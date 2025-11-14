@@ -22,6 +22,7 @@ For dependency management and venv setup, building and publishing, [uv](https://
 3) Run `uv sync` to install all dependencies given in pyproject.toml.
 4) In case you need to add a new dependency, do so via `uv add <new_dependency>`. That way, uv finds versions of all dependencies that are compatible with each other.
 
+To install hdhelpers in editable mode in your venv please run `uv pip install -e .`
 ### Code Quality
 Once you are done writing your code, including unit tests, use `./run check` to see if your code quality is sufficient.
 

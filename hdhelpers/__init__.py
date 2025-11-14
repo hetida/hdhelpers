@@ -1,5 +1,6 @@
 from hdhelpers.exceptions import ComponentException, HelperException, InsufficientPlottingData
-from hdhelpers.plot_helpers import (
+from hdhelpers.structure_metadata import SeriesMetadata, MTSMetadata
+from hdhelpers.helpers_plot import (
     get_and_pad_start_and_end_timestamp,
     get_colors_from_plot_target_settings,
     get_locale_from_plot_target_settings,
@@ -12,7 +13,7 @@ from hdhelpers.plot_target_settings import (
     StatusColors,
     get_plot_target_settings,
 )
-from hdhelpers.time_helpers import modify_timezone
+from hdhelpers.helpers_time import modify_timezone
 
 __all__ = [
     "ComponentException",

@@ -5,11 +5,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from hdhelpers.exceptions import HelperException
 from hdhelpers.plot_target_settings import (
     PlotTargetSettings,
 )
-from hdhelpers.time_helpers import (
+from hdhelpers.helpers_time import (
     _convert_to_optional_timezone,
     _get_end_timestamp,
     _get_start_timestamp,
@@ -50,13 +49,9 @@ def test_get_start_timestamp_directly():
     assert isinstance(timestamp, pd.Timestamp)
 
 
-def test_get_start_timestamp_attrs():
+def test_get_start_timestamp_attrs(series_attrs):
     series = pd.Series()
-    series.attrs = {
-        "single_metric_dataset_metadata": {
-            "ref_interval_start_timestamp": "2025-05-28T09:00:00+02:00"
-        }
-    }
+    series.attrs = series_attrs
     timestamp = _get_start_timestamp(series, None)
     assert isinstance(timestamp, pd.Timestamp)
 
@@ -65,7 +60,7 @@ def test_get_start_timestamp_plot_target_settings():
     plot_target_settings_mock = MagicMock(
         return_value=PlotTargetSettings(datetime_x_axes_range_start="2025-05-28T09:00:00+02:00")
     )
-    with patch("hdhelpers.time_helpers.get_plot_target_settings", plot_target_settings_mock):
+    with patch("hdhelpers.helpers_time.get_plot_target_settings", plot_target_settings_mock):
         timestamp = _get_start_timestamp(pd.Series(), None)
         assert isinstance(timestamp, pd.Timestamp)
 
@@ -90,7 +85,7 @@ def test_get_end_timestamp_plot_target_settings():
     plot_target_settings_mock = MagicMock(
         return_value=PlotTargetSettings(datetime_x_axes_range_end="2025-05-28T18:00:00+02:00")
     )
-    with patch("hdhelpers.time_helpers.get_plot_target_settings", plot_target_settings_mock):
+    with patch("hdhelpers.helpers_time.get_plot_target_settings", plot_target_settings_mock):
         timestamp = _get_end_timestamp(pd.Series(), None)
         assert isinstance(timestamp, pd.Timestamp)
 
@@ -331,7 +326,7 @@ def test_plot_target_timezone(series_summer):
     plot_target_settings_mock = MagicMock(
         return_value=PlotTargetSettings(plot_target_timezone="Europe/Berlin")
     )
-    with patch("hdhelpers.time_helpers.get_plot_target_settings", plot_target_settings_mock):
+    with patch("hdhelpers.helpers_time.get_plot_target_settings", plot_target_settings_mock):
         modified_data = modify_timezone(series_summer)
         assert modified_data.index[1].utcoffset() == datetime.timedelta(seconds=3600)
 

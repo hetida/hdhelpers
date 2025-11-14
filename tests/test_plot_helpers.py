@@ -1,3 +1,4 @@
+import json
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
@@ -5,8 +6,7 @@ import plotly.graph_objects as go
 import pytest
 
 from hdhelpers.exceptions import HelperException, InsufficientPlottingData
-from hdhelpers.plot_helpers import (
-    _get_metric_metadata,
+from hdhelpers.helpers_plot import (
     _pad_end,
     _pad_start,
     get_and_pad_start_and_end_timestamp,
@@ -21,18 +21,6 @@ from hdhelpers.plot_target_settings import (
     StatusColors,
 )
 
-
-def test_get_metric_metadate_default():
-    series = pd.Series()
-    assert _get_metric_metadata(series, "unit", "default") == "default"
-
-
-def test_get_metric_metadate_metadata():
-    series = pd.Series()
-    series.attrs["single_metric_metadata"] = {
-        "structured_metadata": {"metric": {"unit": "unit_from_metadata"}}
-    }
-    assert _get_metric_metadata(series, "unit") == "unit_from_metadata"
 
 
 def test_pad_start():
@@ -69,20 +57,18 @@ def test_get_y_axis_label_default():
     )
 
 
-def test_get_y_axis_labeltitle_with_unit_metadata():
+def test_get_y_axis_labeltitle_with_unit_metadata(series_attrs):
     series = pd.Series()
-    series.attrs["single_metric_metadata"] = {
-        "structured_metadata": {"metric": {"short_display_name": "name_from_metadata"}}
-    }
-    series.attrs["single_metric_metadata"]["structured_metadata"]["metric"]["unit"] = (
-        "unit_from_metadata"
-    )
+    series.attrs = series_attrs
+    series.attrs["single_metric_metadata"]["structured_metadata"]["metric"]["short_display_name"] = "name_from_metadata"
+    series.attrs["single_metric_metadata"]["structured_metadata"]["value_dimensions"]["value"]["unit"] = "unit_from_metadata"
+
     assert get_y_axis_label(series=series) == "name_from_metadata [unit_from_metadata]"
 
 
 def test_get_no_colors_from_plot_target_settings():
     plot_target_settings_mock = MagicMock(return_value=PlotTargetSettings())
-    with patch("hdhelpers.plot_helpers.get_plot_target_settings", plot_target_settings_mock):
+    with patch("hdhelpers.helpers_plot.get_plot_target_settings", plot_target_settings_mock):
         style_object = get_colors_from_plot_target_settings()
         assert isinstance(style_object, PlotTargetStyle)
 
@@ -95,7 +81,7 @@ def test_get_one_color_from_plot_target_settings():
             )
         )
     )
-    with patch("hdhelpers.plot_helpers.get_plot_target_settings", plot_target_settings_mock):
+    with patch("hdhelpers.helpers_plot.get_plot_target_settings", plot_target_settings_mock):
         style_object = get_colors_from_plot_target_settings()
         assert isinstance(style_object, PlotTargetStyle)
 
@@ -117,28 +103,28 @@ def test_get_all_colors_from_plot_target_settings():
             )
         )
     )
-    with patch("hdhelpers.plot_helpers.get_plot_target_settings", plot_target_settings_mock):
+    with patch("hdhelpers.helpers_plot.get_plot_target_settings", plot_target_settings_mock):
         style_object = get_colors_from_plot_target_settings()
         assert isinstance(style_object, PlotTargetStyle)
 
 
 def test_get_no_locale_from_plot_target_settings():
     plot_target_settings_mock = MagicMock(return_value=PlotTargetSettings(plot_target_locale=None))
-    with patch("hdhelpers.plot_helpers.get_plot_target_settings", plot_target_settings_mock):
+    with patch("hdhelpers.helpers_plot.get_plot_target_settings", plot_target_settings_mock):
         locale = get_locale_from_plot_target_settings()
         assert isinstance(locale, str | None)
 
 
 def test_get_empty_locale_from_plot_target_settings():
     plot_target_settings_mock = MagicMock(return_value=PlotTargetSettings(plot_target_locale=""))
-    with patch("hdhelpers.plot_helpers.get_plot_target_settings", plot_target_settings_mock):
+    with patch("hdhelpers.helpers_plot.get_plot_target_settings", plot_target_settings_mock):
         locale = get_locale_from_plot_target_settings()
         assert isinstance(locale, str | None)
 
 
 def test_get_german_locale_from_plot_target_settings():
     plot_target_settings_mock = MagicMock(return_value=PlotTargetSettings(plot_target_locale="de"))
-    with patch("hdhelpers.plot_helpers.get_plot_target_settings", plot_target_settings_mock):
+    with patch("hdhelpers.helpers_plot.get_plot_target_settings", plot_target_settings_mock):
         locale = get_locale_from_plot_target_settings()
         assert isinstance(locale, str | None)
 
@@ -166,7 +152,8 @@ def test_get_and_pad_start_and_end_timestamp(start, end, start_padding, end_padd
 
 def test_get_and_pad_none():
     with pytest.raises(InsufficientPlottingData):
-        start, end = get_and_pad_start_and_end_timestamp(pd.Series())
+        empty_series = pd.Series()
+        get_and_pad_start_and_end_timestamp(empty_series)
 
 
 def test_plotly_fig_to_json_dict_defaults():

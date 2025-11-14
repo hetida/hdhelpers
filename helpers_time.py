@@ -5,29 +5,37 @@ from warnings import warn
 
 import pandas as pd
 import pytz
+from pydantic import ValidationError
 
+from hdhelpers.structure_metadata import SeriesMetadata
 from hdhelpers.exceptions import HelperException
 from hdhelpers.plot_target_settings import get_plot_target_settings
 
 logger = logging.getLogger(__name__)
 
 
-def _to_pd_timestamp(timestamp: datetime | str | int | None) -> pd.Timestamp | None:
+def _to_pd_timestamp(timestamp: datetime | str | int | None, raises: bool = True) -> pd.Timestamp | None:
     """Turn datetime string or integer into a pandas timestamp
 
     Integer values are interpreted as epoch in seconds.
-    String values are accepted in any format compatible with pd.to_datetime
-    and interpreted in seconds.
-    The timezone is set to utc in both cases, other timezones can be set via modify_timezone."""
-    if timestamp is None:
-        return None
-    if isinstance(timestamp, int):
-        timestamp = pd.to_datetime(timestamp, unit="s", utc=True)
-    elif isinstance(timestamp, str | datetime):
-        timestamp = pd.to_datetime(timestamp, utc=True)
-    else:
-        raise TypeError("Unexpected timestamp type, please use str|int|datetime!")
-    return timestamp
+    String values are accepted in any format compatible with pd.to_datetime.
+    The timezone is set to utc, other timezones can be set via modify_timezone."""
+
+    try:
+        if timestamp is None:
+            return timestamp
+        if isinstance(timestamp, int):
+            return pd.to_datetime(timestamp, unit="s", utc=True)
+        elif isinstance(timestamp, str | datetime):
+            return pd.to_datetime(timestamp, utc=True)
+        else:
+            raise TypeError("Unexpected timestamp type, please use str|int|datetime!")
+    except Exception as exc:
+        logger.info("_to_pd_timestamp not sucessful", exc_info=exc)
+        if raises:
+            raise exc
+
+    return None
 
 
 def _get_start_timestamp(
@@ -50,9 +58,7 @@ def _get_start_timestamp(
         if timestamp is not None:
             return timestamp
 
-        key = "ref_interval_start_timestamp"
-        timestamp = series.attrs.get("single_metric_dataset_metadata", {})[key]
-        timestamp = _to_pd_timestamp(timestamp)
+        timestamp = get_start_from_metadata(series)
         if timestamp is not None:
             return timestamp
 
@@ -61,17 +67,51 @@ def _get_start_timestamp(
             timestamp = _to_pd_timestamp(timestamp)
             return timestamp
 
-    except KeyError as exc:
-        msg = f"""Expected key structure not found:
-            attrs["single_metric_dataset_metadata"]["{key}"]"""
+    except ValidationError as exc:
+        msg = f"""Metadata of series is not in standardformat."""
         logger.warning(msg=msg, exc_info=exc)
 
-    except TypeError as exc:
-        msg = f"""Expected key structure not found:
-            attrs["single_metric_dataset_metadata"]["{key}"]"""
-        logger.warning(msg=msg, exc_info=exc)
 
     return None
+
+def get_start_from_metadata(series: pd.Series) -> pd.Timestamp | None:
+    """ Gets the start datetime of the requested interval from the series.
+
+    Args:
+        series (pd.Series): Series with attributes to get the start of the requested interval.
+
+    Returns:
+        pd.Timestamp: The start of the requested interval as pandas Timestamp, or None in case
+        the metadata is not in the standard format.
+    """
+    try:
+        meta_data = SeriesMetadata(**series.attrs)
+        timestamp = meta_data.get_start_requested_interval()
+        timestamp = _to_pd_timestamp(timestamp)
+        return timestamp
+    except ValidationError:
+        logger.info("Series not in standard format, not able to get start of requested interval.")
+        return None
+
+
+def get_end_from_metadata(series) -> pd.Timestamp | None:
+    """ Gets the end datetime of the requested interval from the series.
+
+    Args:
+        series (pd.Series): Series with attributes to get the end of the requested interval.
+
+    Returns:
+        pd.Timestamp: The end of the requested interval as pandas Timestamp, or None in case
+        the metadata is not in the standard format.
+    """
+    try:
+        meta_data = SeriesMetadata(**series.attrs)
+        timestamp = meta_data.get_end_requested_interval()
+        timestamp = _to_pd_timestamp(timestamp)
+        return timestamp
+    except ValidationError:
+        logger.info("Series not in standard format, not able to get end of requested interval.")
+        return None
 
 
 # TODO: gemeinsame Funktion mit _get_start_timestamp (sehr viel Code-Duplikation + gleiche Logik)

@@ -29,7 +29,7 @@ lint(){
         uvx ruff check hdhelpers --exclude "**/__init__.py"
     else
         uvx ruff check "${@}"
-    fi 
+    fi
 }
 
 
@@ -50,7 +50,7 @@ test() {
         uv run -m pytest "${@}" \
         --cov="${@}" \
         --no-cov-on-fail --cov-report=term-missing:skip-covered
-    fi 
+    fi
 }
 
 
@@ -69,6 +69,9 @@ check() {
         echo "CHECKS EXECUTION RESULTS: All checks were successful!"
 }
 
+install_editable_package(){
+    uv pip install -e .
+}
 
 #----- Execution -----#
 if fn_exists "$COMMAND"; then

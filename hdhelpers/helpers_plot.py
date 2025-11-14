@@ -6,12 +6,15 @@ from typing import Any
 import pandas as pd
 from pandas.tseries.frequencies import to_offset
 from plotly.graph_objects import Figure  # type: ignore  # type: ignore
+from pydantic import ValidationError
 
+from hdhelpers.structure_metadata import SeriesMetadata
 from hdhelpers.exceptions import HelperException, InsufficientPlottingData
 from hdhelpers.plot_target_settings import PlotTargetStyle, get_plot_target_settings
-from hdhelpers.time_helpers import _get_end_timestamp, _get_start_timestamp, modify_timezone
+from hdhelpers.helpers_time import _get_end_timestamp, _get_start_timestamp, modify_timezone
 
 logger = logging.getLogger(__name__)
+
 
 
 def get_colors_from_plot_target_settings() -> PlotTargetStyle:
@@ -37,33 +40,6 @@ def get_locale_from_plot_target_settings() -> str | None:
 
     return plot_target_settings.plot_target_locale
 
-
-def _get_metric_metadata(series: pd.Series, metadata: str, default_return_value: str = "") -> str:
-    """Get metadata from attrs["single_metric_metadata"]["structured_metadata"]["metric"]
-
-    Tries to get the metadata from series.attrs according to the conventions of the hetida platform.
-    If such metadata doesn't exist, the default_return_value is returned instead.
-    """
-    try:
-        title = (
-            series.attrs.get("single_metric_metadata", {})
-            .get("structured_metadata", {})
-            .get("metric", {})[metadata]
-        )
-        if not isinstance(title, str):
-            raise TypeError
-
-    except KeyError as exc:
-        msg = f"""Expected attrs["single_metric_metadata"]["structured_metadata"]["metric"]
-            ["{metadata}"] but got incorrect keys! Switching to default {metadata}"""
-        logger.info(msg=msg, exc_info=exc)  # TODO: check log-level
-        title = default_return_value
-    except TypeError as exc:
-        msg = f"""Expected {metadata} to be a string, but it is not! Switching to default {metadata}."""
-        logger.warning(msg=msg, exc_info=exc)
-        title = default_return_value
-
-    return title
 
 
 def _pad_start(timestamp: pd.Timestamp, padding: str | None) -> pd.Timestamp:
@@ -144,9 +120,21 @@ def get_y_axis_label(series: pd.Series, default_title: str = "", default_unit: s
 
     Combines the title and unit provided by _get_display_name and _get_unit.
     """
-    title = _get_metric_metadata(series, "short_display_name", default_title)
-    unit = _get_metric_metadata(series, "unit", default_unit)
+
+    title = default_title
+    unit = default_unit
+    try:
+        meta_data = SeriesMetadata(**series.attrs)
+        unit = meta_data.get_unit()
+        title = meta_data.get_display_name()
+
+    except ValidationError as exc:
+        msg = """Metadata of series does not correspond to the standard format.
+          Using default unit and default title."""
+        logger.info(msg=msg, exc_info=exc)
+
     if len(unit) > 0:
+        logger.debug("Unit is en empty string - returning only title")
         title = f"{title} [{unit}]"
     return title
 

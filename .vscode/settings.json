@@ -29,13 +29,16 @@
     },
     "python.defaultInterpreterPath": ".venv/bin/python",
     "python.languageServer": "Default",
-    "python.testing.unittestArgs": [
+    "python.testing.pytestArgs": [
         "-v",
-        "-s",
-        ".",
         "-c",
-        "pytest.ini",
-        "-p",
-        "test_*.py"
+        "pytest.ini"
     ],
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "autoDocstring.docstringFormat": "google",
+    "autoDocstring.includeName": false,
+    "autoDocstring.generateDocstringOnEnter": true
+
+
 }
