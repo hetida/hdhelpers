@@ -5,15 +5,15 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from hdhelpers.plot_target_settings import (
-    PlotTargetSettings,
-)
 from hdhelpers.helpers_time import (
     _convert_to_optional_timezone,
     _get_end_timestamp,
-    estimate_plot_start,
     _to_pd_timestamp,
+    estimate_plot_start,
     modify_timezone,
+)
+from hdhelpers.plot_target_settings import (
+    PlotTargetSettings,
 )
 
 

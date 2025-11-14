@@ -8,13 +8,12 @@ from pandas.tseries.frequencies import to_offset
 from plotly.graph_objects import Figure  # type: ignore  # type: ignore
 from pydantic import ValidationError
 
-from hdhelpers.structure_metadata import SeriesMetadata
 from hdhelpers.exceptions import HelperException, InsufficientPlottingData
+from hdhelpers.helpers_time import estimate_plot_end, estimate_plot_start, modify_timezone
 from hdhelpers.plot_target_settings import PlotTargetStyle, get_plot_target_settings
-from hdhelpers.helpers_time import estimate_plot_start, estimate_plot_end, modify_timezone
+from hdhelpers.structure_metadata import SeriesMetadata
 
 logger = logging.getLogger(__name__)
-
 
 
 def get_colors_from_plot_target_settings() -> PlotTargetStyle:
@@ -39,7 +38,6 @@ def get_locale_from_plot_target_settings() -> str | None:
     plot_target_settings = get_plot_target_settings()
 
     return plot_target_settings.plot_target_locale
-
 
 
 def _pad_start(timestamp: pd.Timestamp, padding: str | None) -> pd.Timestamp:
@@ -124,7 +122,7 @@ def get_y_axis_label(series: pd.Series, default_title: str = "", default_unit: s
     title = default_title
     unit = default_unit
     try:
-        meta_data = SeriesMetadata(**series.attrs)
+        meta_data = SeriesMetadata(**series.attrs)  # type: ignore
         unit = meta_data.get_unit()
         title = meta_data.get_display_name()
 

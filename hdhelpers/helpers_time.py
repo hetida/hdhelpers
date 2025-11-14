@@ -9,14 +9,16 @@ import pandas as pd
 import pytz
 from pydantic import ValidationError
 
-from hdhelpers.structure_metadata import SeriesMetadata
 from hdhelpers.exceptions import HelperException
 from hdhelpers.plot_target_settings import get_plot_target_settings
+from hdhelpers.structure_metadata import SeriesMetadata
 
 logger = logging.getLogger(__name__)
 
 
-def _to_pd_timestamp(timestamp: datetime | str | int | None, raises: bool = True) -> pd.Timestamp | None:
+def _to_pd_timestamp(
+    timestamp: datetime | str | int | None, raises: bool = True
+) -> pd.Timestamp | None:
     """Turn datetime string or integer into a pandas timestamp
 
     Integer values are interpreted as epoch in seconds.
@@ -32,7 +34,7 @@ def _to_pd_timestamp(timestamp: datetime | str | int | None, raises: bool = True
             return pd.to_datetime(timestamp, utc=True)
         else:
             raise TypeError("Unexpected timestamp type, please use str|int|datetime!")
-    except Exception as exc: #noqa: E722
+    except Exception as exc:  # noqa: E722
         logger.info("_to_pd_timestamp not sucessful", exc_info=exc)
         if raises:
             raise exc
@@ -41,7 +43,9 @@ def _to_pd_timestamp(timestamp: datetime | str | int | None, raises: bool = True
 
 
 def _estimate_plot_interval(
-    series: pd.Series, timestamp: datetime | str | None, interval_edge: Literal["start", "end"] = "start"
+    series: pd.Series,
+    timestamp: datetime | str | None,
+    interval_edge: Literal["start", "end"] = "start",
 ) -> pd.Timestamp | None:
     """Get the start timestamp hierarchically
 
@@ -78,15 +82,14 @@ def _estimate_plot_interval(
             return timestamp
 
     except ValidationError as exc:
-        msg = f"""Metadata of series is not in standardformat."""
+        msg = "Metadata of series is not in standardformat."
         logger.warning(msg=msg, exc_info=exc)
 
     return None
 
-def estimate_plot_start(
-    series: pd.Series, timestamp: datetime | str | None
-) -> pd.Timestamp | None:
-    """ Get the start timestamp hierarchically
+
+def estimate_plot_start(series: pd.Series, timestamp: datetime | str | None) -> pd.Timestamp | None:
+    """Get the start timestamp hierarchically
 
     Will check for an explicit input timestamp first, then check PlotTargetSettings, then the series
     metadata, and then it will take the first series entry as start
@@ -102,9 +105,7 @@ def estimate_plot_start(
     return _estimate_plot_interval(series, timestamp, "start")
 
 
-def estimate_plot_end(
-    series: pd.Series, timestamp: datetime | str | None
-) -> pd.Timestamp | None:
+def estimate_plot_end(series: pd.Series, timestamp: datetime | str | None) -> pd.Timestamp | None:
     """Get the start timestamp hierarchically
 
     Will check for an explicit input timestamp first, then check PlotTargetSettings, then the series
@@ -115,7 +116,7 @@ def estimate_plot_end(
 
 
 def get_start_from_metadata(series: pd.Series) -> pd.Timestamp | None:
-    """ Gets the start datetime of the requested interval from the series.
+    """Gets the start datetime of the requested interval from the series.
 
     Args:
         series (pd.Series): Series with attributes to get the start of the requested interval.
@@ -125,17 +126,16 @@ def get_start_from_metadata(series: pd.Series) -> pd.Timestamp | None:
         the metadata is not in the standard format.
     """
     try:
-        meta_data = SeriesMetadata(**series.attrs)
+        meta_data = SeriesMetadata(**series.attrs)  # type: ignore
         timestamp = meta_data.get_start_requested_interval()
-        timestamp = _to_pd_timestamp(timestamp)
-        return timestamp
+        return _to_pd_timestamp(timestamp)
     except ValidationError:
         logger.info("Series not in standard format, not able to get start of requested interval.")
         return None
 
 
 def get_end_from_metadata(series) -> pd.Timestamp | None:
-    """ Gets the end datetime of the requested interval from the series.
+    """Gets the end datetime of the requested interval from the series.
 
     Args:
         series (pd.Series): Series with attributes to get the end of the requested interval.
@@ -147,8 +147,7 @@ def get_end_from_metadata(series) -> pd.Timestamp | None:
     try:
         meta_data = SeriesMetadata(**series.attrs)
         timestamp = meta_data.get_end_requested_interval()
-        timestamp = _to_pd_timestamp(timestamp)
-        return timestamp
+        return _to_pd_timestamp(timestamp)
     except ValidationError:
         logger.info("Series not in standard format, not able to get end of requested interval.")
         return None

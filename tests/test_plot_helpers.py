@@ -22,7 +22,6 @@ from hdhelpers.plot_target_settings import (
 )
 
 
-
 def test_pad_start():
     start = pd.to_datetime("2025-05-28T09:00:00+02:00")
     padded_start = _pad_start(start, "1h")
@@ -60,8 +59,12 @@ def test_get_y_axis_label_default():
 def test_get_y_axis_labeltitle_with_unit_metadata(series_attrs):
     series = pd.Series()
     series.attrs = series_attrs
-    series.attrs["single_metric_metadata"]["structured_metadata"]["metric"]["short_display_name"] = "name_from_metadata"
-    series.attrs["single_metric_metadata"]["structured_metadata"]["value_dimensions"]["value"]["unit"] = "unit_from_metadata"
+    series.attrs["single_metric_metadata"]["structured_metadata"]["metric"][
+        "short_display_name"
+    ] = "name_from_metadata"
+    series.attrs["single_metric_metadata"]["structured_metadata"]["value_dimensions"]["value"][
+        "unit"
+    ] = "unit_from_metadata"
 
     assert get_y_axis_label(series=series) == "name_from_metadata [unit_from_metadata]"
 
