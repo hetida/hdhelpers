@@ -26,7 +26,7 @@ def _to_pd_timestamp(timestamp: datetime | str | int | None) -> pd.Timestamp | N
     elif isinstance(timestamp, str | datetime):
         timestamp = pd.to_datetime(timestamp, utc=True)
     else:
-        raise HelperException("Unexpected timestamp type, please use str or int!")
+        raise TypeError("Unexpected timestamp type, please use str|int|datetime!")
     return timestamp
 
 
@@ -39,32 +39,42 @@ def _get_start_timestamp(
      metadata, and if both are None or not present, will take the first series entry as start
      timestamp. If the series is also empty, None is returned.
     """
-    if timestamp is not None:
-        return _to_pd_timestamp(timestamp)
+    try:
+        timestamp = _to_pd_timestamp(timestamp)
 
-    plot_target_settings = get_plot_target_settings()
+        if timestamp is not None:
+            return timestamp
 
-    timestamp = plot_target_settings.datetime_x_axes_range_start
 
-    if timestamp is None:
+        plot_target_settings = get_plot_target_settings()
+        timestamp = plot_target_settings.datetime_x_axes_range_start
+        if timestamp is not None:
+            return timestamp
+
         key = "ref_interval_start_timestamp"
-        try:
-            timestamp = series.attrs.get("single_metric_dataset_metadata", {})[key]
-        except KeyError as exc:
-            msg = f"""Expected key structure not found:
-             attrs["single_metric_dataset_metadata"]["{key}"]"""
-            logger.warning(msg=msg, exc_info=exc)
-            if len(series) > 0:
-                timestamp = series.index[0]
-                try:
-                    timestamp = _to_pd_timestamp(timestamp)
-                    return timestamp
-                except HelperException:
-                    return None
+        timestamp = series.attrs.get("single_metric_dataset_metadata", {})[key]
+        timestamp = _to_pd_timestamp(timestamp)
+        if timestamp is not None:
+            return timestamp
 
-    return _to_pd_timestamp(timestamp)
+        if not series.empty and pd.api.types.is_datetime64_dtype(series.index):
+            timestamp = series.index.min()
+            timestamp = _to_pd_timestamp(timestamp)
+            return timestamp
 
+    except KeyError as exc:
+        msg = f"""Expected key structure not found:
+            attrs["single_metric_dataset_metadata"]["{key}"]"""
+        logger.warning(msg=msg, exc_info=exc)
 
+    except TypeError as exc:
+        msg = f"""Expected key structure not found:
+            attrs["single_metric_dataset_metadata"]["{key}"]"""
+        logger.warning(msg=msg, exc_info=exc)
+
+    return None
+
+# TODO: gemeinsame Funktion mit _get_start_timestamp (sehr viel Code-Duplikation + gleiche Logik)
 def _get_end_timestamp(series: pd.Series, timestamp: datetime | str | None) -> pd.Timestamp | None:
     """Get the end timestamp hierarchically
 

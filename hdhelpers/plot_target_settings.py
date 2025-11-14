@@ -64,7 +64,7 @@ class PlotTargetSettings(BaseModel):
     plot_target_timezone: str | None = Field(
         None,
         description="""The timezone plot components should use for datetime axes etc.
-             Usually via series = modify_timezone(series)""",
+             Usually via series = modify_timezone(series)""", #TODO: unklare Beschriebung
         examples=["Europe/Berlin"],
     )
     plot_target_locale: str | None = Field(

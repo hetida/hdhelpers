@@ -38,30 +38,31 @@ def get_locale_from_plot_target_settings() -> str | None:
     return plot_target_settings.plot_target_locale
 
 
-def _get_metric_metadate(series: pd.Series, metadate: str, default_return_value: str = "") -> str:
+def _get_metric_metadata(series: pd.Series, metadata: str, default_return_value: str = "") -> str:
     """Get metadata from attrs["single_metric_metadata"]["structured_metadata"]["metric"]
 
-    Tries to get the metadate from series.attrs according to the conventions of the hetida platform.
+    Tries to get the metadata from series.attrs according to the conventions of the hetida platform.
     If such metadata doesn't exist, the default_return_value is returned instead.
     """
     try:
         title = (
             series.attrs.get("single_metric_metadata", {})
             .get("structured_metadata", {})
-            .get("metric", {})[metadate]
+            .get("metric", {})[metadata]
         )
         if not isinstance(title, str):
-            msg = f"""Expected {metadate} to be a string, but it is not!
- Switching to default {metadate}."""
-            raise HelperException(msg)
+            raise TypeError
+
     except KeyError as exc:
         msg = f"""Expected attrs["single_metric_metadata"]["structured_metadata"]["metric"]
-            ["{metadate}"] but got incorrect keys! Switching to default {metadate}"""
-        logger.info(msg=msg, exc_info=exc)
+            ["{metadata}"] but got incorrect keys! Switching to default {metadata}"""
+        logger.info(msg=msg, exc_info=exc) # TODO: check log-level
         title = default_return_value
-    except HelperException as exc:
+    except TypeError as exc:
+        msg = f"""Expected {metadata} to be a string, but it is not! Switching to default {metadata}."""
         logger.warning(msg=msg, exc_info=exc)
         title = default_return_value
+
     return title
 
 
@@ -143,8 +144,8 @@ def get_y_axis_label(series: pd.Series, default_title: str = "", default_unit: s
 
     Combines the title and unit provided by _get_display_name and _get_unit.
     """
-    title = _get_metric_metadate(series, "short_display_name", default_title)
-    unit = _get_metric_metadate(series, "unit", default_unit)
+    title = _get_metric_metadata(series, "short_display_name", default_title)
+    unit = _get_metric_metadata(series, "unit", default_unit)
     if len(unit) > 0:
         title = f"{title} [{unit}]"
     return title

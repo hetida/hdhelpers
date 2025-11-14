@@ -1,0 +1,18 @@
+# quality checks
+.coverage
+.pytest_cache
+.mypy_cache
+.ruff_cache
+coverage*
+
+# venv
+.venv
+
+# packaging
+dist/*
+
+# generals
+__pycache__
+*.pyc
+*.pyo
+launch.json

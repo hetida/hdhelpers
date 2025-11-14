@@ -6,7 +6,7 @@ import pytest
 
 from hdhelpers.exceptions import HelperException
 from hdhelpers.plot_helpers import (
-    _get_metric_metadate,
+    _get_metric_metadata,
     _pad_end,
     _pad_start,
     get_and_pad_start_and_end_timestamp,
@@ -24,7 +24,7 @@ from hdhelpers.plot_target_settings import (
 
 def test_get_metric_metadate_default():
     series = pd.Series()
-    assert _get_metric_metadate(series, "unit", "default") == "default"
+    assert _get_metric_metadata(series, "unit", "default") == "default"
 
 
 def test_get_metric_metadate_metadata():
@@ -32,7 +32,7 @@ def test_get_metric_metadate_metadata():
     series.attrs["single_metric_metadata"] = {
         "structured_metadata": {"metric": {"unit": "unit_from_metadata"}}
     }
-    assert _get_metric_metadate(series, "unit") == "unit_from_metadata"
+    assert _get_metric_metadata(series, "unit") == "unit_from_metadata"
 
 
 def test_pad_start():
