@@ -11,7 +11,7 @@ from hdhelpers.plot_target_settings import (
 from hdhelpers.helpers_time import (
     _convert_to_optional_timezone,
     _get_end_timestamp,
-    _get_start_timestamp,
+    estimate_plot_start,
     _to_pd_timestamp,
     modify_timezone,
 )
@@ -45,14 +45,14 @@ def test_convert_to_optional_timezone_aware_given():
 
 
 def test_get_start_timestamp_directly():
-    timestamp = _get_start_timestamp(pd.Series(), "2025-05-28T09:00:00+02:00")
+    timestamp = estimate_plot_start(pd.Series(), "2025-05-28T09:00:00+02:00")
     assert isinstance(timestamp, pd.Timestamp)
 
 
 def test_get_start_timestamp_attrs(series_attrs):
     series = pd.Series()
     series.attrs = series_attrs
-    timestamp = _get_start_timestamp(series, None)
+    timestamp = estimate_plot_start(series, None)
     assert isinstance(timestamp, pd.Timestamp)
 
 
@@ -61,7 +61,7 @@ def test_get_start_timestamp_plot_target_settings():
         return_value=PlotTargetSettings(datetime_x_axes_range_start="2025-05-28T09:00:00+02:00")
     )
     with patch("hdhelpers.helpers_time.get_plot_target_settings", plot_target_settings_mock):
-        timestamp = _get_start_timestamp(pd.Series(), None)
+        timestamp = estimate_plot_start(pd.Series(), None)
         assert isinstance(timestamp, pd.Timestamp)
 
 
@@ -96,7 +96,7 @@ def test_get_end_none():
 
 
 def test_get_start_none():
-    timestamp = _get_start_timestamp(pd.Series(), None)
+    timestamp = estimate_plot_start(pd.Series(), None)
     assert timestamp is None
 
 

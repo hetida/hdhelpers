@@ -11,7 +11,7 @@ from pydantic import ValidationError
 from hdhelpers.structure_metadata import SeriesMetadata
 from hdhelpers.exceptions import HelperException, InsufficientPlottingData
 from hdhelpers.plot_target_settings import PlotTargetStyle, get_plot_target_settings
-from hdhelpers.helpers_time import _get_end_timestamp, _get_start_timestamp, modify_timezone
+from hdhelpers.helpers_time import estimate_plot_start, estimate_plot_end, modify_timezone
 
 logger = logging.getLogger(__name__)
 
@@ -90,8 +90,8 @@ def get_and_pad_start_and_end_timestamp(
     formatted to be compatible with pandas.tseries.frequencies.to_offset().
     """
     # Get start and end
-    start = _get_start_timestamp(series, start)
-    end = _get_end_timestamp(series, end)
+    start = estimate_plot_start(series, start)
+    end = estimate_plot_end(series, end)
 
     if start is None:
         raise InsufficientPlottingData("No start timestamp found!")
