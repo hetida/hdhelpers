@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import pytest
 
-from hdhelpers.exceptions import HelperException
+from hdhelpers.exceptions import HelperException, InsufficientPlottingData
 from hdhelpers.plot_helpers import (
     _get_metric_metadata,
     _pad_end,
@@ -165,7 +165,7 @@ def test_get_and_pad_start_and_end_timestamp(start, end, start_padding, end_padd
 
 
 def test_get_and_pad_none():
-    with pytest.raises(HelperException):
+    with pytest.raises(InsufficientPlottingData):
         start, end = get_and_pad_start_and_end_timestamp(pd.Series())
 
 

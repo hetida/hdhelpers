@@ -56,7 +56,7 @@ def _get_metric_metadata(series: pd.Series, metadata: str, default_return_value:
     except KeyError as exc:
         msg = f"""Expected attrs["single_metric_metadata"]["structured_metadata"]["metric"]
             ["{metadata}"] but got incorrect keys! Switching to default {metadata}"""
-        logger.info(msg=msg, exc_info=exc) # TODO: check log-level
+        logger.info(msg=msg, exc_info=exc)  # TODO: check log-level
         title = default_return_value
     except TypeError as exc:
         msg = f"""Expected {metadata} to be a string, but it is not! Switching to default {metadata}."""
@@ -302,7 +302,7 @@ def plotly_fig_to_json_dict(  # noqa: PLR0912, PLR0915
         fig.update_layout({"xaxis": grid_dict, "yaxis": grid_dict})
 
     fig_dict_obj = _serialize_plotly_fig(fig)
-    if not "config" in fig_dict_obj:
+    if "config" not in fig_dict_obj:
         fig_dict_obj["config"] = {}
 
     if add_config_settings and plot_target_settings.plot_target_locale is not None:

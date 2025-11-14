@@ -9,7 +9,8 @@ description = "Streamlines plotting and timezone handling in hetida designer com
 readme = "README.md"
 authors = [
     {name = "Christoph Dingel", email = "cdingel@fuseki.com"},
-    {name = "Steffen Wittkamp", email = "swittkamp@fuseki.com"}
+    {name = "Steffen Wittkamp", email = "swittkamp@fuseki.com"},
+    {name = "Jenny Kupzig", email = "jkupzig@fuseki.com"}
 ]
 requires-python = ">=3.13"
 dependencies = [
@@ -45,9 +46,11 @@ dev = [
 ]
 
 [tool.ruff]
-
 # allow longer lines than the default (88, same as black)
 line-length = 100
+[pycodestyle]
+# Ensures E501 (line-too-long) uses the same limit
+max-line-length = 100
 
 # Assume python313
 target-version = "py313"
@@ -58,4 +61,3 @@ lint.ignore = ["E713", "E714", "B008", "PLR2004", "COM812", "RET504", "PLR0913",
 
 [tool.ruff.lint.per-file-ignores]
 "/**/tests/**/*.py" = ["S101", "PT023", "T201", "INP001", "PT001", "ARG001", "S113", "S603", "PLR0912"]
-

@@ -4,7 +4,7 @@ hdhelpers is a package designed for and included in the standard installation of
 
 It contains functions that streamline plotting components, especially those that are used in the [hetida platform](https://hetida.io/), by
 * accessing series metadata that complies with the hetida platform metadata scheme
-* accessing metadata that the hetida platform writes into the hetida designer's `plot_target_settings` context variable 
+* accessing metadata that the hetida platform writes into the hetida designer's `plot_target_settings` context variable
 * adjusting the timezone of timestamps, series, and dataframes
 * providing toggleable standardized styling options and json serialization for plotly plots
 
@@ -17,14 +17,12 @@ For a specific example of how to use hdhelpers functionality in a hetida designe
 For dependency management and venv setup, building and publishing, [uv](https://docs.astral.sh/uv/) is used.
 
 ### Setting up a Development Environment
-First, move to the `runtime/hdhelpers` subdirectory, which contains the hdhelpers package.
+1) Create a virtual environment with `uv venv`. This will create a hidden `.venv` directory.
+2) Activate the virtual environment via `source .venv/bin/activate`
+3) Run `uv sync` to install all dependencies given in pyproject.toml.
+4) In case you need to add a new dependency, do so via `uv add <new_dependency>`. That way, uv finds versions of all dependencies that are compatible with each other.
 
-Create a virtual environment with `uv venv`, which you can then find in the `.venv` subdirectory. There, uv installs all dependencies defined in `pyproject.toml`.
-
-All uv commands that need a python environment will use `.venv`, so you should use it for your development, too.
-
-Finally, in case you need to add a new dependency, do so via `uv add <new_dependency>`. That way, uv finds versions of all dependencies that are compatible with each other.
-
+### Code Quality
 Once you are done writing your code, including unit tests, use `./run check` to see if your code quality is sufficient.
 
 To use your local hdhelpers code in a hetida designer development setup, use the nix-shell setup by executing the following commands:

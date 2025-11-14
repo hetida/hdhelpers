@@ -125,7 +125,7 @@ def test_to_pd_timestamp_none():
 
 def test_to_pd_timestamp_float():
     timestamp = 3.14
-    with pytest.raises(HelperException):
+    with pytest.raises(TypeError):
         timestamp = _to_pd_timestamp(timestamp)
 
 

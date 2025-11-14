@@ -45,9 +45,8 @@ def _get_start_timestamp(
         if timestamp is not None:
             return timestamp
 
-
         plot_target_settings = get_plot_target_settings()
-        timestamp = plot_target_settings.datetime_x_axes_range_start
+        timestamp = _to_pd_timestamp(plot_target_settings.datetime_x_axes_range_start)
         if timestamp is not None:
             return timestamp
 
@@ -73,6 +72,7 @@ def _get_start_timestamp(
         logger.warning(msg=msg, exc_info=exc)
 
     return None
+
 
 # TODO: gemeinsame Funktion mit _get_start_timestamp (sehr viel Code-Duplikation + gleiche Logik)
 def _get_end_timestamp(series: pd.Series, timestamp: datetime | str | None) -> pd.Timestamp | None:
