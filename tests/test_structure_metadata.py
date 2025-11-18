@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from hdhelpers.structure_metadata import *  # SeriesMetadata, MTSMetadata, StructuredMetadata
+from hdhelpers.structure_metadata import SeriesMetadata, MTSMetadata
 
 
 def test_init_series_metadata():

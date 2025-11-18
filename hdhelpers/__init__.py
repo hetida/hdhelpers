@@ -29,4 +29,6 @@ __all__ = [
     "get_y_axis_label",
     "modify_timezone",
     "plotly_fig_to_json_dict",
+    "MTSMetadata",
+    "SeriesMetadata",
 ]

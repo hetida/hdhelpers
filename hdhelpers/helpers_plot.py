@@ -119,8 +119,6 @@ def get_y_axis_label(series: pd.Series, default_title: str = "", default_unit: s
     Combines the title and unit provided by _get_display_name and _get_unit.
     """
 
-    title = default_title
-    unit = default_unit
     try:
         meta_data = SeriesMetadata(**series.attrs)  # type: ignore
         unit = meta_data.get_unit()
@@ -130,6 +128,16 @@ def get_y_axis_label(series: pd.Series, default_title: str = "", default_unit: s
         msg = """Metadata of series does not correspond to the standard format.
           Using default unit and default title."""
         logger.info(msg=msg, exc_info=exc)
+        unit = default_unit
+        title = default_title
+
+    if unit is None:
+        logger.info("Metadata of series does not contain title. Using default unit")
+        unit = default_unit
+
+    if title is None:
+        logger.info("Metadata of series does not contain display name. Using default title")
+        title = default_title
 
     if len(unit) > 0:
         logger.debug("Unit is en empty string - returning only title")

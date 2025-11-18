@@ -1,8 +1,11 @@
 """Model to represent metadata defined in https://fuseki.atlassian.net/wiki/spaces/DSB/pages/4954849313/Metadaten-Konventionen"""
 
+import logging
 from typing import Literal
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 
 class Value(BaseModel):
@@ -37,8 +40,12 @@ class SingleMetricMetadata(BaseModel):
         return self.structured_metadata.metric.short_display_name
 
     def get_unit(self) -> str | None:
-        value = self.structured_metadata.value_dimensions.get("value")
-        return value.unit
+        try:
+            value = self.structured_metadata.value_dimensions.get("value")
+            return value.unit  # type: ignore[union-attr]
+        except AttributeError:
+            logger.info("No unit found in metadata.")
+            return None
 
 
 class DatasetMetadata(BaseModel):
@@ -91,7 +98,7 @@ class MTSMetadata(BaseModel):
     def get_unit(self):
         return {key: value.get_unit() for key, value in self.by_metric.items()}
 
-    def get_display_name(self) -> dict[str, dict[str, str]]:
+    def get_display_name(self) -> dict[str, str | None]:
         return {key: value.get_display_name() for key, value in self.by_metric.items()}
 
     def get_start_requested_start(self):
