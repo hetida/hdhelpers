@@ -6,8 +6,7 @@ import pytest
 
 from hdhelpers.exceptions import HelperException, InsufficientPlottingData
 from hdhelpers.helpers_plot import (
-    _pad_end,
-    _pad_start,
+    _pad_to_timestamp,
     get_and_pad_start_and_end_timestamp,
     get_colors_from_plot_target_settings,
     get_locale_from_plot_target_settings,
@@ -23,14 +22,14 @@ from hdhelpers.plot_target_settings import (
 
 def test_pad_start():
     start = pd.to_datetime("2025-05-28T09:00:00+02:00")
-    padded_start = _pad_start(start, "1h")
+    padded_start = _pad_to_timestamp(start, "1h", add=False)
     assert isinstance(padded_start, pd.Timestamp)
     assert padded_start < start
 
 
 def test_pad_end():
     end = pd.to_datetime("2025-05-28T18:00:00+02:00")
-    padded_end = _pad_end(end, "1h")
+    padded_end = _pad_to_timestamp(end, "1h", add=True)
     assert isinstance(padded_end, pd.Timestamp)
     assert padded_end > end
 
@@ -38,13 +37,13 @@ def test_pad_end():
 def test_pad_start_wrong_padding():
     timestamp = pd.to_datetime("2025-05-28T09:00:00+02:00")
     with pytest.raises(HelperException):
-        _pad_start(timestamp, "foo")
+        _pad_to_timestamp(timestamp, "foo", add=False)
 
 
 def test_pad_end_wrong_padding():
     timestamp = pd.to_datetime("2025-05-28T09:00:00+02:00")
     with pytest.raises(HelperException):
-        _pad_end(timestamp, "foo")
+        _pad_to_timestamp(timestamp, "foo")
 
 
 def test_get_y_axis_label_default():

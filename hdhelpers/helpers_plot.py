@@ -6,7 +6,7 @@ from typing import Any
 import pandas as pd
 from pandas.tseries.frequencies import to_offset
 from plotly.graph_objects import Figure  # type: ignore  # type: ignore
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from hdhelpers.exceptions import HelperException, InsufficientPlottingData
 from hdhelpers.helpers_time import estimate_plot_end, estimate_plot_start, modify_timezone
@@ -16,6 +16,34 @@ from hdhelpers.structure_metadata import SeriesMetadata
 logger = logging.getLogger(__name__)
 
 
+class PlottingSettings(BaseModel):
+    hide_legend: bool = False
+    hide_x_title: bool = False
+    remove_plotly_bar: bool = False
+    update_x_axes_tickformat: bool = False
+    use_default_standoff: bool = False
+    use_muplot_axes_color: bool = False
+    use_muplot_grid: bool = False
+    use_muplot_line_and_markers: bool = False
+    use_platform_background: bool = False
+
+
+platform_plotting_settings = PlottingSettings(
+    hide_legend=True,
+    hide_x_title=True,
+    remove_plotly_bar=True,
+    update_x_axes_tickformat=True,
+    use_default_standoff=True,
+    use_muplot_axes_color=True,
+    use_muplot_grid=True,
+    use_muplot_line_and_markers=True,
+    use_platform_background=True,
+)
+
+default_plotting_settings = PlottingSettings()
+
+
+# TODO: Klären warum das eine explonierte Funktion ist, wieso hängt sie nicht an
 def get_colors_from_plot_target_settings() -> PlotTargetStyle:
     """Get thematically coherent colors for customizing plots
 
@@ -40,31 +68,31 @@ def get_locale_from_plot_target_settings() -> str | None:
     return plot_target_settings.plot_target_locale
 
 
-def _pad_start(timestamp: pd.Timestamp, padding: str | None) -> pd.Timestamp:
-    """Subtracts padding from the timestamp
+def _pad_to_timestamp(
+    timestamp: pd.Timestamp, padding: str | None, add: bool = True
+) -> pd.Timestamp:
+    """Adds to  or subtracts from a given timestamp a given padding.
 
-    That padding has to be formatted to be compatible with pandas.tseries.frequencies.to_offset().
+    Args:
+        timestamp (pd.Timestamp): Timestamo to be modified.
+        padding (str | None): Duration to be added or subtracted from timestamp. If it is None, the original timestamp is returned.
+        add (bool, optional): Defines if duration is added to (True) or subtracted from (false) the timestamp. Defaults to True.
+
+    Raises:
+        HelperException: If given padding is not compatible with pandas.tseries.frequencies.to_offset().
+
+    Returns:
+        pd.Timestamp: Modified tiemstamp, usually used to define x-axis limits in a plot.
     """
+
     if padding is None:
         return timestamp
+
     try:
-        return timestamp - to_offset(padding)
-    except ValueError as exc:
-        raise HelperException(
-            f"{padding} as padding value is an invalid duration, i.e. not a 'pandas frequency "
-            "string'. Use something compatible with pandas.tseries.frequencies.to_offset()"
-        ) from exc
-
-
-def _pad_end(timestamp: pd.Timestamp, padding: str | None) -> pd.Timestamp:
-    """Adds padding to the timestamp
-
-    That padding has to be formatted to be compatible with pandas.tseries.frequencies.to_offset().
-    """
-    if padding is None:
-        return timestamp
-    try:
-        return timestamp + to_offset(padding)
+        if add is True:
+            return timestamp + to_offset(padding)
+        else:
+            return timestamp - to_offset(padding)
     except ValueError as exc:
         raise HelperException(
             f"{padding} as padding value is an invalid duration, i.e. not a 'pandas frequency "
@@ -107,8 +135,8 @@ def get_and_pad_start_and_end_timestamp(
         end_with_timezone = end_timestamp
 
     # Optionally add padding
-    start_padded = _pad_start(start_with_timezone, start_padding)
-    end_padded = _pad_end(end_with_timezone, end_padding)
+    start_padded = _pad_to_timestamp(start_with_timezone, start_padding, add=False)
+    end_padded = _pad_to_timestamp(end_with_timezone, end_padding, add=True)
 
     return start_padded, end_padded
 
@@ -149,6 +177,8 @@ def _serialize_plotly_fig(v: dict[str, Any] | Figure) -> Any:
     if isinstance(v, dict):
         return v
 
+    # TODO: klären, was die comments bedeuten
+
     # possibly quite inefficient (multiple serialisation / deserialization) but
     # guarantees that the PlotlyJSONEncoder is used and so the resulting Json
     # should be definitely compatible with the plotly javascript library:
@@ -188,84 +218,97 @@ def plotly_fig_to_json_dict(  # noqa: PLR0912, PLR0915
     See visualization components from the accompanying base components for
     examples on usage.
     """
+    # TODO: Klären, hier kann ich sagen, das ich die platform default nutzen möchte, und dann
+    # manuell noch einige Einstellungen anpassen. Die aktuelle Lösung wirkt nicht user-freundlich
+
+    settings = default_plotting_settings
     if use_platform_defaults:
-        if hide_legend is None:
-            hide_legend = True
-        if hide_x_title is None:
-            hide_x_title = True
-        if remove_plotly_bar is None:
-            remove_plotly_bar = True
-        if update_x_axes_tickformat is None:
-            update_x_axes_tickformat = True
-        if use_default_standoff is None:
-            use_default_standoff = True
-        if use_muplot_axes_color is None:
-            use_muplot_axes_color = True
-        if use_muplot_grid is None:
-            use_muplot_grid = True
-        if use_muplot_line_and_markers is None:
-            use_muplot_line_and_markers = True
-        if use_platform_background is None:
-            use_platform_background = True
-    else:
-        if hide_legend is None:
-            hide_legend = False
-        if hide_x_title is None:
-            hide_x_title = False
-        if remove_plotly_bar is None:
-            remove_plotly_bar = False
-        if update_x_axes_tickformat is None:
-            update_x_axes_tickformat = False
-        if use_default_standoff is None:
-            use_default_standoff = False
-        if use_muplot_axes_color is None:
-            use_muplot_axes_color = False
-        if use_muplot_grid is None:
-            use_muplot_grid = False
-        if use_muplot_line_and_markers is None:
-            use_muplot_line_and_markers = False
-        if use_platform_background is None:
-            use_platform_background = False
+        settings = platform_plotting_settings
+
+    # TODO: Klären, wieso einiges platform default sind und andere nicht, die aber danach klingen:
+    # Remove plotly-bar, use_simple_white_template, use_default_standoff, use_platform_colorway
+    #
+    settings.hide_legend = hide_legend if hide_legend is not None else settings.hide_legend
+    settings.hide_x_title = hide_x_title if hide_x_title is not None else settings.hide_x_title
+    settings.remove_plotly_bar = (
+        remove_plotly_bar if remove_plotly_bar is not None else settings.remove_plotly_bar
+    )
+    settings.update_x_axes_tickformat = (
+        update_x_axes_tickformat
+        if update_x_axes_tickformat is not None
+        else settings.update_x_axes_tickformat
+    )
+    settings.use_default_standoff = (
+        use_default_standoff if use_default_standoff is not None else settings.use_default_standoff
+    )
+    settings.use_muplot_axes_color = (
+        use_muplot_axes_color
+        if use_muplot_axes_color is not None
+        else settings.use_muplot_axes_color
+    )
+    settings.use_muplot_grid = (
+        use_muplot_grid if use_muplot_grid is not None else settings.use_muplot_grid
+    )
+    settings.use_muplot_line_and_markers = (
+        use_muplot_line_and_markers
+        if use_muplot_line_and_markers is not None
+        else settings.use_muplot_line_and_markers
+    )
+    settings.use_platform_background = (
+        use_platform_background
+        if use_platform_background is not None
+        else settings.use_platform_background
+    )
 
     plot_target_settings = get_plot_target_settings()
 
-    if use_platform_colorway and plot_target_settings.plot_target_style.line_colors is not None:
-        fig.update_layout(colorway=plot_target_settings.plot_target_style.line_colors)
+    if use_platform_colorway:
+        if plot_target_settings.plot_target_style.line_colors is None:
+            logger.info("Cannot apply platform colorway as context does not deliver line_colors.")
+        else:
+            fig.update_layout(colorway=plot_target_settings.plot_target_style.line_colors)
 
     if use_simple_white_template:
         fig.update_layout({"template": "simple_white"})
 
-    if (
-        use_platform_background
-        and plot_target_settings.plot_target_style.background_color is not None
-    ):
-        fig.update_layout(
-            {
-                "paper_bgcolor": plot_target_settings.plot_target_style.background_color,
-                "plot_bgcolor": "rgba(0,0,0,0)",
-            }
-        )
+    if settings.use_platform_background:
+        if plot_target_settings.plot_target_style.background_color is None:
+            logger.info("Cannot apply platform colorway as context does not deliver line_colors.")
+        else:
+            fig.update_layout(
+                {
+                    "paper_bgcolor": plot_target_settings.plot_target_style.background_color,
+                    "plot_bgcolor": "rgba(0,0,0,0)",
+                }
+            )
 
-    if hide_legend:
+    if settings.hide_legend:
         fig.update_layout(showlegend=False)
 
-    if hide_x_title:
+    if settings.hide_x_title:
         fig.update_xaxes(title_text="")
 
-    if update_x_axes_tickformat and plot_target_settings.datetime_tick_format is not None:
-        fig.update_xaxes(tickformat=plot_target_settings.datetime_tick_format)
+    if settings.update_x_axes_tickformat:
+        if plot_target_settings.datetime_tick_format is None:
+            logger.info(
+                "Cannot apply update_x_axes_tickformat as context does not deliver datetime_tick_format."
+            )
+        else:
+            fig.update_xaxes(tickformat=plot_target_settings.datetime_tick_format)
 
-    if (
-        use_muplot_axes_color
-        and plot_target_settings.plot_target_style.axes_label_color is not None
-    ):
-        fig.update_xaxes(color=plot_target_settings.plot_target_style.axes_label_color)
-        fig.update_yaxes(color=plot_target_settings.plot_target_style.axes_label_color)
+    if use_muplot_axes_color:
+        if plot_target_settings.plot_target_style.axes_label_color is None:
+            logger.info(
+                "Cannot apply use_muplot_axes_color as context does not deliver axes_label_color."
+            )
+        else:
+            fig.update_xaxes(color=plot_target_settings.plot_target_style.axes_label_color)
+            fig.update_yaxes(color=plot_target_settings.plot_target_style.axes_label_color)
 
-    if use_default_standoff:
+    if settings.use_default_standoff:
         fig.update_yaxes(title_standoff=5)
 
-    if use_muplot_line_and_markers:
+    if settings.use_muplot_line_and_markers:
         try:
             fig.update_traces(
                 {
@@ -286,23 +329,27 @@ def plotly_fig_to_json_dict(  # noqa: PLR0912, PLR0915
             {"margin": {"autoexpand": True, "l": 0, "r": 0, "b": 0, "t": 0, "pad": 0}}
         )
 
-    if use_muplot_grid and plot_target_settings.plot_target_style.grid_color is not None:
-        grid_dict = {
-            "showgrid": True,
-            "gridcolor": plot_target_settings.plot_target_style.grid_color,
-            "zeroline": True,
-            "zerolinecolor": plot_target_settings.plot_target_style.grid_color,
-        }
-        fig.update_layout({"xaxis": grid_dict, "yaxis": grid_dict})
+    if settings.use_muplot_grid:
+        if plot_target_settings.plot_target_style.grid_color is None:
+            logger.info("Cannot apply use_muplot_grid as context does not deliver grid_color.")
+        else:
+            grid_dict = {
+                "showgrid": True,
+                "gridcolor": plot_target_settings.plot_target_style.grid_color,
+                "zeroline": True,
+                "zerolinecolor": plot_target_settings.plot_target_style.grid_color,
+            }
+            fig.update_layout({"xaxis": grid_dict, "yaxis": grid_dict})
 
     fig_dict_obj = _serialize_plotly_fig(fig)
+
     if "config" not in fig_dict_obj:
         fig_dict_obj["config"] = {}
 
     if add_config_settings and plot_target_settings.plot_target_locale is not None:
         fig_dict_obj["config"]["locale"] = plot_target_settings.plot_target_locale
 
-    if remove_plotly_bar:
+    if settings.remove_plotly_bar:
         fig_dict_obj["config"]["displayModeBar"] = False
 
     if remove_plotly_icon:
