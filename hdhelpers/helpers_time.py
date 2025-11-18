@@ -9,7 +9,6 @@ import pandas as pd
 import pytz
 from pydantic import ValidationError
 
-from hdhelpers.exceptions import HelperException
 from hdhelpers.plot_target_settings import get_plot_target_settings
 from hdhelpers.structure_metadata import SeriesMetadata
 
@@ -50,8 +49,8 @@ def _estimate_plot_interval(
     """Get the start timestamp hierarchically
 
     Will check for an explicit input timestamp first, then check PlotTargetSettings, then the series
-     metadata, and if both are None or not present, will take the first series entry as start
-     timestamp. If the series is also empty, None is returned.
+    metadata, and if both are None or not present, will take the first series entry as start
+    timestamp. If the series is also empty, None is returned.
     """
     settings_entry = "datetime_x_axes_range_start"
     metadata_func = get_start_from_metadata
@@ -151,40 +150,6 @@ def get_end_from_metadata(series) -> pd.Timestamp | None:
     except ValidationError:
         logger.info("Series not in standard format, not able to get end of requested interval.")
         return None
-
-
-# TODO: gemeinsame Funktion mit _get_start_timestamp (sehr viel Code-Duplikation + gleiche Logik)
-def _get_end_timestamp(series: pd.Series, timestamp: datetime | str | None) -> pd.Timestamp | None:
-    """Get the end timestamp hierarchically
-
-    Will check for an explicit input timestamp first, then check PlotTargetSettings, then the series
-    metadata, and if both are None or not present, will take the last series entry as end timestamp.
-    If the series is also empty, None is returned.
-    """
-    if timestamp is not None:
-        return _to_pd_timestamp(timestamp)
-
-    plot_target_settings = get_plot_target_settings()
-
-    timestamp = plot_target_settings.datetime_x_axes_range_end
-
-    if timestamp is None:
-        key = "ref_interval_end_timestamp"
-        try:
-            timestamp = series.attrs.get("single_metric_dataset_metadata", {})[key]
-        except KeyError as exc:
-            msg = f"""Expected key structure not found:
-             attrs["single_metric_dataset_metadata"]["{key}"]"""
-            logger.warning(msg=msg, exc_info=exc)
-            if len(series) > 0:
-                timestamp = series.index[-1]
-                try:
-                    timestamp = _to_pd_timestamp(timestamp)
-                    return timestamp
-                except HelperException:
-                    return None
-
-    return _to_pd_timestamp(timestamp)
 
 
 @singledispatch
