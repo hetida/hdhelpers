@@ -13,7 +13,7 @@ from hdhelpers.helpers_time import estimate_plot_end, estimate_plot_start, modif
 from hdhelpers.plot_target_settings import PlotTargetStyle, get_plot_target_settings
 from hdhelpers.structure_metadata import SeriesMetadata
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("hdhelpers")
 
 
 class PlottingSettings(BaseModel):
@@ -44,7 +44,7 @@ default_plotting_settings = PlottingSettings()
 
 
 # TODO: Klären warum das eine explonierte Funktion ist, wieso hängt sie nicht an
-def get_colors_from_plot_target_settings() -> PlotTargetStyle:
+def get_perferred_colors() -> PlotTargetStyle:
     """Get thematically coherent colors for customizing plots
 
     Most color uses are already covered by the default settings of plotly_fig_to_json_dict().
@@ -57,7 +57,7 @@ def get_colors_from_plot_target_settings() -> PlotTargetStyle:
     return plot_target_settings.plot_target_style
 
 
-def get_locale_from_plot_target_settings() -> str | None:
+def get_locale() -> str | None:
     """Get language for customizing text elements in plots
 
     Axis ticks are already covered by the default settings of plotly_fig_to_json_dict().
@@ -100,6 +100,7 @@ def _pad_to_timestamp(
         ) from exc
 
 
+# TODO: Namen
 def get_and_pad_start_and_end_timestamp(
     series: pd.Series,
     timezone: str | None = None,
@@ -149,8 +150,8 @@ def get_y_axis_label(series: pd.Series, default_title: str = "", default_unit: s
 
     try:
         meta_data = SeriesMetadata(**series.attrs)  # type: ignore
-        unit = meta_data.get_unit()
-        title = meta_data.get_display_name()
+        unit = meta_data.get_unit()["value"]
+        title = meta_data.get_display_name()["value"]
 
     except ValidationError as exc:
         msg = """Metadata of series does not correspond to the standard format.

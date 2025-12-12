@@ -1,7 +1,7 @@
 {
     "dataset_metadata": {
     "ref_interval_start_timestamp": "2025-11-05T13:28:00Z",
-    "ref_interval_end_timestamp": "2025-11-05T13:28:00Z",
+    "ref_interval_end_timestamp": "2025-11-06T13:28:00Z",
     "ref_interval_type": "closed",
     "ref_metric": "Wasserstand Ruhr Meschede",
     "ref_data_frequency": null,

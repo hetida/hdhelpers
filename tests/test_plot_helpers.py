@@ -8,8 +8,8 @@ from hdhelpers.exceptions import HelperException, InsufficientPlottingData
 from hdhelpers.helpers_plot import (
     _pad_to_timestamp,
     get_and_pad_start_and_end_timestamp,
-    get_colors_from_plot_target_settings,
-    get_locale_from_plot_target_settings,
+    get_locale,
+    get_perferred_colors,
     get_y_axis_label,
     plotly_fig_to_json_dict,
 )
@@ -57,7 +57,7 @@ def test_get_y_axis_label_default():
 def test_get_y_axis_labeltitle_with_unit_metadata(series_attrs):
     series = pd.Series()
     series.attrs = series_attrs
-    series.attrs["single_metric_metadata"]["structured_metadata"]["metric"][
+    series.attrs["single_metric_metadata"]["structured_metadata"]["value_dimensions"]["value"][
         "short_display_name"
     ] = "name_from_metadata"
     series.attrs["single_metric_metadata"]["structured_metadata"]["value_dimensions"]["value"][
@@ -70,7 +70,7 @@ def test_get_y_axis_labeltitle_with_unit_metadata(series_attrs):
 def test_get_no_colors_from_plot_target_settings():
     plot_target_settings_mock = MagicMock(return_value=PlotTargetSettings())
     with patch("hdhelpers.helpers_plot.get_plot_target_settings", plot_target_settings_mock):
-        style_object = get_colors_from_plot_target_settings()
+        style_object = get_perferred_colors()
         assert isinstance(style_object, PlotTargetStyle)
 
 
@@ -83,7 +83,7 @@ def test_get_one_color_from_plot_target_settings():
         )
     )
     with patch("hdhelpers.helpers_plot.get_plot_target_settings", plot_target_settings_mock):
-        style_object = get_colors_from_plot_target_settings()
+        style_object = get_perferred_colors()
         assert isinstance(style_object, PlotTargetStyle)
 
 
@@ -105,28 +105,28 @@ def test_get_all_colors_from_plot_target_settings():
         )
     )
     with patch("hdhelpers.helpers_plot.get_plot_target_settings", plot_target_settings_mock):
-        style_object = get_colors_from_plot_target_settings()
+        style_object = get_perferred_colors()
         assert isinstance(style_object, PlotTargetStyle)
 
 
 def test_get_no_locale_from_plot_target_settings():
     plot_target_settings_mock = MagicMock(return_value=PlotTargetSettings(plot_target_locale=None))
     with patch("hdhelpers.helpers_plot.get_plot_target_settings", plot_target_settings_mock):
-        locale = get_locale_from_plot_target_settings()
+        locale = get_locale()
         assert isinstance(locale, str | None)
 
 
 def test_get_empty_locale_from_plot_target_settings():
     plot_target_settings_mock = MagicMock(return_value=PlotTargetSettings(plot_target_locale=""))
     with patch("hdhelpers.helpers_plot.get_plot_target_settings", plot_target_settings_mock):
-        locale = get_locale_from_plot_target_settings()
+        locale = get_locale()
         assert isinstance(locale, str | None)
 
 
 def test_get_german_locale_from_plot_target_settings():
     plot_target_settings_mock = MagicMock(return_value=PlotTargetSettings(plot_target_locale="de"))
     with patch("hdhelpers.helpers_plot.get_plot_target_settings", plot_target_settings_mock):
-        locale = get_locale_from_plot_target_settings()
+        locale = get_locale()
         assert isinstance(locale, str | None)
 
 

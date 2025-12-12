@@ -12,7 +12,7 @@ from pydantic import ValidationError
 from hdhelpers.plot_target_settings import get_plot_target_settings
 from hdhelpers.structure_metadata import SeriesMetadata
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("hdhelpers")
 
 
 def _to_pd_timestamp(
@@ -126,7 +126,7 @@ def get_start_from_metadata(series: pd.Series) -> pd.Timestamp | None:
     """
     try:
         meta_data = SeriesMetadata(**series.attrs)  # type: ignore
-        timestamp = meta_data.get_start_requested_interval()
+        timestamp = meta_data.get_start()
         return _to_pd_timestamp(timestamp)
     except ValidationError:
         logger.info("Series not in standard format, not able to get start of requested interval.")
@@ -145,7 +145,7 @@ def get_end_from_metadata(series) -> pd.Timestamp | None:
     """
     try:
         meta_data = SeriesMetadata(**series.attrs)
-        timestamp = meta_data.get_end_requested_interval()
+        timestamp = meta_data.get_end()
         return _to_pd_timestamp(timestamp)
     except ValidationError:
         logger.info("Series not in standard format, not able to get end of requested interval.")

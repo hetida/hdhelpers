@@ -2,6 +2,7 @@
 
 import logging
 from typing import Literal
+from abc import ABC, abstractmethod
 
 from pydantic import BaseModel, Field
 
@@ -36,16 +37,24 @@ class StructuredMetadata(BaseModel):
 class SingleMetricMetadata(BaseModel):
     structured_metadata: StructuredMetadata
 
-    def get_display_name(self) -> str | None:
-        return self.structured_metadata.metric.short_display_name
-
-    def get_unit(self) -> str | None:
+    def _get_from_value(self, key: str) -> dict[str, str | None]:
+        entry_from_value = None
         try:
             value = self.structured_metadata.value_dimensions.get("value")
-            return value.unit  # type: ignore[union-attr]
+            entry_from_value = getattr(value, key)
         except AttributeError:
             logger.info("No unit found in metadata.")
-            return None
+
+        return {"value": entry_from_value}
+
+    def get_display_name(self) -> dict[str, str | None]:
+        return self._get_from_value("short_display_name")
+
+    def get_name(self) -> dict[str, str | None]:
+        return self._get_from_value("name")
+
+    def get_unit(self) -> dict[str, str | None]:
+        return self._get_from_value("unit")
 
 
 class DatasetMetadata(BaseModel):
@@ -74,35 +83,64 @@ class DatasetMetadata(BaseModel):
         return self.ref_interval_end_timestamp
 
 
-class SeriesMetadata(BaseModel):
+
+class MetaDataInterface(BaseModel, ABC):
+    @abstractmethod
+    def get_unit(self) -> dict[str, str | None]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_display_name(self) -> dict[str, str | None]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_name(self) -> dict[str, str | None]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_start(self) -> str:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_end(self) -> str:
+        raise NotImplementedError
+
+
+class SeriesMetadata(MetaDataInterface):
     dataset_metadata: DatasetMetadata
     single_metric_metadata: SingleMetricMetadata
 
-    def get_unit(self) -> str | None:
+    def get_unit(self) -> dict[str, str | None]:
         return self.single_metric_metadata.get_unit()
 
-    def get_display_name(self) -> str | None:
+    def get_name(self) -> dict[str, str | None]:
+        return self.single_metric_metadata.get_name()
+
+    def get_display_name(self) -> dict[str, str | None]:
         return self.single_metric_metadata.get_display_name()
 
-    def get_start_requested_interval(self) -> str:
+    def get_start(self) -> str:
         return self.dataset_metadata.get_requested_interval_start()
 
-    def get_end_requested_interval(self) -> str:
+    def get_end(self) -> str:
         return self.dataset_metadata.get_requested_interval_end()
 
 
-class MTSMetadata(BaseModel):
+class MTSMetadata(MetaDataInterface):
     dataset_metadata: DatasetMetadata
     by_metric: dict[str, SingleMetricMetadata]
 
-    def get_unit(self):
-        return {key: value.get_unit() for key, value in self.by_metric.items()}
+    def get_unit(self) -> dict[str, str | None]:
+        return {key: value.get_unit()["value"] for key, value in self.by_metric.items()}
+
+    def get_name(self) -> dict[str, str | None]:
+        return {key: value.get_name()["value"] for key, value in self.by_metric.items()}
 
     def get_display_name(self) -> dict[str, str | None]:
-        return {key: value.get_display_name() for key, value in self.by_metric.items()}
+        return {key: value.get_display_name()["value"] for key, value in self.by_metric.items()}
 
-    def get_start_requested_start(self):
+    def get_start(self) -> str:
         return self.dataset_metadata.get_requested_interval_start()
 
-    def get_end_requested_start(self):
+    def get_end(self) -> str:
         return self.dataset_metadata.get_requested_interval_end()
