@@ -2,7 +2,7 @@
 
 import logging
 from typing import Literal
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
 from pydantic import BaseModel, Field
 
@@ -84,7 +84,8 @@ class DatasetMetadata(BaseModel):
 
 
 
-class MetaDataInterface(BaseModel, ABC):
+class MetaDataInterface(BaseModel):
+
     @abstractmethod
     def get_unit(self) -> dict[str, str | None]:
         raise NotImplementedError

@@ -17,63 +17,65 @@
         "new_data_invalidation_date": null
     },
     "by_metric": {
-        "key1": {
-            "structured_metadata": {
-                "metric": {
+        "metric1": {
+            "metric": {
                 "name": "Wasserstand Ruhr Meschede",
                 "display_name": null,
                 "short_display_name": null,
                 "description": null,
-                "unit": "m³/s",
                 "value_data_type": null,
                 "external_id": "wasserstand.ruhr.meschede2",
                 "channel_id": "303fc49a-b515-4fbc-b4fd-70594f053f58"
                 },
-                "inherited": {
+            "inherited": {
                 "Stationsname": "Meschede (Ruhr)",
                 "Latitude": 51.347759,
                 "Longitude": 8.280575
-                },
-                "value_dimensions": {
-                "value": {
-                    "name": "Wasserstand Ruhr Meschede",
+            },
+            "value_dimensions": {
+                "value_dim1": {
+                    "name": "Wasserstand Ruhr Meschede v1",
                     "display_name": null,
                     "short_display_name": null,
                     "description": null,
                     "unit": "m³/s",
                     "value_data_type": "float"
-                    }
+                },
+                "value_dim2": {
+                    "name": "Wasserstand Ruhr Meschede v2",
+                    "display_name": null,
+                    "short_display_name": null,
+                    "description": null,
+                    "unit": "m³/s",
+                    "value_data_type": "float"
                 }
             }
         },
-        "key2": {
-            "structured_metadata": {
-                "metric": {
+        "metric2": {
+            "metric": {
                 "name": "Wasserstand Ruhr Meschede",
                 "display_name": null,
                 "short_display_name": null,
                 "description": null,
-                "unit": "m³/h",
                 "value_data_type": null,
                 "external_id": "wasserstand.ruhr.meschede2",
                 "channel_id": "303fc49a-b515-4fbc-b4fd-70594f053f59"
-                },
-                "inherited": {
+            },
+            "inherited": {
                 "Stationsname": "Meschede (Ruhr)",
                 "Latitude": 51.347759,
                 "Longitude": 8.280575
-                },
-                "value_dimensions": {
-                "value": {
+            },
+            "value_dimensions": {
+                "value_dim1": {
                     "name": "Wasserstand Ruhr Meschede (2)",
                     "display_name": null,
                     "short_display_name": null,
                     "description": null,
                     "unit": "m³/h",
                     "value_data_type": "float"
-                    }
                 }
-            }
+             }
         }
     }
 }
