@@ -29,7 +29,7 @@ class Metric(BaseModel):
 
 
 class StructuredMetadata(BaseModel):
-    metric: Metric
+    metric: Metric = Field(default=Metric())
     value_dimensions: dict[str, Value] = Field(default=defaultdict(lambda: None))
     inherited: dict = Field(default=defaultdict(lambda: None))
     hierarchy: dict = Field(default=defaultdict(lambda: None))
@@ -51,7 +51,7 @@ class StructuredMetadata(BaseModel):
         return entry_from_metric
 
     def _get_from_value(self, key: str) -> dict[str, str]:
-        value_names = {}
+        value_names = defaultdict(lambda: None)
         for dim in self._get_value_dims():
             value_names[dim] = self._get_from_value_single(key)
         return value_names

@@ -1,24 +1,43 @@
 import logging
 import datetime
 from collections import defaultdict
+from typing import Any
 
 import pandas as pd
-from pydantic import ValidationError
+
 
 from hdhelpers.structure_metadata import MTSMetadata, SeriesMetadata
+from hdhelpers.exceptions import HelperException
 
 logger = logging.getLogger("hdhelpers")
 
-def _load_mts(timeseries_object: pd.DataFrame | pd.Series) -> MTSMetadata | SeriesMetadata:
-    try:
-        return SeriesMetadata(**timeseries_object.attrs) # type: ignore[misc]
-    except ValidationError:
-        try:
-            logger.debug("object does not correspond to series metadata, trying mts-metadata")
-            return MTSMetadata(**timeseries_object.attrs) # type: ignore[misc]
-        except ValidationError as exc2:
-            logger.debug("object does not correspond to trying mts-metadata")
-            raise ValidationError("Metadata does not follow convention") from exc2
+def _check_series(timeseries_object: Any):
+    if not isinstance(timeseries_object, pd.Series):
+        raise TypeError("Please use pandas Series for this function.")
+
+def _check_mts(timeseries_object: Any):
+    if not isinstance(timeseries_object, pd.DataFrame):
+        raise TypeError("Please use pandas Dataframe for this function.")
+    if (timeseries_object.columns not in ["timestamp", "value", "metric"]).any():
+        raise HelperException("Please use valid MTS.")
+
+def _load_metadata_from_series(timeseries_object: pd.Series) -> SeriesMetadata:
+    _check_series(timeseries_object)
+    return SeriesMetadata(**timeseries_object.attrs) # type: ignore[misc]
+
+
+def _load_metadata_from_mts(timeseries_object: pd.DataFrame) -> MTSMetadata:
+    _check_mts(timeseries_object)
+    return MTSMetadata(**timeseries_object.attrs) # type: ignore[misc]
+
+
+def _load_metadata(timeseries_object: pd.DataFrame | pd.Series) -> MTSMetadata | SeriesMetadata:
+    if isinstance(timeseries_object, pd.Series):
+        return _load_metadata_from_series(timeseries_object)
+    if isinstance(timeseries_object, pd.Series):
+        return _load_metadata_from_mts(timeseries_object)
+    raise TypeError("Please use pandas Series or Dataframe for loading metadata.")
+
 
 ## Metadata Dataset
 def get_queried_interval(timeseries_object: pd.Series | pd.DataFrame) -> tuple[datetime.datetime|None, datetime.datetime|None]:
@@ -45,7 +64,7 @@ def get_queried_interval(timeseries_object: pd.Series | pd.DataFrame) -> tuple[d
         ...    get_queried_interval(series)
         datetime.datetime(2025,11,5,31,28, tzinfo=datetime.UTC), datetime.datetime(2025,11,6,31,28, tzinfo=datetime.UTC)
     """
-    metadata = _load_mts(timeseries_object)
+    metadata = _load_metadata(timeseries_object)
 
     start = datetime.datetime.fromisoformat(metadata.get_start())  if metadata.get_start() else None
     end = datetime.datetime.fromisoformat(metadata.get_end())  if metadata.get_end() else None
@@ -84,7 +103,8 @@ def get_series_unit(timeseries_object: pd.Series) -> str | None:
     ...    get_series_unit(series)
     "m/s"
     """
-    return None
+    metadata = _load_metadata_from_series(timeseries_object)
+    return metadata.get_unit()
 
 def get_series_name(timeseries_object: pd.Series) -> str | None:
     """Gets name of the series from metadata
@@ -113,13 +133,14 @@ def get_series_name(timeseries_object: pd.Series) -> str | None:
     ...    get_series_name(series)
     "name_of_series"
     >>> attr = { "by_metric": { "series": {"metric": {"name": "name_of_series"}},
-    ...                                   {"value_dimensions": {"value": {"name": "value_name_of_series"}}}}}
+    ...                                   "value_dimensions": {"value": {"name": "value_name_of_series"}}}}
     ...    series = pd.Series()
     ...    series.attrs = attr
     ...    get_series_name(series)
-    "value_name_of_series"
+    "name_of_series"
     """
-    return None
+    metadata = _load_metadata_from_series(timeseries_object)
+    return metadata.get_name()
 
 def get_series_display_name(timeseries_object: pd.Series) -> str | None:
     """Gets display name of the series from metadata
@@ -143,7 +164,8 @@ def get_series_display_name(timeseries_object: pd.Series) -> str | None:
     ...    get_series_display_name(series)
     "display_name_of_series"
     """
-    return None
+    metadata = _load_metadata_from_series(timeseries_object)
+    return metadata.get_display_name()
 
 
 def get_series_short_display_name(timeseries_object: pd.Series) -> str | None:
@@ -168,7 +190,8 @@ def get_series_short_display_name(timeseries_object: pd.Series) -> str | None:
     ...    get_series_short_display_name(series)
     "short_display_name_of_series"
     """
-    return None
+    metadata = _load_metadata_from_series(timeseries_object)
+    return metadata.get_short_display_name()
 
 
 # MTS Metric

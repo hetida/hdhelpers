@@ -21,8 +21,8 @@
         "series": {
             "metric": {
                 "name": "Wasserstand Ruhr Meschede",
-                "display_name": null,
-                "short_display_name": null,
+                "display_name": "Wasserstand",
+                "short_display_name": "W",
                 "description": null,
                 "value_data_type": null,
                 "external_id": "wasserstand.ruhr.meschede2",
@@ -36,8 +36,8 @@
             "value_dimensions": {
             "value": {
                 "name": "Wasserstand Ruhr Meschede",
-                "display_name": null,
-                "short_display_name": null,
+                "display_name": "Wasserstand value",
+                "short_display_name": "W value",
                 "description": null,
                 "unit": "m³/s",
                 "value_data_type": "float"
