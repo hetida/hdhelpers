@@ -1,6 +1,24 @@
-from collections import defaultdict
+import logging
 import datetime
+from collections import defaultdict
+
 import pandas as pd
+from pydantic import ValidationError
+
+from hdhelpers.structure_metadata import MTSMetadata, SeriesMetadata
+
+logger = logging.getLogger("hdhelpers")
+
+def _load_mts(timeseries_object: pd.DataFrame | pd.Series) -> MTSMetadata | SeriesMetadata:
+    try:
+        return SeriesMetadata(**timeseries_object.attrs) # type: ignore[misc]
+    except ValidationError:
+        try:
+            logger.debug("object does not correspond to series metadata, trying mts-metadata")
+            return MTSMetadata(**timeseries_object.attrs) # type: ignore[misc]
+        except ValidationError as exc2:
+            logger.debug("object does not correspond to trying mts-metadata")
+            raise ValidationError("Metadata does not follow convention") from exc2
 
 ## Metadata Dataset
 def get_queried_interval(timeseries_object: pd.Series | pd.DataFrame) -> tuple[datetime.datetime|None, datetime.datetime|None]:
@@ -20,14 +38,19 @@ def get_queried_interval(timeseries_object: pd.Series | pd.DataFrame) -> tuple[d
         >>> attr = {
         ...        "dataset_metadata": {
         ...        "ref_interval_start_timestamp": "2025-11-05T13:28:00Z",
-        ...        "ref_interval_end_timestamp": "2025-11-06T13:28:00Z"
+        ...        "ref_interval_end_timestamp": "2025-11-06T13:28:00Z" }
         ...    }
         ...    series = pd.Series()
         ...    series.attrs = attr
         ...    get_queried_interval(series)
         datetime.datetime(2025,11,5,31,28, tzinfo=datetime.UTC), datetime.datetime(2025,11,6,31,28, tzinfo=datetime.UTC)
     """
-    return None, None
+    metadata = _load_mts(timeseries_object)
+
+    start = datetime.datetime.fromisoformat(metadata.get_start())  if metadata.get_start() else None
+    end = datetime.datetime.fromisoformat(metadata.get_end())  if metadata.get_end() else None
+
+    return start, end
 
 ## Series
 def get_series_unit(timeseries_object: pd.Series) -> str | None:

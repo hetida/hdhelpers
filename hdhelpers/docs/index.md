@@ -1,49 +1,5 @@
-# hdhelpers
-## What is hdhelpers?
-hdhelpers is a package designed for and included in the standard installation of the [hetida designer](https://github.com/hetida/hetida-designer).
 
-It contains functions that streamline plotting components, especially those that are used in the [hetida platform](https://hetida.io/), by
-* accessing series metadata that complies with the hetida platform metadata scheme
-* accessing metadata that the hetida platform writes into the hetida designer's `plot_target_settings` context variable
-* adjusting the timezone of timestamps, series, and dataframes
-* providing toggleable standardized styling options and json serialization for plotly plots
-
-## Getting Started with hdhelpers
-Since the intended use of the hdhelpers package is as a part of the hetida designer, it is highly recommended to follow the [hetida designer setup guide](https://github.com/hetida/hetida-designer/blob/release/README.md#getting-started-with-hetida-designer).
-
-For a specific example of how to use hdhelpers functionality in a hetida designer component, see [Example](#example).
-
-## Developing for hdhelpers
-For dependency management and venv setup, building and publishing, [uv](https://docs.astral.sh/uv/) is used.
-
-### Setting up a Development Environment
-1) Create a virtual environment with `uv venv`. This will create a hidden `.venv` directory.
-2) Activate the virtual environment via `source .venv/bin/activate`
-3) Run `uv sync` to install all dependencies given in pyproject.toml.
-4) In case you need to add a new dependency, do so via `uv add <new_dependency>`. That way, uv finds versions of all dependencies that are compatible with each other.
-
-To install hdhelpers in editable mode in your venv please run `uv pip install -e .`
-### Code Quality
-Once you are done writing your code, including unit tests, use `./run check` to see if your code quality is sufficient.
-
-To use your local hdhelpers code in a hetida designer development setup, use the nix-shell setup by executing the following commands:
-```
-nix-shell --pure
-overmind s
-```
-
-### Build, Publish, and Release
-Before you build the package, set an appropriate version number in `pyproject.toml` that matches the version number in the hedita designer `VERSION` file.
-
-To build the package and delete any files that are currently in the `dist` subdirectory, execute `rm -r dist && uv build`. [Hatchling](https://pypi.org/project/hatchling/), the build backend specified in `pyproject.toml`, will build a new sdist and wheel in the `dist` subdirectory.
-
-To publish the build from the `dist` subdirectory to PyPI, use `uv publish`. To do so, you need a PyPI account with a token to enter in the command line as password following the username "\_\_token__", and you need maintainer or owner access to the [hdhelpers PyPI project](https://pypi.org/project/hdhelpers/).
-
-The hetida designer docker compose setup installs hdhelpers from [PyPI](https://pypi.org) as it does with any dependency listed in `runtime/requirements.in`.
-
-Next time your hetida designer docker compose dev setup builds the runtime container, it will install the hdhelpers version that you just deployed.
-
- <a name="example"></a> Example
+## <a name="example"></a> Example
 Let's say we want to plot a timeseries with data points "2020-01-01T08:10:00+00:00": 1, "2020-01-01T08:15:00+00:00": 2, "2020-01-01T08:16:00+00:00": 3, "2020-01-01T08:17:00+00:00": 4 for an interval "2020-01-01T08:10:00.000Z" to "2020-01-01T08:20:00.000Z". As a direct provisioning input wiring, the json would look like this:
 ```
 {

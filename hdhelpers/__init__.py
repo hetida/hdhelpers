@@ -1,4 +1,6 @@
 from hdhelpers.exceptions import HelperException, InsufficientPlottingData
+from hdhelpers.helpers_metadata_interface import get_queried_interval
+
 from hdhelpers.helpers_metadata import (
     get_display_name,
     get_end,
@@ -22,6 +24,7 @@ from hdhelpers.plot_target_settings import (
 )
 from hdhelpers.structure_metadata import MTSMetadata, SeriesMetadata
 
+
 __all__ = [
     "HelperException",
     "InsufficientPlottingData",
@@ -42,4 +45,5 @@ __all__ = [
     "get_display_name",
     "get_start",
     "get_end",
+    "get_queried_interval",
 ]

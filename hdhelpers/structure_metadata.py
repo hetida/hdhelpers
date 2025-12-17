@@ -5,7 +5,7 @@ from collections import defaultdict
 from typing import Literal
 
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 logger = logging.getLogger(__name__)
 
@@ -20,9 +20,9 @@ class Value(BaseModel):
 
 
 class Metric(BaseModel):
-    name: str
-    external_id: str
-    channel_id: str
+    name: str | None = Field(default=None)
+    external_id: str | None = Field(default=None)
+    channel_id: str | None = Field(default=None)
     display_name: str | None = Field(default=None)
     short_display_name: str | None = Field(default=None)
     description: str | None = Field(default=None)
@@ -31,12 +31,8 @@ class Metric(BaseModel):
 class StructuredMetadata(BaseModel):
     metric: Metric
     value_dimensions: dict[str, Value] = Field(default=defaultdict(lambda: None))
-    inherited: dict = Field(default={})
-    hierarchy: dict = Field(default={})
-
-
-class SingleMetricMetadata(BaseModel):
-    structured_metadata: StructuredMetadata
+    inherited: dict = Field(default=defaultdict(lambda: None))
+    hierarchy: dict = Field(default=defaultdict(lambda: None))
 
     def _get_value_dims(self) -> list[str]:
         value_dims = []
@@ -47,7 +43,7 @@ class SingleMetricMetadata(BaseModel):
     def _get_from_metric(self, key: str) -> str | None:
         entry_from_metric = None
         try:
-            metric = self.structured_metadata.metric
+            metric = self.metric
             entry_from_metric = getattr(metric, key)
         except AttributeError:
             logger.info("Metadata not in standard format, returning None")
@@ -63,13 +59,12 @@ class SingleMetricMetadata(BaseModel):
     def _get_from_value_single(self, key: str, dim: str = "value") -> str | None:
         entry_from_value = None
         try:
-            value = self.structured_metadata.value_dimensions.get(dim)
+            value = self.value_dimensions.get(dim)
             entry_from_value = getattr(value, key)
         except AttributeError:
             logger.info("Metadata not in standard format, returning None")
 
         return entry_from_value
-
 
     def get_metric_name(self) -> str | None:
         return self._get_from_metric("name")
@@ -93,14 +88,10 @@ class SingleMetricMetadata(BaseModel):
         return self._get_from_value("unit")
 
 
-
-
 class DatasetMetadata(BaseModel):
-    ref_interval_start_timestamp: str
-    ref_interval_end_timestamp: str
-    ref_interval_type: Literal[
-        "left_closed", "right_open", "right_closed", "left_open", "closed", "open"
-    ]
+    ref_interval_start_timestamp: str | None = Field(default=None)
+    ref_interval_end_timestamp: str | None = Field(default=None)
+    ref_interval_type: Literal["left_closed", "right_open", "right_closed", "left_open", "closed", "open"] | None = Field(default=None)
     ref_metric: str | None = Field(default=None)
     ref_data_frequency: str | None = Field(default=None)
     ref_data_frequency_offset: str | None = Field(default=None)
@@ -114,50 +105,66 @@ class DatasetMetadata(BaseModel):
     invalidation_timestamp: str | None = Field(default=None)
     new_data_invalidation_date: str | None = Field(default=None)
 
-    def get_requested_interval_start(self) -> str:
+    def get_requested_interval_start(self) -> str | None:
         return self.ref_interval_start_timestamp
 
-    def get_requested_interval_end(self) -> str:
+    def get_requested_interval_end(self) -> str | None:
         return self.ref_interval_end_timestamp
 
 
 
 
 class SeriesMetadata(BaseModel):
-    dataset_metadata: DatasetMetadata
-    by_metric: dict[str, SingleMetricMetadata]
+    dataset_metadata: DatasetMetadata = Field(default=DatasetMetadata())
+    by_metric: dict[str, StructuredMetadata] = Field(default=defaultdict(lambda: StructuredMetadata()))
+    METRIC_KEY: str = "series"
+    VALUE_KEY:str = "value"
+
+    @computed_field
+    @property
+    def metric(self) -> StructuredMetadata:
+        return self.by_metric[self.METRIC_KEY]
 
     def get_unit(self) -> str | None:
-        return self.single_metric_metadata.get_unit()
+        return self.metric.get_value_unit()[self.VALUE_KEY]
 
-    def get_name(self) -> dict[str, str | None]:
-        return self.single_metric_metadata.get_name()
+    def get_name(self) -> str | None:
+        name = self.metric.get_metric_name()
+        if not name:
+            name = self.metric.get_value_name()[self.VALUE_KEY]
+        return name
 
-    def get_display_name(self) -> dict[str, str | None]:
-        return self.single_metric_metadata.get_display_name()
+    def get_display_name(self) -> str | None:
+        name = self.metric.get_metric_display_name()
+        if not name:
+            name = self.metric.get_value_display_name()[self.VALUE_KEY]
+        if not name:
+            name = self.get_name()
+        return name
 
-    def get_short_display_name(self) -> dict[str, str | None]:
-        return self.single_metric_metadata.get_display_name()
+    def get_short_display_name(self) -> str | None:
+        name = self.metric.get_metric_short_display_name()
+        if not name:
+            name = self.metric.get_value_short_display_name()[self.VALUE_KEY]
+        if not name:
+            name = self.get_display_name()
+        if not name:
+            name = self.get_name()
+        return name
 
-    def get_start(self) -> datetime.datetime:
+    def get_start(self) -> str:
         return self.dataset_metadata.get_requested_interval_start()
 
-    def get_end(self) -> datetime.datetime:
+    def get_end(self) -> str:
         return self.dataset_metadata.get_requested_interval_end()
 
 
 class MTSMetadata(BaseModel):
-    dataset_metadata: DatasetMetadata
-    by_metric: dict[str, SingleMetricMetadata]
+    dataset_metadata: DatasetMetadata = Field(default=DatasetMetadata())
+    by_metric: dict[str, StructuredMetadata] = Field(default=defaultdict(lambda: StructuredMetadata()))
 
     def get_unit(self) -> dict[str, str | None]:
-        return {key: value.get_unit()["value"] for key, value in self.by_metric.items()}
-
-    def get_name(self) -> dict[str, str | None]:
-        return {key: value.get_name()["value"] for key, value in self.by_metric.items()}
-
-    def get_display_name(self) -> dict[str, str | None]:
-        return {key: value.get_display_name()["value"] for key, value in self.by_metric.items()}
+        return {key: value.get_value_unit()["value"] for key, value in self.by_metric.items()}
 
     def get_start(self) -> str:
         return self.dataset_metadata.get_requested_interval_start()
