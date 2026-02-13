@@ -16,7 +16,8 @@ requires-python = ">=3.13"
 dependencies = [
     "pandas>=2,<3",
     "plotly>=6,<7",
-    "pydantic>=2,<3"
+    "pydantic>=2,<3",
+    "glom>25,<26"
 ]
 license = {file = "LICENSE"}
 
