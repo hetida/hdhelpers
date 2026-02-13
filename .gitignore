@@ -16,3 +16,6 @@ __pycache__
 *.pyc
 *.pyo
 launch.json
+requirements*.txt
+requirements*.in
+
