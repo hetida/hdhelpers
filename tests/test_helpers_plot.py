@@ -62,7 +62,7 @@ def test_get_y_axis_labeltitle_with_unit_metadata():
                 "value_dimensions": {
                     "value": {
                         "short_display_name": "name_from_metadata",
-                        "unit": "unit_from_metadata"
+                        "unit": "unit_from_metadata",
                     }
                 }
             }

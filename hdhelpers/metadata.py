@@ -9,14 +9,18 @@ and try to provide backwards compatible access to metadata for different version
 of the metadata conventions or simpler metadata structures.
 """
 
-from collections import defaultdict
 import datetime
+from collections import defaultdict
 from typing import Any, cast
 
-from glom import Coalesce, Spec, glom
 import pandas as pd
+from glom import Coalesce, Spec, glom
 
-from hdhelpers.metadata_private import _get_value_dimension_info, _spec_by_metric_key, _spec_not_none
+from hdhelpers.metadata_private import (
+    _get_value_dimension_info,
+    _spec_by_metric_key,
+    _spec_not_none,
+)
 
 
 def get_units(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, str | None]]:
@@ -62,7 +66,6 @@ def get_short_display_names(
 
 def get_measurements(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, str | None]]:
     return _get_value_dimension_info(multitsframe, "measurement")
-
 
 
 def get_metric_info(multitsframe: pd.DataFrame, metric_info: str | Spec) -> defaultdict[str, Any]:
@@ -128,7 +131,8 @@ def get_metric_info(multitsframe: pd.DataFrame, metric_info: str | Spec) -> defa
 def extract_series_metric_key(metadata: Any) -> Any:
     return glom(metadata, Coalesce("dataset_metadata.single_metric", default="series"))
 
-def extract_from_metadata(metadata: Any, key: str, default: str|None = None) -> Any:
+
+def extract_from_metadata(metadata: Any, key: str, default: str | None = None) -> Any:
     return glom(metadata, Coalesce(f"dataset_metadata.{key}", default=default))
 
 
@@ -143,7 +147,9 @@ def get_series_info(series: pd.Series, value_dim_info: str | Spec) -> Any:
     this value dimension.
     """
     series_metric_key = extract_from_metadata(series.attrs, key="single_metric", default="series")
-    from_new_convention = _get_value_dimension_info(series, value_dim_info).get(series_metric_key, {}).get("value", None)
+    from_new_convention = (
+        _get_value_dimension_info(series, value_dim_info)[series_metric_key]["value"]
+    )
 
     if from_new_convention is not None:
         return from_new_convention
@@ -263,7 +269,14 @@ def get_series_display_name(series: pd.Series) -> str | None:
     """
     return cast(
         str | None,
-        get_series_info(series, Coalesce(_spec_not_none("display_name"), _spec_not_none("name"), _spec_not_none("short_display_name"))),
+        get_series_info(
+            series,
+            Coalesce(
+                _spec_not_none("display_name"),
+                _spec_not_none("name"),
+                _spec_not_none("short_display_name"),
+            ),
+        ),
     )
 
 
@@ -306,7 +319,9 @@ def get_series_measurement(series: pd.Series) -> str | None:
     return cast(str | None, get_series_info(series, "measurement"))
 
 
-def get_queried_interval(data: pd.Series | pd.DataFrame) -> tuple[datetime.datetime|None, datetime.datetime|None]:
+def get_queried_interval(
+    data: pd.Series | pd.DataFrame,
+) -> tuple[datetime.datetime | None, datetime.datetime | None]:
     start = extract_from_metadata(data.attrs, key="ref_interval_start_timestamp", default=None)
     end = extract_from_metadata(data.attrs, key="ref_interval_end_timestamp", default=None)
 

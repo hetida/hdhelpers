@@ -69,7 +69,9 @@ def test_get_end_timestamp_directly():
 
 
 def test_get_end_timestamp_attrs(empty_series_with_attr):
-    empty_series_with_attr.attrs["dataset_metadata"]["ref_interval_end_timestamp"] = "2025-05-28T18:00:00+02:00"
+    empty_series_with_attr.attrs["dataset_metadata"]["ref_interval_end_timestamp"] = (
+        "2025-05-28T18:00:00+02:00"
+    )
     timestamp = estimate_plot_end(empty_series_with_attr, None)
     assert isinstance(timestamp, pd.Timestamp)
 

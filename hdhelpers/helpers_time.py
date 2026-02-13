@@ -9,8 +9,8 @@ import pandas as pd
 import pytz
 from pydantic import ValidationError
 
-from hdhelpers.plot_target_settings import get_plot_target_settings
 from hdhelpers.metadata import get_queried_interval
+from hdhelpers.plot_target_settings import get_plot_target_settings
 
 logger = logging.getLogger("hdhelpers")
 

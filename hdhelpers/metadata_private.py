@@ -1,10 +1,10 @@
-
 from collections import defaultdict
 from collections.abc import Callable
 from typing import Any
 
-from glom import A, Check, Coalesce, Iter, Merge, S, Spec, T, glom
 import pandas as pd
+from glom import A, Check, Coalesce, Iter, Merge, S, Spec, T, glom
+
 
 # info on T: Basically, think of T as your data’s stunt double. Everything that you do to T will be recorded and executed during the glom() call.
 # info to S: On its surface, the glom scope is a dictionary of extra values that can be passed in to the top-level glom call. These values can then be addressed with the S object, which behaves similarly to the T object.
@@ -16,7 +16,7 @@ def _update_dict_and_return_it(start_dict: dict, updated_values_dict: dict) -> d
 
 
 def _spec_not_none(spec: str | Spec) -> Spec:
-    """ this entries must be given in the spec"""
+    """this entries must be given in the spec"""
     # TODO: Given the suite of tools introduced with Match, the Check specifier type may be deprecated in a future release
     return (spec, Check(validate=lambda x: x is not None))
 
@@ -167,6 +167,7 @@ def _spec_defaults_by_value_dimension(metadatum_key: str | Spec) -> Spec:
         default={},
     )
 
+
 def _spec_defaults_by_metric(metadatum_key: str | Spec) -> Spec:
     return Coalesce(
         (
@@ -178,10 +179,8 @@ def _spec_defaults_by_metric(metadatum_key: str | Spec) -> Spec:
                 key_as_value=True,
             ),
         ),
-    default={},
+        default={},
     )
-
-
 
 
 def _spec_actual_per_metric_per_value_dimensions(metadatum_key: str | Spec) -> Spec:
@@ -212,7 +211,9 @@ def _spec_new_convention(metadatum_key: str | Spec) -> Spec:
             "metric_key": _spec_metric_key(),
             "defaults_by_value_dimension": _spec_defaults_by_value_dimension(metadatum_key),
             "defaults_by_metric": _spec_defaults_by_metric(metadatum_key),
-            "actual_per_metric_per_value_dimensions": _spec_actual_per_metric_per_value_dimensions(metadatum_key),
+            "actual_per_metric_per_value_dimensions": _spec_actual_per_metric_per_value_dimensions(
+                metadatum_key
+            ),
         },
         lambda x: defaultdict(
             lambda: defaultdict(lambda: None, {}),
@@ -239,12 +240,11 @@ def _spec_new_convention(metadatum_key: str | Spec) -> Spec:
                         ).items()
                     },
                 )
-                for metric, info_by_val_dim in x[
-                    "actual_per_metric_per_value_dimensions"
-                ].items()
+                for metric, info_by_val_dim in x["actual_per_metric_per_value_dimensions"].items()
             },
         ),
     )
+
 
 def _spec_older_convention1_value_dim(metadatum_key: str | Spec) -> Spec:
     return (
@@ -261,6 +261,7 @@ def _spec_older_convention1_value_dim(metadatum_key: str | Spec) -> Spec:
         ),
     )
 
+
 def _spec_older_convention1_metric(metadatum_key: str | Spec) -> Spec:
     return (
         "by_metric",
@@ -269,10 +270,11 @@ def _spec_older_convention1_metric(metadatum_key: str | Spec) -> Spec:
             (
                 Coalesce("metric", default={}),
                 Check(instance_of=dict),
-                {"value": Coalesce(metadatum_key)}
+                {"value": Coalesce(metadatum_key)},
             )
         ),
     )
+
 
 def _spec_older_convention2(metadatum_key: str | Spec) -> Spec:
     return (
@@ -283,28 +285,33 @@ def _spec_older_convention2(metadatum_key: str | Spec) -> Spec:
         ),
     )
 
+
 def _spec_platform_convention_series_metric(metadatum_key: str | Spec) -> Spec:
     return (
         "single_metric_metadata.structured_metadata.metric",
         Check(instance_of=dict),
-        {"series": {"value": Coalesce(metadatum_key, default=None)}}
+        {"series": {"value": Coalesce(metadatum_key, default=None)}},
     )
+
 
 def _spec_platform_convention_series_value_dim(metadatum_key: str | Spec) -> Spec:
     return (
         "single_metric_metadata.structured_metadata.value_dimensions.value",
         Check(instance_of=dict),
-        {"series": {"value": Coalesce(metadatum_key, default=None)}}
+        {"series": {"value": Coalesce(metadatum_key, default=None)}},
     )
+
 
 def _spec_older_convention4(metadatum_key: str | Spec) -> Spec:
     return (
-        "metric_metadata",
-        Check(instance_of=dict),
-        _glom_dict_with_keys_of_current_dict_and_values_something_deeper_nested(
-            {"value": Coalesce(metadatum_key, default=None)}  # only SERIES / only value column.
+        (
+            "metric_metadata",
+            Check(instance_of=dict),
+            _glom_dict_with_keys_of_current_dict_and_values_something_deeper_nested(
+                {"value": Coalesce(metadatum_key, default=None)}  # only SERIES / only value column.
+            ),
         ),
-    ),
+    )
 
 
 def _spec_by_metric_key_by_val_dimension(metadatum_key: str | Spec) -> Spec:

@@ -6,12 +6,12 @@ from typing import Any
 import pandas as pd
 from pandas.tseries.frequencies import to_offset
 from plotly.graph_objects import Figure  # type: ignore  # type: ignore
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from hdhelpers.exceptions import HelperException, InsufficientPlottingData
 from hdhelpers.helpers_time import estimate_plot_end, estimate_plot_start, modify_timezone
+from hdhelpers.metadata import get_series_display_name, get_series_unit
 from hdhelpers.plot_target_settings import PlotTargetStyle, get_plot_target_settings
-from hdhelpers.metadata import get_series_unit, get_series_display_name
 
 logger = logging.getLogger("hdhelpers")
 

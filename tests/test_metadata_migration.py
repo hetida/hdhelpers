@@ -10,6 +10,7 @@ from hdhelpers.metadata import (
     get_units,
 )
 
+
 def test_get_units_mts_old_format(empty_mts_with_old_attr):
     units_by_metric_by_value_dimension = get_units(empty_mts_with_old_attr)
 
@@ -18,7 +19,7 @@ def test_get_units_mts_old_format(empty_mts_with_old_attr):
     assert units_by_metric_by_value_dimension["some_other_metric"]["value"] == "l"
 
     # ensure that default dict is used in case of missing entry
-    assert units_by_metric_by_value_dimension["SOME"]["SOME"] is None # is a default dict
+    assert units_by_metric_by_value_dimension["SOME"]["SOME"] is None  # is a default dict
 
 
 def test_get_units_mts_new_format_1(empty_mts_with_attr):
@@ -61,7 +62,7 @@ def test_get_units_mts_new_format_2(empty_mts_with_attr):
 
 def test_get_units_mts_new_format_3(empty_mts_with_attr):
 
-    empty_mts_with_attr.attrs["dataset_metadata"]["metric_key"] = ("external_id")
+    empty_mts_with_attr.attrs["dataset_metadata"]["metric_key"] = "external_id"
     units_by_metric_by_value_dimension = get_units(empty_mts_with_attr)
 
     assert units_by_metric_by_value_dimension["external_first"]["temp"] == "C"
