@@ -11,7 +11,7 @@ from pydantic import BaseModel, ValidationError
 from hdhelpers.exceptions import HelperException, InsufficientPlottingData
 from hdhelpers.helpers_time import estimate_plot_end, estimate_plot_start, modify_timezone
 from hdhelpers.plot_target_settings import PlotTargetStyle, get_plot_target_settings
-from hdhelpers.structure_metadata import SeriesMetadata
+from hdhelpers.metadata import get_series_unit, get_series_display_name
 
 logger = logging.getLogger("hdhelpers")
 
@@ -145,20 +145,11 @@ def get_and_pad_start_and_end_timestamp(
 def get_y_axis_label(series: pd.Series, default_title: str = "", default_unit: str = "") -> str:
     """Get full y-axis label from metadata
 
-    Combines the title and unit provided by _get_display_name and _get_unit.
+    Combines the title and unit provided by _get_display_name and _get_units.
     """
 
-    try:
-        meta_data = SeriesMetadata(**series.attrs)  # type: ignore
-        unit = meta_data.get_unit()["value"]
-        title = meta_data.get_display_name()["value"]
-
-    except ValidationError as exc:
-        msg = """Metadata of series does not correspond to the standard format.
-          Using default unit and default title."""
-        logger.info(msg=msg, exc_info=exc)
-        unit = default_unit
-        title = default_title
+    unit = get_series_unit(series)
+    title = get_series_display_name(series)
 
     if unit is None:
         logger.info("Metadata of series does not contain title. Using default unit")

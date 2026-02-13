@@ -1,48 +1,16 @@
 {
     "dataset_metadata": {
+        "metric_key": "id",
         "single_metric": "series",
-        "ref_interval_start_timestamp": "2025-11-05T13:28:00Z",
-        "ref_interval_end_timestamp": "2025-11-06T13:28:00Z",
-        "ref_interval_type": "closed",
-        "ref_metric": "Wasserstand Ruhr Meschede",
-        "ref_data_frequency": null,
-        "ref_data_frequency_offset": null,
-        "invalidation_interval_start": null,
-        "invalidation_interval_end": null,
-        "invalidation_interval_type": null,
-        "invalidate_dataset": null,
-        "delete_invalidated": null,
-        "only_invalidate": null,
-        "ref_dataset_discrete": null,
-        "invalidation_timestamp": null,
-        "new_data_invalidation_date": null
+        "ref_interval_start_timestamp": "2023-01-01T00:00:00+00:00",
+        "ref_interval_end_timestamp": "2023-01-02T00:00:00Z"
     },
-    "by_metric": {
-        "series": {
-            "metric": {
-                "name": "Wasserstand Ruhr Meschede",
-                "display_name": "Wasserstand",
-                "short_display_name": "W",
-                "description": null,
-                "value_data_type": null,
-                "external_id": "wasserstand.ruhr.meschede2",
-                "channel_id": "303fc49a-b515-4fbc-b4fd-70594f053f58"
-            },
-            "inherited": {
-            "Stationsname": "Meschede (Ruhr)",
-            "Latitude": 51.347759,
-            "Longitude": 8.280575
-            },
-            "value_dimensions": {
-            "value": {
-                "name": "Wasserstand Ruhr Meschede",
-                "display_name": "Wasserstand value",
-                "short_display_name": "W value",
-                "description": null,
-                "unit": "m³/s",
-                "value_data_type": "float"
-                }
-            }
+    "metrics": [
+        {
+            "id": "series",
+            "external_id": "external_first",
+            "unit": "m",
+            "name": "first name"
         }
-    }
+    ]
 }

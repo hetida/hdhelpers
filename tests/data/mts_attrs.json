@@ -1,81 +1,78 @@
 {
     "dataset_metadata": {
-        "ref_interval_start_timestamp": "2025-11-05T13:28:00Z",
-        "ref_interval_end_timestamp": "2025-11-06T13:28:00Z",
-        "ref_interval_type": "closed",
-        "ref_metric": "Wasserstand Ruhr Meschede",
-        "ref_data_frequency": null,
-        "ref_data_frequency_offset": null,
-        "invalidation_interval_start": null,
-        "invalidation_interval_end": null,
-        "invalidation_interval_type": null,
-        "invalidate_dataset": null,
-        "delete_invalidated": null,
-        "only_invalidate": null,
-        "ref_dataset_discrete": null,
-        "invalidation_timestamp": null,
-        "new_data_invalidation_date": null
+        "metric_key": "id",
+        "ref_interval_start_timestamp": "2023-01-01T00:00:00+00:00",
+        "ref_interval_end_timestamp": "2023-01-02T00:00:00Z"
     },
-    "by_metric": {
-        "metric1": {
-            "metric": {
-                "name": "Wasserstand Ruhr Meschede",
-                "display_name": null,
-                "short_display_name": null,
-                "description": null,
-                "value_data_type": null,
-                "external_id": "wasserstand.ruhr.meschede2",
-                "channel_id": "303fc49a-b515-4fbc-b4fd-70594f053f58"
-                },
-            "inherited": {
-                "Stationsname": "Meschede (Ruhr)",
-                "Latitude": 51.347759,
-                "Longitude": 8.280575
-            },
-            "value_dimensions": {
-                "value_dim1": {
-                    "name": "Wasserstand Ruhr Meschede v1",
-                    "display_name": null,
-                    "short_display_name": null,
-                    "description": null,
-                    "unit": "m³/s",
-                    "value_data_type": "float"
-                },
-                "value_dim2": {
-                    "name": "Wasserstand Ruhr Meschede v2",
-                    "display_name": null,
-                    "short_display_name": null,
-                    "description": null,
-                    "unit": "m³/s",
-                    "value_data_type": "float"
-                }
-            }
+    "value_dimensions_shared": [
+        {
+            "column": "pressure",
+            "unit": "bar",
+            "name": "shared value_dimension pressure name",
+            "measurement": "pressure"
         },
-        "metric2": {
-            "metric": {
-                "name": "Wasserstand Ruhr Meschede",
-                "display_name": null,
-                "short_display_name": null,
-                "description": null,
-                "value_data_type": null,
-                "external_id": "wasserstand.ruhr.meschede2",
-                "channel_id": "303fc49a-b515-4fbc-b4fd-70594f053f59"
-            },
-            "inherited": {
-                "Stationsname": "Meschede (Ruhr)",
-                "Latitude": 51.347759,
-                "Longitude": 8.280575
-            },
-            "value_dimensions": {
-                "value_dim1": {
-                    "name": "Wasserstand Ruhr Meschede (2)",
-                    "display_name": null,
-                    "short_display_name": null,
-                    "description": null,
-                    "unit": "m³/h",
-                    "value_data_type": "float"
-                }
-             }
+        {
+            "column": "temp",
+            "measurement": "temperature"
         }
-    }
+    ],
+    "metrics": [
+        {
+            "id": "first",
+            "external_id": "external_first",
+            "unit": "m",
+            "display_name": "first display name",
+            "value_dimensions": [
+                {
+                    "column": "temp",
+                    "unit": "C",
+                    "measurement": "temperature"
+                }
+            ]
+        },
+        {
+            "id": "second",
+            "name": "second name",
+            "external_id": "external_second",
+            "value_dimensions": [
+                {
+                    "column": "temp",
+                    "unit": "C"
+                }
+            ]
+        },
+        {
+            "id": "third",
+            "external_id": "external_third",
+            "measurement": "height",
+            "value_dimensions": [
+                {
+                    "column": "pressure",
+                    "display_name": "thirds's pressure"
+                }
+            ]
+        },
+        {
+            "id": "fourth",
+            "external_id": "external_fourth",
+            "unit": "l",
+            "value_dimensions": [
+                {
+                    "column": "pressure",
+                    "unit" : "Pa"
+                }
+            ]
+        },
+        {
+            "id": "fifth",
+            "external_id": "external_fifth",
+            "unit": "l",
+            "value_dimensions": [
+                {
+                    "column": "value",
+                    "unit" : "m^3"
+                }
+            ]
+        }
+    ]
 }

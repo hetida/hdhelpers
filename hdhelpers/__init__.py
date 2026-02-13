@@ -1,13 +1,18 @@
 from hdhelpers.exceptions import HelperException, InsufficientPlottingData
-from hdhelpers.helpers_metadata_interface import get_queried_interval
 
-from hdhelpers.helpers_metadata import (
-    get_display_name,
-    get_end,
-    get_name,
-    get_start,
-    get_unit,
+from hdhelpers.metadata import (
+    get_display_names,
+    get_measurements,
+    get_metric_info,
+    get_series_display_name,
+    get_series_measurement,
+    get_series_name,
+    get_series_short_display_name,
+    get_series_unit,
+    get_units,
+    get_queried_interval,
 )
+
 from hdhelpers.helpers_plot import (
     get_and_pad_start_and_end_timestamp,
     get_locale,
@@ -22,8 +27,6 @@ from hdhelpers.plot_target_settings import (
     StatusColors,
     get_plot_target_settings,
 )
-from hdhelpers.structure_metadata import MTSMetadata, SeriesMetadata
-
 
 __all__ = [
     "HelperException",
@@ -38,12 +41,13 @@ __all__ = [
     "get_y_axis_label",
     "modify_timezone",
     "plotly_fig_to_json_dict",
-    "MTSMetadata",
-    "SeriesMetadata",
-    "get_unit",
-    "get_name",
-    "get_display_name",
-    "get_start",
-    "get_end",
-    "get_queried_interval",
+    "get_display_names",
+    "get_measurements",
+    "get_metric_info",
+    "get_series_display_name",
+    "get_series_measurement",
+    "get_series_name",
+    "get_series_short_display_name",
+    "get_series_unit",
+    "get_units",
 ]
