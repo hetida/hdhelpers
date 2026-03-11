@@ -2,9 +2,9 @@ from collections import defaultdict
 from typing import Any
 
 import pandas as pd
-from glom import A, Check, glom
+from glom import Check, Spec, glom
 
-import metadata_specs as specs
+import hdhelpers.metadata_specs as specs
 
 
 def spec_not_none(spec: str | Spec) -> Spec:

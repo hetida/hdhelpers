@@ -1,7 +1,8 @@
 from collections import defaultdict
 from collections.abc import Callable
 
-from glom import A, Check, Coalesce, Iter, Merge, S, Spec, T, glom
+from glom import A, Check, Coalesce, Iter, Merge, S, Spec, T
+
 
 def by_metric_key_by_val_dimension(metadatum_key: str | Spec) -> Spec:
     """Providesglom spec that extracts a metadatum by metric by value dimension
@@ -30,6 +31,7 @@ def by_metric_key_by_val_dimension(metadatum_key: str | Spec) -> Spec:
         default={},
     )
 
+
 def _spec_metric_key() -> Spec:
     return ("dataset_metadata.metric_key", A.globals.metric_key)
 
@@ -39,7 +41,7 @@ def _spec_defaults_by_value_dimension(metadatum_key: str | Spec) -> Spec:
         (
             Coalesce("value_dimensions_shared", default=[]),
             Check(instance_of=list),
-            build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
+            _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
                 "column", Coalesce(metadatum_key, default=None)
             ),
         ),
@@ -52,7 +54,7 @@ def _spec_defaults_by_metric(metadatum_key: str | Spec) -> Spec:
         (
             "metrics",
             Check(instance_of=list),
-            build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
+            _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
                 S.globals.metric_key,
                 Coalesce(metadatum_key, default=None),
                 key_as_value=True,
@@ -192,7 +194,8 @@ def _spec_older_convention4(metadatum_key: str | Spec) -> Spec:
         ),
     )
 
-def _spec_by_metric_key(metadatum_key: str | Spec) -> Spec:
+
+def spec_by_metric_key(metadatum_key: str | Spec) -> Spec:
     return Coalesce(
         (  # current metdadata convention
             {
@@ -222,6 +225,7 @@ def _spec_by_metric_key(metadatum_key: str | Spec) -> Spec:
             ),
         ),
     )
+
 
 def _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
     key_spec: Spec,
@@ -284,7 +288,8 @@ def _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
         lambda x: _update_dict_and_return_it(start_dict.copy(), x),
     ) + ((continuation_spec,) if continuation_spec is not None else ())
 
-def glom_dict_with_keys_of_current_dict_and_values_something_deeper_nested(
+
+def _glom_dict_with_keys_of_current_dict_and_values_something_deeper_nested(
     deeper_glom_spec: Spec, add_keys_with_none_values: list[str] | None = None
 ) -> Spec:
     """Create dicts with keys from current dict and values from deeper in their value objects
@@ -350,6 +355,7 @@ def glom_dict_with_keys_of_current_dict_and_values_something_deeper_nested(
         Merge(),
         lambda x: _update_dict_and_return_it(start_dict.copy(), x),
     )
+
 
 # info on T: Basically, think of T as your data’s stunt double. Everything that you do to T will be recorded and executed during the glom() call.
 # info to S: On its surface, the glom scope is a dictionary of extra values that can be passed in to the top-level glom call. These values can then be addressed with the S object, which behaves similarly to the T object.

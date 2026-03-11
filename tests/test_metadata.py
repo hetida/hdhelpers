@@ -4,16 +4,16 @@ import pandas as pd
 import pytest
 
 from hdhelpers.metadata import (
-    get_display_names,
-    get_measurements,
-    get_metric_info,
+    # get_display_names,
+    # get_measurements,
+    # get_metric_info,
     get_queried_interval,
     get_series_display_name,
-    get_series_measurement,
+    # get_series_measurement,
     get_series_name,
     get_series_short_display_name,
     get_series_unit,
-    get_units,
+    # get_units,
 )
 
 
@@ -41,8 +41,8 @@ def test_doctest_get_queried_interval():
 def test_get_queried_interval_not_given():
     start, end = get_queried_interval(pd.Series())
 
-    assert start == None
-    assert end == None
+    assert start is None
+    assert end is None
 
 
 def test_get_series_unit(empty_series_with_old_attr_real):
@@ -85,7 +85,7 @@ def test_doctest_get_series_unit(attr, output):
 
 
 def test_get_series_unit_no_attr():
-    assert get_series_unit(pd.Series()) == None
+    assert get_series_unit(pd.Series()) is None
 
 
 def test_get_series_name(empty_series_with_old_attr_real):
@@ -137,7 +137,7 @@ def test_doctest_get_series_name(attr, output):
 
 
 def test_get_series_name_no_attr():
-    assert get_series_name(pd.Series()) == None
+    assert get_series_name(pd.Series()) is None
 
 
 def test_get_display_name_series_name(empty_series_with_old_attr_real):
@@ -265,7 +265,7 @@ def test_doctest_get_series_display_name(attr, output):
 
 
 def test_get_series_display_name_no_attr():
-    assert get_series_display_name(pd.Series()) == None
+    assert get_series_display_name(pd.Series()) is None
 
 
 def test_get_short_display_name_series_name(empty_series_with_old_attr_real):
@@ -344,7 +344,3 @@ def test_doctest_get_series_short_display_name(attr, output):
     series = pd.Series()
     series.attrs = attr
     assert get_series_short_display_name(series) == output
-
-
-def test_get_series_display_name_no_attr():
-    assert get_series_short_display_name(pd.Series()) == None

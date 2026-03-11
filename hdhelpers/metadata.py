@@ -18,12 +18,14 @@ from glom import Coalesce, Spec, glom
 
 from hdhelpers.metadata_helpers import (
     get_value_dimension_info,
-    _spec_by_metric_key,
     spec_not_none,
 )
+from hdhelpers.metadata_specs import spec_by_metric_key
 
 
-def get_units(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, str | None]]:
+def get_units(
+    multitsframe: pd.DataFrame,
+) -> defaultdict[str, defaultdict[str, str | None]]:
     """Gets unit of value dimensions in MTS metrics from Metadata
 
     Args:
@@ -123,7 +125,7 @@ def get_metric_info(multitsframe: pd.DataFrame, metric_info: str | Spec) -> defa
     }
 
     """
-    spec = _spec_by_metric_key(metric_info)
+    spec = spec_by_metric_key(metric_info)
     metric_info = glom(multitsframe.attrs, spec)
     return defaultdict(lambda: None, metric_info)
 
