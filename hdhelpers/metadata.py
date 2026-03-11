@@ -16,10 +16,10 @@ from typing import Any, cast
 import pandas as pd
 from glom import Coalesce, Spec, glom
 
-from hdhelpers.metadata_private import (
-    _get_value_dimension_info,
+from hdhelpers.metadata_helpers import (
+    get_value_dimension_info,
     _spec_by_metric_key,
-    _spec_not_none,
+    spec_not_none,
 )
 
 
@@ -45,27 +45,27 @@ def get_units(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, s
     ...    get_values_display_names(dataframe)
     { "metric1": {"value_dim_1": "m"}, "metric2": {"value_dim_1": None}, "metric3:  {"value_dim_1": None, "value_dim_2": "km"}}
     """
-    return _get_value_dimension_info(multitsframe, "unit")
+    return get_value_dimension_info(multitsframe, "unit")
 
 
 def get_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, str | None]]:
-    return _get_value_dimension_info(multitsframe, Coalesce("name", default=None))
+    return get_value_dimension_info(multitsframe, Coalesce("name", default=None))
 
 
 def get_display_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, str | None]]:
-    return _get_value_dimension_info(multitsframe, Coalesce("display_name", "name", default=None))
+    return get_value_dimension_info(multitsframe, Coalesce("display_name", "name", default=None))
 
 
 def get_short_display_names(
     multitsframe: pd.DataFrame,
 ) -> defaultdict[str, defaultdict[str, str | None]]:
-    return _get_value_dimension_info(
+    return get_value_dimension_info(
         multitsframe, Coalesce("short_display_name", "display_name", "name", default=None)
     )
 
 
 def get_measurements(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, str | None]]:
-    return _get_value_dimension_info(multitsframe, "measurement")
+    return get_value_dimension_info(multitsframe, "measurement")
 
 
 def get_metric_info(multitsframe: pd.DataFrame, metric_info: str | Spec) -> defaultdict[str, Any]:
@@ -147,9 +147,9 @@ def get_series_info(series: pd.Series, value_dim_info: str | Spec) -> Any:
     this value dimension.
     """
     series_metric_key = extract_from_metadata(series.attrs, key="single_metric", default="series")
-    from_new_convention = (
-        _get_value_dimension_info(series, value_dim_info)[series_metric_key]["value"]
-    )
+    from_new_convention = get_value_dimension_info(series, value_dim_info)[series_metric_key][
+        "value"
+    ]
 
     if from_new_convention is not None:
         return from_new_convention
@@ -158,13 +158,13 @@ def get_series_info(series: pd.Series, value_dim_info: str | Spec) -> Any:
     return glom(
         series.attrs,
         Coalesce(
-            _spec_not_none(
+            spec_not_none(
                 (
                     "single_metric_metadata.structured_metadata.value_dimensions.value",
                     value_dim_info,
                 )
             ),
-            _spec_not_none(
+            spec_not_none(
                 (
                     "single_metric_metadata.structured_metadata.metric",
                     value_dim_info,
@@ -206,7 +206,7 @@ def get_series_unit(series: pd.Series) -> str | None:
     ...    get_series_unit(series)
     "m/s"
     """
-    return cast(str | None, get_series_info(series, _spec_not_none("unit")))
+    return cast(str | None, get_series_info(series, spec_not_none("unit")))
 
 
 def get_series_name(series: pd.Series) -> str | None:
@@ -242,7 +242,7 @@ def get_series_name(series: pd.Series) -> str | None:
     ...    get_series_name(series)
     "name_of_series"
     """
-    return cast(str | None, get_series_info(series, _spec_not_none("name")))
+    return cast(str | None, get_series_info(series, spec_not_none("name")))
 
 
 def get_series_display_name(series: pd.Series) -> str | None:
@@ -272,9 +272,9 @@ def get_series_display_name(series: pd.Series) -> str | None:
         get_series_info(
             series,
             Coalesce(
-                _spec_not_none("display_name"),
-                _spec_not_none("name"),
-                _spec_not_none("short_display_name"),
+                spec_not_none("display_name"),
+                spec_not_none("name"),
+                spec_not_none("short_display_name"),
             ),
         ),
     )
@@ -307,9 +307,9 @@ def get_series_short_display_name(series: pd.Series) -> str | None:
         get_series_info(
             series,
             Coalesce(
-                _spec_not_none("short_display_name"),
-                _spec_not_none("display_name"),
-                _spec_not_none("name"),
+                spec_not_none("short_display_name"),
+                spec_not_none("display_name"),
+                spec_not_none("name"),
             ),
         ),
     )

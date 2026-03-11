@@ -17,7 +17,8 @@ dependencies = [
     "pandas>=2,<3",
     "plotly>=6,<7",
     "pydantic>=2,<3",
-    "glom>25,<26"
+    "glom>25,<26",
+    "numpy>=2.3.3",
 ]
 license = {file = "LICENSE"}
 
@@ -62,3 +63,7 @@ lint.ignore = ["E713", "E714", "B008", "PLR2004", "COM812", "RET504", "PLR0913",
 
 [tool.ruff.lint.per-file-ignores]
 "/**/tests/**/*.py" = ["S101", "PT023", "T201", "INP001", "PT001", "ARG001", "S113", "S603", "PLR0912"]
+
+[[tool.mypy.overrides]]
+module = ["glom"]
+ignore_missing_imports = true
