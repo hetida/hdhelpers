@@ -5,11 +5,12 @@ usage() {
     echo "Hint: All commands expect a Python dev virtual environment to be active"
     echo ""
     echo "  Commands:"
-    echo "  - lint               :    run ruff on all packages or on specific directories defining them as input, e.g., bash ./run lint hdhelpers"
-    echo "  - test               :    run pytest on all packages or on specific directories defining them as input, e.g., bash ./run test test"
-    echo "  - typecheck          :    run mypy static type check"
-    echo "  - format             :    run ruff format"
-    echo "  - check              :    run format check, tests, typechecking"
+    echo "  - lint                :    run ruff on all packages or on specific directories defining them as input, e.g., bash ./run lint hdhelpers"
+    echo "  - test                :    run pytest on all packages or on specific directories defining them as input, e.g., bash ./run test test"
+    echo "  - typecheck           :    run mypy static type check"
+    echo "  - format              :    run ruff format"
+    echo "  - check               :    run format check, tests, typechecking"
+    echo "  - create_docu         :    runs sphinx to generate python pcakge documentation"
 }
 
 set -euo pipefail
@@ -30,6 +31,12 @@ lint(){
     else
         uvx ruff check "${@}"
     fi
+}
+
+create_docu(){
+    uv pip install .
+    sphinx-build -M html docs/source docs/build
+    sphinx-build -M doctest docs/source docs/build
 }
 
 

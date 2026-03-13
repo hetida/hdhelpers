@@ -30,7 +30,8 @@ templates_path = ["_templates"]
 
 extensions = [
     'sphinx.ext.autodoc', # docstrings to documentation
-    "sphinx.ext.napoleon", # enables Sphinx to parse both NumPy and Google style docstrings
+    'sphinx.ext.napoleon', # enables Sphinx to parse both NumPy and Google style docstrings
+    'sphinx.ext.doctest' # enabled embedding and testing Python code examples in documentation
 ]
 
 autosummary_generate = False
@@ -42,4 +43,11 @@ toc_object_entries_show_parents= 'hide' # hide class name in Table of Contents
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path('..', '..','hdhelpers').resolve()))
+sys.path.insert(0, str(Path('..', 'src','hdhelpers').resolve()))
+
+doctest_global_setup = '''
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
+'''

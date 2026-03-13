@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 import pytest
 
 from hdhelpers.exceptions import HelperException, InsufficientPlottingData
-from hdhelpers.helpers_plot import (
+from hdhelpers.docs.plotting.helpers_plot import (
     _pad_to_timestamp,
     get_and_pad_start_and_end_timestamp,
     get_locale,
@@ -19,6 +19,29 @@ from hdhelpers.plot_target_settings import (
     StatusColors,
 )
 
+
+def test_to_pd_timestamp_int():
+    timestamp = 1748415600
+    timestamp = _to_pd_timestamp(timestamp)
+    assert isinstance(timestamp, pd.Timestamp)
+
+
+def test_to_pd_timestamp_str():
+    timestamp = "2025-05-28T09:00:00+02:00"
+    timestamp = _to_pd_timestamp(timestamp)
+    assert isinstance(timestamp, pd.Timestamp)
+
+
+def test_to_pd_timestamp_none():
+    timestamp = None
+    timestamp = _to_pd_timestamp(timestamp)
+    assert timestamp is None
+
+
+def test_to_pd_timestamp_float():
+    timestamp = 3.14
+    with pytest.raises(TypeError):
+        timestamp = _to_pd_timestamp(timestamp)
 
 def test_pad_start():
     start = pd.to_datetime("2025-05-28T09:00:00+02:00")
@@ -214,3 +237,53 @@ def test_plotly_fig_to_json_dict_set_everything():
     assert json_dict.get("layout", {}).get("margin", {}) == {}
     assert "displaylogo" not in json_dict.get("config", {})
     assert "displayModeBar" not in json_dict.get("config", {})
+
+def test_get_start_timestamp_directly():
+    timestamp = estimate_plot_start(pd.Series(), "2025-05-28T09:00:00+02:00")
+    assert isinstance(timestamp, pd.Timestamp)
+
+
+def test_get_start_timestamp_attrs(empty_series_with_attr):
+    timestamp = estimate_plot_start(empty_series_with_attr, None)
+    assert isinstance(timestamp, pd.Timestamp)
+
+
+def test_get_start_timestamp_plot_target_settings():
+    plot_target_settings_mock = MagicMock(
+        return_value=PlotTargetSettings(datetime_x_axes_range_start="2025-05-28T09:00:00+02:00")
+    )
+    with patch("hdhelpers.helpers_time.get_plot_target_settings", plot_target_settings_mock):
+        timestamp = estimate_plot_start(pd.Series(), None)
+        assert isinstance(timestamp, pd.Timestamp)
+
+
+def test_get_end_timestamp_directly():
+    timestamp = estimate_plot_end(pd.Series(), "2025-05-28T18:00:00+02:00")
+    assert isinstance(timestamp, pd.Timestamp)
+
+
+def test_get_end_timestamp_attrs(empty_series_with_attr):
+    empty_series_with_attr.attrs["dataset_metadata"]["ref_interval_end_timestamp"] = (
+        "2025-05-28T18:00:00+02:00"
+    )
+    timestamp = estimate_plot_end(empty_series_with_attr, None)
+    assert isinstance(timestamp, pd.Timestamp)
+
+
+def test_get_end_timestamp_plot_target_settings():
+    plot_target_settings_mock = MagicMock(
+        return_value=PlotTargetSettings(datetime_x_axes_range_end="2025-05-28T18:00:00+02:00")
+    )
+    with patch("hdhelpers.helpers_time.get_plot_target_settings", plot_target_settings_mock):
+        timestamp = estimate_plot_end(pd.Series(), None)
+        assert isinstance(timestamp, pd.Timestamp)
+
+
+def test_get_end_none():
+    timestamp = estimate_plot_end(pd.Series(), None)
+    assert timestamp is None
+
+
+def test_get_start_none():
+    timestamp = estimate_plot_start(pd.Series(), None)
+    assert timestamp is None

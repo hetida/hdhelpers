@@ -5,201 +5,32 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from hdhelpers.helpers_time import (
-    _convert_to_optional_timezone,
-    _to_pd_timestamp,
-    estimate_plot_end,
-    estimate_plot_start,
-    modify_timezone,
-)
-from hdhelpers.plot_target_settings import (
-    PlotTargetSettings,
-)
+from hdhelpers.helpers import modify_timezone
+from hdhelpers.plot_target_settings import PlotTargetSettings
 
-
-def test_convert_to_optional_timezone_naive_none():
-    assert (
-        _convert_to_optional_timezone(pd.to_datetime("2025-01-01T01:00:00"), None).tz
-        == datetime.timezone.utc
-    )
-
-
-def test_convert_to_optional_timezone_aware_none():
-    assert _convert_to_optional_timezone(
-        pd.to_datetime("2025-01-01T01:00:00+05:00"), None
-    ).tz == datetime.timezone(datetime.timedelta(seconds=18000))
-
-
-def test_convert_to_optional_timezone_naive_given():
-    timestamp = _convert_to_optional_timezone(
-        pd.to_datetime("2025-01-01T01:00:00"), "Europe/Berlin"
-    )
-    assert timestamp.utcoffset() == datetime.timedelta(seconds=3600)
-
-
-def test_convert_to_optional_timezone_aware_given():
-    timestamp = _convert_to_optional_timezone(
-        pd.to_datetime("2025-01-01T01:00:00+05:00"), "Europe/Berlin"
-    )
-    assert timestamp.utcoffset() == datetime.timedelta(seconds=3600)
-
-
-def test_get_start_timestamp_directly():
-    timestamp = estimate_plot_start(pd.Series(), "2025-05-28T09:00:00+02:00")
-    assert isinstance(timestamp, pd.Timestamp)
-
-
-def test_get_start_timestamp_attrs(empty_series_with_attr):
-    timestamp = estimate_plot_start(empty_series_with_attr, None)
-    assert isinstance(timestamp, pd.Timestamp)
-
-
-def test_get_start_timestamp_plot_target_settings():
-    plot_target_settings_mock = MagicMock(
-        return_value=PlotTargetSettings(datetime_x_axes_range_start="2025-05-28T09:00:00+02:00")
-    )
-    with patch("hdhelpers.helpers_time.get_plot_target_settings", plot_target_settings_mock):
-        timestamp = estimate_plot_start(pd.Series(), None)
-        assert isinstance(timestamp, pd.Timestamp)
-
-
-def test_get_end_timestamp_directly():
-    timestamp = estimate_plot_end(pd.Series(), "2025-05-28T18:00:00+02:00")
-    assert isinstance(timestamp, pd.Timestamp)
-
-
-def test_get_end_timestamp_attrs(empty_series_with_attr):
-    empty_series_with_attr.attrs["dataset_metadata"]["ref_interval_end_timestamp"] = (
-        "2025-05-28T18:00:00+02:00"
-    )
-    timestamp = estimate_plot_end(empty_series_with_attr, None)
-    assert isinstance(timestamp, pd.Timestamp)
-
-
-def test_get_end_timestamp_plot_target_settings():
-    plot_target_settings_mock = MagicMock(
-        return_value=PlotTargetSettings(datetime_x_axes_range_end="2025-05-28T18:00:00+02:00")
-    )
-    with patch("hdhelpers.helpers_time.get_plot_target_settings", plot_target_settings_mock):
-        timestamp = estimate_plot_end(pd.Series(), None)
-        assert isinstance(timestamp, pd.Timestamp)
-
-
-def test_get_end_none():
-    timestamp = estimate_plot_end(pd.Series(), None)
-    assert timestamp is None
-
-
-def test_get_start_none():
-    timestamp = estimate_plot_start(pd.Series(), None)
-    assert timestamp is None
-
-
-def test_to_pd_timestamp_int():
-    timestamp = 1748415600
-    timestamp = _to_pd_timestamp(timestamp)
-    assert isinstance(timestamp, pd.Timestamp)
-
-
-def test_to_pd_timestamp_str():
-    timestamp = "2025-05-28T09:00:00+02:00"
-    timestamp = _to_pd_timestamp(timestamp)
-    assert isinstance(timestamp, pd.Timestamp)
-
-
-def test_to_pd_timestamp_none():
-    timestamp = None
-    timestamp = _to_pd_timestamp(timestamp)
-    assert timestamp is None
-
-
-def test_to_pd_timestamp_float():
-    timestamp = 3.14
-    with pytest.raises(TypeError):
-        timestamp = _to_pd_timestamp(timestamp)
-
-
-@pytest.fixture()
-def series_winter() -> pd.Series:
-    winter = pd.Series(
-        [0, 1, 2, 3],
-        index=pd.to_datetime(
-            ["2023-10-29 00:00", "2023-10-29 01:00", "2023-10-29 02:00", "2023-10-29 03:00"],
-            format="%Y-%m-%d %H:%M",
-            utc=True,
-        ),
-    )
-    winter.attrs["foo"] = "bar"
-
-    return winter
-
-
-@pytest.fixture()
-def series_summer() -> pd.Series:
-    summer = pd.Series(
-        [0, 1, 2, 3],
-        index=pd.to_datetime(
-            ["2023-03-25 23:00", "2023-03-26 00:00", "2023-03-26 01:00", "2023-03-26 02:00"],
-            format="%Y-%m-%d %H:%M",
-            utc=True,
-        ),
-    )
-    summer.attrs["foo"] = "bar"
-    return summer
-
-
-@pytest.fixture()
-def dataframe() -> pd.DataFrame:
-    values = [1.0, 1.2, 1.2]
-    timestamps = pd.to_datetime(
+# tests
+@pytest.mark.parametrize(
+        ("timestamp", "timezone", "result"),
         [
-            "2019-08-01T15:45:36.000Z",
-            "2019-08-02T11:33:41.000Z",
-            "2019-08-03T11:57:41.000Z",
+            pytest.param("2025-01-01T01:00:00", None,  datetime.timezone.utc, id="naive none"),
+            pytest.param("2025-01-01T01:00:00+05:00", None, datetime.timezone(datetime.timedelta(seconds=18000)), id="aware none"),
         ],
-        format="%Y-%m-%dT%H:%M:%S.%fZ",
-    ).tz_localize("UTC")
-
-    ts_df = pd.DataFrame({"timestamp": timestamps, "value": values})
-    ts_df.attrs["foo"] = "bar"
-
-    return ts_df
-
-
-@pytest.fixture()
-def multicolumn_frame() -> pd.DataFrame:
-    values = [1.0, 1.2, 1.2]
-    index = pd.to_datetime(
-        [
-            "2021-08-01T15:45:36.000Z",
-            "2021-08-02T11:33:41.000Z",
-            "2021-08-03T11:57:41.000Z",
-        ],
-        format="%Y-%m-%dT%H:%M:%S.%fZ",
-    ).tz_localize("UTC")
-    more_timestamps = pd.to_datetime(
-        [
-            "2020-08-01T15:45:36.000Z",
-            "2020-08-02T11:33:41.000Z",
-            "2020-08-03T11:57:41.000Z",
-        ],
-        format="%Y-%m-%dT%H:%M:%S.%fZ",
-    ).tz_localize("UTC")
-    timestamps = pd.to_datetime(
-        [
-            "2019-08-01T15:45:36.000Z",
-            "2019-08-02T11:33:41.000Z",
-            "2019-08-03T11:57:41.000Z",
-        ],
-        format="%Y-%m-%dT%H:%M:%S.%fZ",
-    ).tz_localize("UTC")
-
-    ts_df = pd.DataFrame(
-        {"timestamp": timestamps, "values": values, "more_timestamps": more_timestamps}, index=index
     )
-    ts_df.attrs["foo"] = "bar"
+def test_modify_timezone_timestamp_naive(timestamp, timezone, result):
+    modified_timezone = modify_timezone(pd.to_datetime(timestamp), to_timezone = timezone)
+    assert modified_timezone.tz == result
 
-    return ts_df
+
+@pytest.mark.parametrize(
+        ("timestamp", "timezone", "result"),
+        [
+            pytest.param("2025-01-01T01:00:00", "Europe/Berlin", datetime.timedelta(seconds=3600), id="naive given"),
+            pytest.param("2025-01-01T01:00:00+05:00", "Europe/Berlin", datetime.timedelta(seconds=3600), id="aware given"),
+        ],
+    )
+def test_modify_timezone_timestamp_offset(timestamp, timezone, result):
+    modified_timezone = modify_timezone(pd.to_datetime(timestamp), to_timezone = timezone)
+    assert modified_timezone.utcoffset() == result
 
 
 def test_modify_timezone_good_dataframe(dataframe):
@@ -321,7 +152,7 @@ def test_plot_target_timezone(series_summer):
     plot_target_settings_mock = MagicMock(
         return_value=PlotTargetSettings(plot_target_timezone="Europe/Berlin")
     )
-    with patch("hdhelpers.helpers_time.get_plot_target_settings", plot_target_settings_mock):
+    with patch("hdhelpers.plot_target_settings.get_plot_target_settings", plot_target_settings_mock):
         modified_data = modify_timezone(series_summer)
         assert modified_data.index[1].utcoffset() == datetime.timedelta(seconds=3600)
 

@@ -27,7 +27,7 @@ To install hdhelpers in editable mode in your venv please run `uv pip install -e
 Once you are done writing your code, including unit tests, use `./run check` to see if your code quality is sufficient.
 
 ### Documentation
-Fr documentation we use the tool sphinx. Please run `sphinx-build -M html hdhelpers/docs/source hdhelpers/docs/build` to create the documentation which will be stroed in **hdhelpers/docs/build**
+Fr documentation we use the tool sphinx. Please run `sphinx-build -M html docs/source docs/build` to create the documentation which will be stroed in **hdhelpers/docs/build**
 
 ### Build, Publish, and Release
 Before you build the package, set an appropriate version number in `pyproject.toml` that matches the version number in

@@ -4,7 +4,7 @@ from typing import Any
 import pandas as pd
 from glom import Check, Spec, glom
 
-import hdhelpers.metadata_specs as specs
+import hdhelpers.metadata.specs as specs
 
 
 def spec_not_none(spec: str | Spec) -> Spec:

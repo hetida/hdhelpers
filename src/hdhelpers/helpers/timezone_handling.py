@@ -1,153 +1,14 @@
 import logging
-from datetime import datetime
 from functools import singledispatch
-from typing import Literal
 from warnings import warn
 
-import numpy as np
 import pandas as pd
 import pytz
-from pydantic import ValidationError
 
-from hdhelpers.metadata import get_queried_interval
-from hdhelpers.plot_target_settings import get_plot_target_settings
+import hdhelpers
+
 
 logger = logging.getLogger("hdhelpers")
-
-
-def _to_pd_timestamp(
-    timestamp: datetime | str | int | None, raises: bool = True
-) -> pd.Timestamp | None:
-    """Turn datetime string or integer into a pandas timestamp
-
-    Integer values are interpreted as epoch in seconds.
-    String values are accepted in any format compatible with pd.to_datetime.
-    The timezone is set to utc, other timezones can be set via modify_timezone."""
-
-    try:
-        if timestamp is None:
-            return timestamp
-        if isinstance(timestamp, int):
-            return pd.to_datetime(timestamp, unit="s", utc=True)
-        elif isinstance(timestamp, str | datetime):
-            return pd.to_datetime(timestamp, utc=True)
-        else:
-            raise TypeError("Unexpected timestamp type, please use str|int|datetime!")
-    except Exception as exc:  # noqa: E722
-        logger.info("_to_pd_timestamp not sucessful", exc_info=exc)
-        if raises:
-            raise exc
-
-    return None
-
-
-def _estimate_plot_interval(
-    series: pd.Series,
-    timestamp: datetime | str | None,
-    interval_edge: Literal["start", "end"] = "start",
-) -> pd.Timestamp | None:
-    """Get the start timestamp hierarchically
-
-    Will check for an explicit input timestamp first, then check PlotTargetSettings, then the series
-    metadata, and if both are None or not present, will take the first series entry as start
-    timestamp. If the series is also empty, None is returned.
-    """
-    settings_entry = "datetime_x_axes_range_start"
-    metadata_func = get_start_from_metadata
-    index_func = np.min
-    if interval_edge == "end":
-        settings_entry = "datetime_x_axes_range_end"
-        metadata_func = get_end_from_metadata
-        index_func = np.max
-
-    try:
-        timestamp = _to_pd_timestamp(timestamp)
-
-        if timestamp is not None:
-            return timestamp
-
-        plot_target_settings = get_plot_target_settings()
-        timestamp = _to_pd_timestamp(getattr(plot_target_settings, settings_entry))
-        if timestamp is not None:
-            return timestamp
-
-        timestamp = metadata_func(series)
-        if timestamp is not None:
-            return timestamp
-
-        if not series.empty and pd.api.types.is_datetime64_dtype(series.index):
-            timestamp = index_func(series.index)
-            timestamp = _to_pd_timestamp(timestamp)
-            return timestamp
-
-    except ValidationError as exc:
-        msg = "Metadata of series is not in standardformat."
-        logger.warning(msg=msg, exc_info=exc)
-
-    return None
-
-
-def estimate_plot_start(series: pd.Series, timestamp: datetime | str | None) -> pd.Timestamp | None:
-    """Get the start timestamp hierarchically
-
-    Will check for an explicit input timestamp first, then check PlotTargetSettings, then the series
-    metadata, and then it will take the first series entry as start
-    timestamp. If the series is also empty, None is returned.
-
-    Args:
-        series (pd.Series): _description_
-        timestamp (datetime | str | None): _description_
-
-    Returns:
-        pd.Timestamp | None: _description_
-    """
-    return _estimate_plot_interval(series, timestamp, "start")
-
-
-def estimate_plot_end(series: pd.Series, timestamp: datetime | str | None) -> pd.Timestamp | None:
-    """Get the start timestamp hierarchically
-
-    Will check for an explicit input timestamp first, then check PlotTargetSettings, then the series
-     metadata, and if both are None or not present, will take the first series entry as start
-     timestamp. If the series is also empty, None is returned.
-    """
-    return _estimate_plot_interval(series, timestamp, "end")
-
-
-def get_start_from_metadata(series: pd.Series) -> pd.Timestamp | None:
-    """Gets the start datetime of the requested interval from the series.
-
-    Args:
-        series (pd.Series): Series with attributes to get the start of the requested interval.
-
-    Returns:
-        pd.Timestamp: The start of the requested interval as pandas Timestamp, or None in case
-        the metadata is not in the standard format.
-    """
-    try:
-        start, _ = get_queried_interval(series)
-        return _to_pd_timestamp(start)
-    except ValidationError:
-        logger.info("Series not in standard format, not able to get start of requested interval.")
-        return None
-
-
-def get_end_from_metadata(series) -> pd.Timestamp | None:
-    """Gets the end datetime of the requested interval from the series.
-
-    Args:
-        series (pd.Series): Series with attributes to get the end of the requested interval.
-
-    Returns:
-        pd.Timestamp: The end of the requested interval as pandas Timestamp, or None in case
-        the metadata is not in the standard format.
-    """
-    try:
-        _, end = get_queried_interval(series)
-        return _to_pd_timestamp(end)
-    except ValidationError:
-        logger.info("Series not in standard format, not able to get end of requested interval.")
-        return None
 
 
 @singledispatch
@@ -206,7 +67,7 @@ def modify_timezone[T: (pd.Timestamp, pd.Series, pd.DataFrame)](  # noqa: PLR091
 
     try:
         if to_timezone is None:
-            plot_target_settings = get_plot_target_settings()
+            plot_target_settings = hdhelpers.plot_target_settings.get_plot_target_settings()
             if plot_target_settings.plot_target_timezone is not None:
                 to_timezone = plot_target_settings.plot_target_timezone
 

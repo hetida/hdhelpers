@@ -33,6 +33,24 @@ Further Information
 Functions
 =========
 
-.. automodule:: hdhelpers
+metadata
+-----------------
+
+.. automodule:: hdhelpers.metadata
+   :members:
+   :show-inheritance:
+
+
+helpers
+------------------
+
+.. automodule:: hdhelpers.helpers
+   :members:
+   :show-inheritance:
+   
+exceptions
+-------------------
+
+.. automodule:: hdhelpers.exceptions
    :members:
    :show-inheritance:
