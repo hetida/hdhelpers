@@ -6,6 +6,7 @@ from hdhelpers.helpers_plot import (
     get_y_axis_label,
     plotly_fig_to_json_dict,
 )
+
 from hdhelpers.helpers_time import modify_timezone
 from hdhelpers.metadata import (
     get_display_names,
@@ -19,6 +20,7 @@ from hdhelpers.metadata import (
     get_series_unit,
     get_units,
 )
+
 from hdhelpers.plot_target_settings import (
     PlotTargetSettings,
     PlotTargetStyle,

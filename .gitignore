@@ -20,3 +20,4 @@ requirements*.txt
 requirements*.in
 
 todo
+hdhelpers/docs/build/
