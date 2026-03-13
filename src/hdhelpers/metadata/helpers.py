@@ -65,8 +65,15 @@ def get_units(
         ... }
         >>> dataframe = pd.DataFrame()
         >>> dataframe.attrs = attr
-        >>> get_units(dataframe)
-        { "metric1": {"value_dim_1": "m"}, "metric2": {"value_dim_1": None}, "metric3:  {"value_dim_1": None, "value_dim_2": "km"}}
+        >>> result = get_units(dataframe)
+        >>> result["metric1"]
+        {'value_dim_1': 'm'}
+        >>> result["metric2"]
+        {'value_dim_1': None}
+        >>> result["metric3"]
+        {'value_dim_1': None, 'value_dim_2': "km"}
+        >>> assert result["not-defined"] is None
+        True
     """
     return get_value_dimension_info(multitsframe, "unit")
 
@@ -107,7 +114,8 @@ def get_metric_info(multitsframe: pd.DataFrame, metric_info: str | Spec) -> defa
 
     .. doctest::
 
-        >>> from hdhelpers.metadata import get_series_unit
+        >>> from hdhelpers.metadata import get_metric_info
+        >>> multitsframe = pd.DataFrame()
         >>> multitsframe.attrs = {
         ...    "dataset_metadata": {
         ...        "metric_key": "id"
@@ -139,9 +147,13 @@ def get_metric_info(multitsframe: pd.DataFrame, metric_info: str | Spec) -> defa
         ...        }
         ...    ]
         ... }
-        >>> get_metric_info(multitsframe, "external_id")
-        { "first": "external_first", "second": "external_second" }
-
+        >>> result = get_metric_info(multitsframe, "external_id")
+        >>> result["first"]
+        'external_first'
+        >>> result["second"]
+        'external_second'
+        >>> result["not-given"] is None
+        True
     """
     spec = spec_by_metric_key(metric_info)
     metric_info = glom(multitsframe.attrs, spec)
@@ -255,18 +267,18 @@ def get_series_name(series: pd.Series) -> str | None:
         >>> get_series_name(series)
         'value_name_of_series'
 
-        >>> attr = { "by_metric": { "series": {"metric": {"name": "name_of_series"}}}}
+        >>> attr = { "by_metric": { "series": {"metric": {"name": "name_of_series_1"}}}}
         >>> series = pd.Series()
         >>> series.attrs = attr
         >>> get_series_name(series)
-        'name_of_series'
+        'name_of_series_1'
 
-        >>> attr = { "by_metric": { "series": {"metric": {"name": "name_of_series"}},
-        ...                                   "value_dimensions": {"value": {"name": "value_name_of_series"}}}}
+        >>> attr = { "single_metric_metadata": { "structured_metadata": {"metric": {"name": "name_of_series_2"}},
+        ...                                                              "value_dimensions": {"value": {"name": "value_name_of_series"}}}}
         >>> series = pd.Series()
         >>> series.attrs = attr
         >>> get_series_name(series)
-        'name_of_series'
+        'name_of_series_2'
     """
     return cast(str | None, get_series_info(series, spec_not_none("name")))
 
