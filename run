@@ -50,12 +50,12 @@ format() {
 test() {
     if (( ${#} == 0 )) ; then
         echo "Testing hdhelpers package code ..."
-        uv run -m pytest tests -c pytest.ini \
+        python -m pytest tests -c pytest.ini \
         --cov=hdhelpers --no-cov-on-fail \
         --ignore=*/__init__.py
         coverage xml -i -o coverage.xml
     else
-        uv run -m pytest "${@}" \
+        python -m pytest "${@}" \
         --cov="${@}" \
         --no-cov-on-fail --cov-report=term-missing:skip-covered
     fi
@@ -63,7 +63,7 @@ test() {
 
 
 typecheck() {
-    uv run -m mypy "${@}" src
+    python -m mypy "${@}" src
 }
 
 
@@ -71,8 +71,8 @@ check() {
     # Will fail with non-zero exit status if any tool has some complaint.
     # If everything is okay this will have 0 exits status
     echo "--> Running ruff format in check mode" && ruff format src tests --check &&
-        echo "--> Running tests" && uv run -m pytest tests -c pytest.ini --cov=. --cov-report=term-missing --cov-fail-under=80 &&
-        echo "--> Running mypy" && uv run -m mypy src &&
+        echo "--> Running tests" && python -m pytest tests -c pytest.ini --cov=. --cov-report=term-missing --cov-fail-under=80 &&
+        echo "--> Running mypy" && python -m mypy src &&
         echo "--> Running ruff" && ruff check src tests &&
         echo "--> Creating docu" && install_editable_package && create_docu &&
         echo "CHECKS EXECUTION RESULTS: All checks were successful!"
