@@ -53,7 +53,7 @@ homepage = "https://fuseki.com/data-science/hetida-designer/"
 documentation = "https://github.com/hetida/hetida-designer/tree/release/docs"
 repository = "https://github.com/hetida/hetida-designer"
 
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
     "mypy>=1.16.1",
     "pandas-stubs>=2.2.3.250527",
@@ -61,6 +61,9 @@ dev = [
     "pytest-cov>=6.2.1",
     "ruff>=0.12.1",
     "sqlalchemy>=2.0.43",
+]
+docs = [
+    "sphinx"
 ]
 
 [tool.ruff]
