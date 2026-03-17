@@ -47,7 +47,7 @@ helpers
 .. automodule:: hdhelpers.helpers
    :members:
    :show-inheritance:
-   
+
 exceptions
 -------------------
 

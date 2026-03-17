@@ -18,9 +18,6 @@ exclude = [
 ]
 
 
-
-
-
 [project]
 name = "hdhelpers"
 version = "0.0.1"
@@ -69,6 +66,9 @@ dev = [
 [tool.ruff]
 # allow longer lines than the default (88, same as black)
 line-length = 100
+
+
+
 [pycodestyle]
 # Ensures E501 (line-too-long) uses the same limit
 max-line-length = 100
@@ -82,6 +82,7 @@ lint.ignore = ["E713", "E714", "B008", "PLR2004", "COM812", "RET504", "PLR0913",
 
 [tool.ruff.lint.per-file-ignores]
 "/**/tests/**/*.py" = ["S101", "PT023", "T201", "INP001", "PT001", "ARG001", "S113", "S603", "PLR0912"]
+"tests/conftest.py" = ["F401"]
 
 [[tool.mypy.overrides]]
 module = ["glom"]

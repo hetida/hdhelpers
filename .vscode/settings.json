@@ -38,7 +38,8 @@
     "python.testing.unittestEnabled": false,
     "autoDocstring.docstringFormat": "google",
     "autoDocstring.includeName": false,
-    "autoDocstring.generateDocstringOnEnter": true
+    "autoDocstring.generateDocstringOnEnter": true,
+    "rewrap.wrappingColumn": 120
 
 
 }

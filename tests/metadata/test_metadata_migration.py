@@ -11,6 +11,19 @@ from hdhelpers.metadata import (
 )
 
 
+def test_get_units_mts_old_format_by_metric(empty_mts_with_old_attr_real):
+    ##### NEW #####
+    units_by_metric_by_value_dimension = get_units(empty_mts_with_old_attr_real)
+
+    # get values
+    assert units_by_metric_by_value_dimension["metric1"]["value_dim1"] == "m³/s"
+    assert units_by_metric_by_value_dimension["metric1"]["value_dim2"] == "m³/s"
+    assert units_by_metric_by_value_dimension["metric2"]["value_dim1"] == "m³/h"
+
+    # ensure that default dict is used in case of missing entry
+    assert units_by_metric_by_value_dimension["SOME"]["SOME"] is None  # is a default dict
+
+
 def test_get_units_mts_old_format(empty_mts_with_old_attr):
     units_by_metric_by_value_dimension = get_units(empty_mts_with_old_attr)
 
@@ -23,7 +36,6 @@ def test_get_units_mts_old_format(empty_mts_with_old_attr):
 
 
 def test_get_units_mts_new_format_1(empty_mts_with_attr):
-
     measurements_by_metric_by_value_dimension = get_measurements(empty_mts_with_attr)
 
     assert measurements_by_metric_by_value_dimension["first"]["temp"] == "temperature"
@@ -39,7 +51,6 @@ def test_get_units_mts_new_format_1(empty_mts_with_attr):
 
 
 def test_get_units_mts_new_format_2(empty_mts_with_attr):
-
     units_by_metric_by_value_dimension = get_units(empty_mts_with_attr)
 
     assert units_by_metric_by_value_dimension["first"]["temp"] == "C"
@@ -61,7 +72,6 @@ def test_get_units_mts_new_format_2(empty_mts_with_attr):
 
 
 def test_get_units_mts_new_format_3(empty_mts_with_attr):
-
     empty_mts_with_attr.attrs["dataset_metadata"]["metric_key"] = "external_id"
     units_by_metric_by_value_dimension = get_units(empty_mts_with_attr)
 
@@ -84,7 +94,6 @@ def test_get_units_mts_new_format_3(empty_mts_with_attr):
 
 
 def test_get_multitsframe_display_names_from_metadata_with_value_dimensions(empty_mts_with_attr):
-
     display_names_by_metric_by_value_dimension = get_display_names(empty_mts_with_attr)
 
     assert display_names_by_metric_by_value_dimension["first"]["temp"] is None
@@ -105,7 +114,6 @@ def test_get_multitsframe_display_names_from_metadata_with_value_dimensions(empt
 
 
 def test_get_metric_info(empty_mts_with_attr):
-
     external_ids_by_metric = get_metric_info(empty_mts_with_attr, "external_id")
 
     assert external_ids_by_metric["UNKNOWN"] is None
@@ -124,7 +132,6 @@ def test_series_unit(empty_series_with_attr):
 
 
 def test_series_unit_old(empty_series_with_old_attr):
-
     assert get_series_unit(empty_series_with_old_attr) == "C°"
 
     assert get_series_name(empty_series_with_old_attr) == "Muster Channel"

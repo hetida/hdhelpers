@@ -8,28 +8,44 @@ import pytest
 from hdhelpers.helpers import modify_timezone
 from hdhelpers.plot_target_settings import PlotTargetSettings
 
+
 # tests
 @pytest.mark.parametrize(
-        ("timestamp", "timezone", "result"),
-        [
-            pytest.param("2025-01-01T01:00:00", None,  datetime.timezone.utc, id="naive none"),
-            pytest.param("2025-01-01T01:00:00+05:00", None, datetime.timezone(datetime.timedelta(seconds=18000)), id="aware none"),
-        ],
-    )
+    ("timestamp", "timezone", "result"),
+    [
+        pytest.param("2025-01-01T01:00:00", None, datetime.timezone.utc, id="naive none"),
+        pytest.param(
+            "2025-01-01T01:00:00+05:00",
+            None,
+            datetime.timezone(datetime.timedelta(seconds=18000)),
+            id="aware none",
+        ),
+    ],
+)
 def test_modify_timezone_timestamp_naive(timestamp, timezone, result):
-    modified_timezone = modify_timezone(pd.to_datetime(timestamp), to_timezone = timezone)
+    modified_timezone = modify_timezone(pd.to_datetime(timestamp), to_timezone=timezone)
     assert modified_timezone.tz == result
 
 
 @pytest.mark.parametrize(
-        ("timestamp", "timezone", "result"),
-        [
-            pytest.param("2025-01-01T01:00:00", "Europe/Berlin", datetime.timedelta(seconds=3600), id="naive given"),
-            pytest.param("2025-01-01T01:00:00+05:00", "Europe/Berlin", datetime.timedelta(seconds=3600), id="aware given"),
-        ],
-    )
+    ("timestamp", "timezone", "result"),
+    [
+        pytest.param(
+            "2025-01-01T01:00:00",
+            "Europe/Berlin",
+            datetime.timedelta(seconds=3600),
+            id="naive given",
+        ),
+        pytest.param(
+            "2025-01-01T01:00:00+05:00",
+            "Europe/Berlin",
+            datetime.timedelta(seconds=3600),
+            id="aware given",
+        ),
+    ],
+)
 def test_modify_timezone_timestamp_offset(timestamp, timezone, result):
-    modified_timezone = modify_timezone(pd.to_datetime(timestamp), to_timezone = timezone)
+    modified_timezone = modify_timezone(pd.to_datetime(timestamp), to_timezone=timezone)
     assert modified_timezone.utcoffset() == result
 
 
@@ -152,7 +168,9 @@ def test_plot_target_timezone(series_summer):
     plot_target_settings_mock = MagicMock(
         return_value=PlotTargetSettings(plot_target_timezone="Europe/Berlin")
     )
-    with patch("hdhelpers.plot_target_settings.get_plot_target_settings", plot_target_settings_mock):
+    with patch(
+        "hdhelpers.plot_target_settings.get_plot_target_settings", plot_target_settings_mock
+    ):
         modified_data = modify_timezone(series_summer)
         assert modified_data.index[1].utcoffset() == datetime.timedelta(seconds=3600)
 

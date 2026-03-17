@@ -1,6 +1,7 @@
 import pandas as pd
 import pytest
 
+
 @pytest.fixture(scope="function")
 def series_winter() -> pd.Series:
     winter = pd.Series(

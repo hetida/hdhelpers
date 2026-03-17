@@ -7,7 +7,6 @@ import pytz
 
 import hdhelpers
 
-
 logger = logging.getLogger("hdhelpers")
 
 

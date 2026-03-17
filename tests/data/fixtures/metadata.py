@@ -3,6 +3,7 @@ import json
 import pandas as pd
 import pytest
 
+
 @pytest.fixture(scope="function")
 def empty_mts_with_old_attr() -> pd.DataFrame:
     with open("tests/data/json_templates/old_mts_attrs.json", "r") as file:

@@ -1,4 +1,4 @@
-""" Collection of functions to access metadata information from timeseries objects """
+"""Collection of functions to access metadata information from timeseries objects"""
 
 from .helpers import (
     get_display_names,

@@ -44,21 +44,17 @@ def get_units(
         >>> attr = {
         ...    "by_metric": {
         ...        "metric1": {
-        ...           "value_dimension": {
+        ...           "value_dimensions": {
         ...                "value_dim_1": {
         ...                    "unit": "m"
         ...                }
         ...            }
         ...        },
-        ...        "metric2": {
-        ...                "value_dim_1": {
-        ...                    "name": "name_of_value_dim_1"
-        ...                }
-        ...        },
         ...        "metric3": {
-        ...            "value_dim_1": {},
-        ...            "value_dim_2": {
-        ...                "unit": "km"
+        ...            "value_dimensions": {
+        ...                 "value_dim_1": {
+        ...                     "unit": None,
+        ...                 }
         ...            }
         ...        }
         ...    }
@@ -66,13 +62,11 @@ def get_units(
         >>> dataframe = pd.DataFrame()
         >>> dataframe.attrs = attr
         >>> result = get_units(dataframe)
-        >>> result["metric1"]
-        {'value_dim_1': 'm'}
-        >>> result["metric2"]
-        {'value_dim_1': None}
-        >>> result["metric3"]
-        {'value_dim_1': None, 'value_dim_2': "km"}
-        >>> assert result["not-defined"] is None
+        >>> result["metric1"]['value_dim_1']
+        'm'
+        >>> result["metric3"]['value_dim_1'] is None
+        True
+        >>> result["metric2"]['value_dim_1'] is None
         True
     """
     return get_value_dimension_info(multitsframe, "unit")
@@ -179,8 +173,9 @@ def get_series_info(series: pd.Series, value_dim_info: str | Spec) -> Any:
     this value dimension.
     """
     series_metric_key = extract_from_metadata(series.attrs, key="single_metric", default="series")
-    from_new_convention = get_value_dimension_info(series, value_dim_info)[series_metric_key].get('value')
-
+    from_new_convention = get_value_dimension_info(series, value_dim_info)[series_metric_key].get(
+        "value"
+    )
 
     if from_new_convention is not None:
         return from_new_convention

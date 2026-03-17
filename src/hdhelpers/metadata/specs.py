@@ -251,28 +251,22 @@ def _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
     add_keys_with_none_values allows to add keys even if they do not occur
     with a default value of None.
 
-    Example:
+    .. doctest::
 
-    data = {
-        "some": [
-            {"id": 42, "name": "some_name", "sub": {"unit": "l"}},
-            {"id": 53, "name": "another", "sub": {"unit": "m"}},
-        ]
-    }
-
-    glom(
-        data,
-        (
-            "some",
-            build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
-                "id", "sub.unit"
-            ),
-        ),
-    )
-
-    # yields:
-    {42: 'l', 53: 'm'}
+        >>> from hdhelpers.metadata.specs import _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result
+        >>> from glom import glom
+        >>> data = {
+        ...    "some": [
+        ...    {"id": "42", "name": "some_name", "sub": {"unit": "l"}},
+        ...    {"id": "53", "name": "another", "sub": {"unit": "m"}},]
+        ... }
+        >>> result = glom(data, ("some", _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result("id", "sub.unit")))
+        >>> result["42"]
+        'l'
+        >>> result["53"]
+        'm'
     """
+
     if add_keys_with_none_values is None:
         add_keys_with_none_values = []
 
@@ -283,7 +277,7 @@ def _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
 
     return (
         [{"key": key_spec if not key_as_value else T[key_spec], "value": value_spec}],
-        [lambda x: (x["key"], x["value"])],
+        [lambda x: (x.get("key"), x.get("value"))],
         dict,
         lambda x: _update_dict_and_return_it(start_dict.copy(), x),
     ) + ((continuation_spec,) if continuation_spec is not None else ())
@@ -302,47 +296,43 @@ def _glom_dict_with_keys_of_current_dict_and_values_something_deeper_nested(
     add_keys_with_none_values allows to add keys even if they do not occur
     with a default value of None.
 
+    .. doctest::
 
-    E.g.
-
-    data = {
-        'some_other_field': 'value',
-        'by_item': {
-            'item1': {
-                'metadata': {
-                    'properties': {
-                        'unit': 'kg'
-                    }
-                }
-            },
-            'item2': {
-                'info': {
-                    'details': {
-                        'unit': 'meters'
-                    }
-                }
-            },
-            'item3': {
-                'unit': 'liters'
-            }
-        }
-    }
-
-    res = glom(
-        data,
-        (
-            "by_item",
-            glom_dict_with_keys_of_current_dict_and_values_something_deeper_nested(
-                Coalesce(
-                    "metadata.properties.unit", "info.details.unit", "unit", default=None
-                )
-            ),
-        ),
-    )
-    print(res)
-    # will output:
-    #     {'item1': 'kg', 'item2': 'meters', 'item3': 'liters'}
-
+        >>> from hdhelpers.metadata.specs import _glom_dict_with_keys_of_current_dict_and_values_something_deeper_nested
+        >>> from glom import glom
+        >>> data = {
+        ...     'some_other_field': 'value',
+        ...     'by_item': {
+        ...         'item1': {
+        ...             'metadata': {
+        ...                 'properties': {
+        ...                     'unit': 'kg'
+        ...                  }
+        ...              }
+        ...         },
+        ...         'item2': {
+        ...             'info': {
+        ...                 'details': {
+        ...                     'unit': 'meters'
+        ...                 }
+        ...             }
+        ...         },
+        ...         'item3': {
+        ...             'unit': 'liters'
+        ...         }
+        ...     }
+        ... }
+        >>> glom(
+        ... data,
+        ...     ("by_item",
+        ...         _glom_dict_with_keys_of_current_dict_and_values_something_deeper_nested(
+        ...             Coalesce(
+        ...                 "metadata.properties.unit", "info.details.unit", "unit", default=None
+        ...             )
+        ...         ),
+        ...     ),
+        ... )
+        {'item1': 'kg', 'item2': 'meters', 'item3': 'liters'}
     """
     if add_keys_with_none_values is None:
         add_keys_with_none_values = []
