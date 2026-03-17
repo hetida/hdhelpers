@@ -79,7 +79,7 @@ check() {
 }
 
 install_editable_package(){
-    uv pip install -e .
+    pip install -e .
 }
 
 #----- Execution -----#
