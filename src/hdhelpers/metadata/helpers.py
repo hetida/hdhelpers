@@ -17,6 +17,7 @@ import pandas as pd
 from glom import Coalesce, Spec, glom
 
 from hdhelpers.metadata.private import (
+    extract_from_metadata,
     get_value_dimension_info,
     spec_not_none,
 )
@@ -73,38 +74,128 @@ def get_units(
 
 
 def get_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, str | None]]:
+    """Gets names of the MTS metrics from Metadata
+
+    Args:
+        timeseries_object (pd.DataFrame): MTS with metadata following the convention.
+
+    Returns:
+        dict[str, str | None]: Dictionary of metrics containing the names.
+            If the name is not present for a metric the corresponding value is None.
+
+    Raises:
+        TypeError: If `timeseries_object` is not a DataFrame.
+
+    .. doctest::
+
+        >>> from hdhelpers.metadata import get_names
+        >>> attr = { "by_metric": { "metric1": {"metric": {"name": "name_of_metric1"}}},
+        ...                       { "metric2": {"metric": {"name": None }}}}
+        >>> dataframe = pd.DataFrame()
+        >>> dataframe.attrs = attr
+        >>> result = get_names(dataframe)
+        >>> result["metric1"]
+        'name_of_metric1'
+        >>> result["metric2"] is None
+        True
+    """
+
     return get_value_dimension_info(multitsframe, Coalesce("name", default=None))
 
 
 def get_display_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, str | None]]:
+    # TODO: NOT WORKING DOCTEST
+    """Gets display names of the MTS metrics from Metadata
+
+    Args:
+        timeseries_object (pd.DataFrame): MTS with metadata following the convention.
+
+    Returns:
+        dict[str, dict[str, str | None]]: Dictionary of metrics containing the display names.
+        If the display name of the metrics is not present it returns the result of get_metric_names().
+
+    Raises:
+        TypeError: If `timeseries_object` is not a DataFrame.
+
+    .. doctest::
+
+        >>> from hdhelpers.metadata import get_display_names
+        >>> attr = { "by_metric": { "metric1": {"metric": {"display_name": "display_name_of_metric1"}},
+        ...                         "metric2": {"metric": {"name": "name_of_metric2"}}}}
+        >>> dataframe = pd.DataFrame()
+        >>> dataframe.attrs = attr
+        >>> result = get_display_names(dataframe)
+        >>> result["metric1"]
+        "display_name_of_metric1"
+        >>> result["metric2"]
+        "name_of_metric2"
+    """
+
     return get_value_dimension_info(multitsframe, Coalesce("display_name", "name", default=None))
 
 
 def get_short_display_names(
     multitsframe: pd.DataFrame,
 ) -> defaultdict[str, defaultdict[str, str | None]]:
+    """Gets short display names of the MTS metrics from Metadata
+
+    Args:
+        timeseries_object (pd.DataFrame): MTS with metadata following the convention.
+
+    Returns:
+        dict[str, str | None]: Dictionary of metrics containing the short display names.
+        If the short display name of the metrics is not present it returns the result of get_metric_display_names().
+
+    Raises:
+        TypeError: If `timeseries_object` is not a DataFrame.
+
+    .. doctest::
+
+        >>> from hdhelpers.metadata import get_short_display_names
+        >>> attr = { "by_metric": { "metric1": {"metric": {"short_display_name": "short_display_name_of_metric1"}},
+        ...                         "metric2": {"metric": {"name": "name_of_metric2"}},
+        ...                         "metric3" : {}} }}
+        >>> dataframe = pd.DataFrame()
+        >>> dataframe.attrs = attr
+        >>> result = get_short_display_names(dataframe)
+        >>> result["metric1"]
+        "short_display_name_of_metric1"
+        >>> result["metric2"]
+        "name_of_metric2"
+        >>> result["metric3"] is None
+        True
+    """
+
     return get_value_dimension_info(
         multitsframe, Coalesce("short_display_name", "display_name", "name", default=None)
     )
 
 
 def get_measurements(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, str | None]]:
+    """_summary_
+
+    Args:
+        multitsframe (pd.DataFrame): _description_
+
+    Returns:
+        defaultdict[str, defaultdict[str, str | None]]: _description_
+    """
     return get_value_dimension_info(multitsframe, "measurement")
 
 
 def get_metric_info(multitsframe: pd.DataFrame, metric_info: str | Spec) -> defaultdict[str, Any]:
-    """Obtain a defaultdict of metadata associated to metrics
+    """Obtain a dictionary of metadata associated to metrics
 
     In contrast to metadata associated to concrete value dimensions, this
     function abstracts access to metadata associated to the underlying metric.
 
-    The keys are the entries of the metrics metadata specified via
-    "metric_key" in "dataset_metadata".
+    Args:
+        multitsframe (pd.DataFrame): multitsframe to retrieve information from
+        metric_info (str | Spec): Name of informartion to retrieve. Note that metric_info is interpreted as a glom Spec.
 
-    The values are the entries specified via metric_info in the metrics metadata.
-    Note that metric_info is interpreted as a glom Spec.
-
-    The default value of the default dict is None.
+    Returns:
+        defaultdict[str, Any]: dictionary, where keys are the entries of the metrics metadata specified via
+    "metric_key" in "dataset_metadata" and values are the entries specified via metric_info in the metrics metadata
 
     .. doctest::
 
@@ -153,13 +244,6 @@ def get_metric_info(multitsframe: pd.DataFrame, metric_info: str | Spec) -> defa
     metric_info = glom(multitsframe.attrs, spec)
     return defaultdict(lambda: None, metric_info)
 
-
-def extract_series_metric_key(metadata: Any) -> Any:
-    return glom(metadata, Coalesce("dataset_metadata.single_metric", default="series"))
-
-
-def extract_from_metadata(metadata: Any, key: str, default: str | None = None) -> Any:
-    return glom(metadata, Coalesce(f"dataset_metadata.{key}", default=default))
 
 
 def get_series_info(series: pd.Series, value_dim_info: str | Spec) -> Any:
@@ -295,6 +379,7 @@ def get_series_display_name(series: pd.Series) -> str | None:
 
     .. doctest::
 
+        >>> import pandas as pd
         >>> from hdhelpers.metadata import get_series_display_name
         >>> attr = { "by_metric": { "series": {"metric": {"display_name": "display_name_of_series"}}}}
         >>> series = pd.Series()
@@ -332,6 +417,7 @@ def get_series_short_display_name(series: pd.Series) -> str | None:
 
     .. doctest::
 
+        >>> import pandas as pd
         >>> from hdhelpers.metadata import get_series_short_display_name
         >>> attr = { "by_metric": { "series": { "metric": {"short_display_name": "short_display_name_of_series"}}}}
         >>> series = pd.Series()
@@ -353,12 +439,51 @@ def get_series_short_display_name(series: pd.Series) -> str | None:
 
 
 def get_series_measurement(series: pd.Series) -> str | None:
+    """_summary_
+
+    Args:
+        series (pd.Series): _description_
+
+    Returns:
+        str | None: _description_
+    """
     return cast(str | None, get_series_info(series, "measurement"))
 
 
 def get_queried_interval(
     data: pd.Series | pd.DataFrame,
 ) -> tuple[datetime.datetime | None, datetime.datetime | None]:
+    """Get queried interval from metadata
+
+    Args:
+        timeseries_object (pd.Series | pd.DataFrame): Series or Dataframe with metadata following the convention
+
+    Returns:
+        tuple[datetime.datetime|None, datetime.datetime|None]: Tuple of available start and end date of requested interval.
+
+    Raises:
+        ValueError: If metadata of `timeseries_object` is not None and not convertable to a datetime-object (ISO-format is expected).
+        TypeError: If `timeseries_object` is not a Series or Dataframe.
+
+    .. doctest::
+
+        >>> import pandas as pd
+        >>> from hdhelpers.metadata import get_queried_interval
+        >>> attr = {
+        ...        "dataset_metadata": {
+        ...        "ref_interval_start_timestamp": "2025-11-05T13:28:00Z",
+        ...        "ref_interval_end_timestamp": "2025-11-06T13:28:00Z"
+        ...    }
+        ... }
+        >>> series = pd.Series()
+        >>> series.attrs = attr
+        >>> start, end = get_queried_interval(series)
+        >>> start.isoformat()
+        '2025-11-05T13:28:00+00:00'
+        >>> end.isoformat()
+        '2025-11-06T13:28:00+00:00'
+    """
+
     start = extract_from_metadata(data.attrs, key="ref_interval_start_timestamp", default=None)
     end = extract_from_metadata(data.attrs, key="ref_interval_end_timestamp", default=None)
 

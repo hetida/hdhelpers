@@ -2,8 +2,8 @@
 First steps
 #######################
 
-Example for plotting
-====================
+Example for plotting (tbd)
+==========================
 
 Let's say we want to plot a timeseries with data points.
 In hetida designer this series can be represented as json for *direct provisioning* :
@@ -38,7 +38,8 @@ Our component code might look like this:
 
 .. code-block:: python
 
-    from hdhelpers import get_and_pad_start_and_end_timestamp, get_y_axis_label, modify_timezone, plotly_fig_to_json_dict
+    from hdhelpers.plotting import get_and_pad_start_and_end_timestamp, get_y_axis_label, plotly_fig_to_json_dict
+    from hdhelpers.helpers import modify_timezone
     import plotly.graph_objects as go
 
     def main(*, series):

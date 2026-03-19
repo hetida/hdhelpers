@@ -47,16 +47,32 @@ def modify_timezone[T: (pd.Timestamp, pd.Series, pd.DataFrame)](  # noqa: PLR091
     to_timezone: str | None = None,
     column_name: str | None = None,
     column_names: list[str] | None = None,
-    convert_index: bool = True,
-) -> T:
+    convert_index: bool = True,) -> T:
     """Modifies timestamps to a certain timezone
 
-    Keyword arguments:
-    object_to_convert -- pd.Timestamp, pd.Series or pd.DataFrame where timezone is modified
-    to_timezone -- timezone to convert to, e.g. for German time use Europe/Berlin.
-    See possible timezone strings in pandas tz_convert method or pytz all_timezones list.
-    column_name -- column_name to apply, default is index as pd.Series have timestamps in index
+    Args:
+        object_to_convert (pd.Timestamp | pd.Series | pd.DataFrame): Timestamp, Series or DataFrame where timezone is modified
+        to_timezone (str | None): timezone to convert to, e.g. for German time use Europe/Berlin. See possible timezone strings in pandas tz_convert method or pytz all_timezones list. Default is None.
+        column_name (str | None): column_name to apply, default is index as pd.Series have timestamps in index. Will be deprecated soon. Default is None.
+        column_names (str | None): list of column_names to apply, default is index as pd.Series have timestamps in index. Default is None.
+        convert_index (bool | None): Convert index. Default is true.
+
+    Returns:
+        pd.Timestamp | pd.Series | pd.DataFrame:
+            Returns the modified timezone object.
+
+    Raises:
+        TypeError: If `object_to_convert` is not a Series, Timestamp, DataFrame.
+
+    .. doctest::
+
+        >>> from hdhelpers.helpers import modify_timezone
+        >>> modified_timezone = modify_timezone(pd.to_datetime("2025-01-01T01:00:00+05:00"), to_timezone="Europe/Berlin")
+        >>> int(modified_timezone.utcoffset().total_seconds())
+        3600
     """
+
+
     if not isinstance(object_to_convert, pd.Timestamp | pd.Series | pd.DataFrame):
         raise TypeError(
             f"object_to_convert is {type(object_to_convert)} not pd.Series | pd.DataFrame"

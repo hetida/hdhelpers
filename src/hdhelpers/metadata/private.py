@@ -2,7 +2,7 @@ from collections import defaultdict
 from typing import Any
 
 import pandas as pd
-from glom import Check, Spec, glom
+from glom import Check, Coalesce, Spec, glom
 
 import hdhelpers.metadata.specs as specs
 
@@ -11,6 +11,14 @@ def spec_not_none(spec: str | Spec) -> Spec:
     """this entries must be given in the spec"""
     # TODO: Given the suite of tools introduced with Match, the Check specifier type may be deprecated in a future release
     return (spec, Check(validate=lambda x: x is not None))
+
+
+def extract_from_metadata(metadata: Any, key: str, default: str | None = None) -> Any:
+    return glom(metadata, Coalesce(f"dataset_metadata.{key}", default=default))
+
+def extract_series_metric_key(metadata: Any) -> Any:
+    """TODO: Not sure why it exists - have to check"""
+    return glom(metadata, Coalesce("dataset_metadata.single_metric", default="series"))
 
 
 def get_value_dimension_info(
