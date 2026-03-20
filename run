@@ -10,7 +10,8 @@ usage() {
     echo "  - typecheck           :    run mypy static type check"
     echo "  - format              :    run ruff format"
     echo "  - check               :    run format check, tests, typechecking"
-    echo "  - create_docu         :    runs sphinx to generate python pcakge documentation"
+    echo "  - create_docu         :    runs sphinx to generate python package documentation"
+    echo "  - build_package       :    builds package with defined version"
 }
 
 set -euo pipefail
@@ -80,6 +81,12 @@ check() {
 
 install_editable_package(){
     pip install -e .
+}
+
+build_package(){
+    rm -r dist
+    uv version ${@}
+    uv build --no-sources
 }
 
 #----- Execution -----#

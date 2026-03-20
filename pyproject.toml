@@ -20,7 +20,7 @@ exclude = [
 
 [project]
 name = "hdhelpers"
-version = "0.0.1"
+version = "0.0.2"
 description = "Streamlines plotting and timezone handling in hetida designer components"
 readme = "README.md"
 authors = [
