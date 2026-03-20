@@ -1,0 +1,16 @@
+name: Deploy Sphinx Docs
+
+on:
+push:
+branches:
+- main
+
+jobs:
+  deploy:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v3
+    - uses: sphinx-notes/pages@v3
+    with:
+      documentation_path: hdhelpers/docs/source
+      publish: true
