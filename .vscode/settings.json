@@ -29,17 +29,5 @@
     },
     "python.defaultInterpreterPath": ".venv/bin/python",
     "python.languageServer": "Default",
-    "python.testing.pytestArgs": [
-        "-v",
-        "-c",
-        "pytest.ini"
-    ],
-    "python.testing.pytestEnabled": true,
-    "python.testing.unittestEnabled": false,
-    "autoDocstring.docstringFormat": "google",
-    "autoDocstring.includeName": false,
-    "autoDocstring.generateDocstringOnEnter": true,
-    "rewrap.wrappingColumn": 120
-
 
 }

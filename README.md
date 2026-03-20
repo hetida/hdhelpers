@@ -15,7 +15,7 @@ For dependency management and venv setup, building and publishing, [uv](https://
 ### Setting up a Development Environment
 1) Create a virtual environment with `uv venv`. This will create a hidden `.venv` directory.
 2) Activate the virtual environment via `source .venv/bin/activate`
-3) Run `uv sync` to install all dependencies given in pyproject.toml.
+3) Run `uv sync --all-extras` to install all dependencies given in pyproject.toml.
 4) In case you need to add a new dependency, do so via `uv add <new_dependency>`. That way, uv finds versions of all
    dependencies that are compatible with each other.
 5) In case you need a new requirement for development purposes please use `uv add --dev <new_dependency>`
@@ -28,19 +28,36 @@ Once you are done writing your code, including unit tests, use `./run check` to 
 ### Documentation
 Fr documentation we use the tool sphinx. Please apply `run create_docu` to create the current state of documentation. It will be stored in **docs/build**.
 
-### Build, Publish, and Release
-To **build** distribution wheels for the package, please excecute `./run build_package <version_nr>` where version number
-should follow [semantic versioning](https://semver.org/).
+### Build, Release and Publish
+This process is usually triggered when a PR from develop to main is created.
 
-To publish the build from the `dist` subdirectory to PyPI, use `uv publish`. To do so, you need a PyPI account with a
-token to enter in the command line as password following the username "\_\_token__", and you need maintainer or owner
-access to the [hdhelpers PyPI project](https://pypi.org/project/hdhelpers/).
+To **build** and **release** a new package version
 
-After publishing please communicate to the hetida designer team so upgrade there dependencies.
+1) Please execute `./run build_package <version_nr>` where version number should follow [semantic versioning](https://semver.org/).
+This will:
+- Runs `uv lock --upgrade` to upgrade dependencies.
+- Update version in pyproject.toml
+- Update __version__ in __init__.py
+- Builds wheels of hdhelpers in ./dist
+
+2) Ensure that listed `classifiers` in `pyproject.toml`are up to date. If not
+- Update pyproject.toml accordingly
+- Update `./run test-py-versions` accordingly for local testing using uv
+- Update `check_pull_request.yml` accordingly for automated pipeline execution of checks
+
+3) Update CHANGELOG.md manually
+
+
+When the PR is accepted, the package can be published. To **publish** the build from the `dist` subdirectory to PyPI,
+
+1) tag your main branch with the specified package version using github interface
+
+2) use `uv publish`. To do so, you need a PyPI account with a token to enter in the command line as password following the username "\_\_token__",
+and you need maintainer or owner access to the [hdhelpers PyPI project](https://pypi.org/project/hdhelpers/).
+
+3) After publishing please communicate to the hetida designer team so upgrade there dependencies.
 The hetida designer docker compose setup installs hdhelpers from [PyPI](https://pypi.org) as it does with any dependency listed in `runtime/requirements.in`.
 
-Next time your hetida designer docker compose dev setup builds the runtime container, it will install the hdhelpers
-version that you just deployed.
 
 ### Trouble Shooting
 - Please ensure that dependencies specified for hdhelpers do work in current designer versions.

@@ -4,7 +4,7 @@ from typing import Any
 import pandas as pd
 from glom import Check, Coalesce, Spec, glom
 
-import hdhelpers.metadata.specs as specs
+import hdhelpers.metadata._specs as _specs
 
 
 def check_dataframe(data: pd.DataFrame):
@@ -19,7 +19,7 @@ def check_series(series: pd.Series):
 
 def check_series_or_dataframe(data: pd.Series | pd.DataFrame):
     if not isinstance(data, pd.Series) and not isinstance(data, pd.DataFrame):
-        raise TypeError("Input os not a pd.Series or pd.DataFrame.")
+        raise TypeError("Input is not a pd.Series or pd.DataFrame.")
 
 
 def spec_not_none(spec: str | Spec) -> Spec:
@@ -30,11 +30,6 @@ def spec_not_none(spec: str | Spec) -> Spec:
 
 def extract_from_metadata(metadata: Any, key: str, default: str | None = None) -> Any:
     return glom(metadata, Coalesce(f"dataset_metadata.{key}", default=default))
-
-
-def extract_series_metric_key(metadata: Any) -> Any:
-    """TODO: Not sure why it exists - have to check"""
-    return glom(metadata, Coalesce("dataset_metadata.single_metric", default="series"))
 
 
 def get_value_dimension_info(
@@ -61,7 +56,7 @@ def get_value_dimension_info(
 
     For examples we refer to the corresponding unit tests (/tests/helpers/test_metadata.py).
     """
-    spec = specs.by_metric_key_by_val_dimension(value_dim_info)
+    spec = _specs.by_metric_key_by_val_dimension(value_dim_info)
     value_dimension_info_by_metric_by_value_dimension = glom(multitsframe.attrs, spec)
     return defaultdict(
         lambda: defaultdict(lambda: None), value_dimension_info_by_metric_by_value_dimension

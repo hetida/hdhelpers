@@ -17,28 +17,25 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13", "3.14"]
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
-
-      - name: Setup Python
-        uses: actions/setup-python@v5.0.0
+      - uses: actions/checkout@v5
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
-          # Version range or exact version of Python to use, using SemVer's version range syntax. Reads from .python-version if unset.
-          python-version: "3.13"
-          # Used to specify a package manager for caching in the default directory. Supported values: pip, pipenv, poetry.
-          cache: pip
+          python-version: ${{ matrix.python-version }}
 
-      # Runs a single command using the runners shell
-      - name: Info
-        run: echo "Applying Quality Assurance Framework"
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
 
       - name: Sync dependencies and run checks
         run: |
           set -e
           echo "Installing hdhelpers"
           pip install ".[dev, docs]"
-          echo "Running checks..."
-          ./run check
+          echo "Running tests..."
+          ./run test

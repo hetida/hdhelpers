@@ -12,6 +12,7 @@ usage() {
     echo "  - check               :    run format check, tests, typechecking"
     echo "  - create_docu         :    runs sphinx to generate python package documentation"
     echo "  - build_package       :    builds package with defined version"
+    echo "  - test-py-versions    :    runs tests on several python version using uv run --python"
 }
 
 set -euo pipefail
@@ -71,12 +72,36 @@ typecheck() {
 check() {
     # Will fail with non-zero exit status if any tool has some complaint.
     # If everything is okay this will have 0 exits status
-    echo "--> Running ruff format in check mode" && ruff format src tests --check &&
+    local no_tests="false"
+
+     # Parse flags
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --no-tests)
+                no_tests="true"
+                shift
+                ;;
+            *)
+                echo "Unknown option: $1"
+                exit 1
+                ;;
+        esac
+    done
+
+    if [[ "$no_tests" == "true" ]]; then
+        echo "--> Running ruff format in check mode" && ruff format src tests --check &&
+        echo "--> Running mypy" && python -m mypy src &&
+        echo "--> Running ruff" && ruff check src tests &&
+        echo "--> Creating docu" && install_editable_package && create_docu &&
+        echo "CHECKS EXECUTION RESULTS: All checks were successful!"
+    else
+        echo "--> Running ruff format in check mode" && ruff format src tests --check &&
         echo "--> Running tests" && python -m pytest tests -c pytest.ini --cov=. --cov-report=term-missing --cov-fail-under=80 &&
         echo "--> Running mypy" && python -m mypy src &&
         echo "--> Running ruff" && ruff check src tests &&
         echo "--> Creating docu" && install_editable_package && create_docu &&
         echo "CHECKS EXECUTION RESULTS: All checks were successful!"
+    fi
 }
 
 install_editable_package(){
@@ -84,9 +109,17 @@ install_editable_package(){
 }
 
 build_package(){
+    uv lock --upgrade
     rm -r dist
-    uv version ${@}
+    uv version $@
+    sed -i "s/^__version__ = .*/__version__ = \"$@\"/" src/hdhelpers/__init__.py
     uv build --no-sources
+}
+
+test-py-versions() {
+    echo "Py 3.12" && uv run --python=3.12 --all-extras pytest tests -c pytest.ini --cov=. --cov-report=term-missing --cov-fail-under=80 &&
+    echo "Py 3.13" && uv run --python=3.13 --all-extras pytest tests -c pytest.ini --cov=. --cov-report=term-missing --cov-fail-under=80 &&
+    echo "Py 3.14" && uv run --python=3.14 --all-extras pytest tests -c pytest.ini --cov=. --cov-report=term-missing --cov-fail-under=80
 }
 
 #----- Execution -----#

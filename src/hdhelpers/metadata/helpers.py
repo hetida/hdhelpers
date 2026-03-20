@@ -16,7 +16,7 @@ from typing import Any, cast
 import pandas as pd
 from glom import Coalesce, Spec, glom
 
-from hdhelpers.metadata.private import (
+from hdhelpers.metadata._helpers import (
     check_dataframe,
     check_series,
     check_series_or_dataframe,
@@ -24,7 +24,7 @@ from hdhelpers.metadata.private import (
     get_value_dimension_info,
     spec_not_none,
 )
-from hdhelpers.metadata.specs import spec_by_metric_key
+from hdhelpers.metadata._specs import spec_by_metric_key
 
 
 def get_units(
