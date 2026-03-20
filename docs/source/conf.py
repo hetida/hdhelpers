@@ -48,6 +48,13 @@ sys.path.insert(0, str(Path('..', 'src','hdhelpers').resolve()))
 doctest_global_setup = '''
 try:
     import pandas as pd
+    from hdhelpers import *
+    from hdhelpers.metadata import *
+    from hdhelpers.helpers import *
+
+    series = pd.Series()
+    dataframe = pd.DataFrame()
+    multitsframe = pd.DataFrame()
 except ImportError:
     pd = None
 '''

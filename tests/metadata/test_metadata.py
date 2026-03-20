@@ -344,3 +344,26 @@ def test_doctest_get_series_short_display_name(attr, output):
     series = pd.Series()
     series.attrs = attr
     assert get_series_short_display_name(series) == output
+
+
+
+def test_get_names_for_mts_with_metric_info_fallback_option():
+    from hdhelpers.metadata import get_names, get_display_names, get_short_display_names
+
+    attr = { "by_metric": { "metric1": {"metric": {"name": "name_of_metric1"}},
+                            "metric2": {"metric": {"name": None }}}}
+
+    attr = { "by_metric": { "metric1": {"metric": {"short_display_name": "short_display_name_of_metric1"}},
+                            "metric2": {"metric": {"name": "name_of_metric2"}},
+                            "metric3" : {} }}
+
+    attr = { "dataset_metadata": {"metric_key": "column"},
+            "metrics": [{"external_id": "column_name", "value_dimensions": [{"column": "temp", "measurement": "temperature"}]}]}
+
+    dataframe = pd.DataFrame()
+    dataframe.attrs = attr
+    result_name = get_names(dataframe)
+    result_display_name = get_display_names(dataframe)
+    result_short_display_name = get_short_display_names(dataframe)
+
+    assert result_name == result_display_name == result_short_display_name
