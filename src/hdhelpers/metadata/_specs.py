@@ -253,7 +253,7 @@ def _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
 
     .. doctest::
 
-        >>> from hdhelpers.metadata.specs import _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result
+        >>> from hdhelpers.metadata._specs import _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result
         >>> from glom import glom
         >>> data = {
         ...    "some": [
@@ -298,7 +298,7 @@ def _glom_dict_with_keys_of_current_dict_and_values_something_deeper_nested(
 
     .. doctest::
 
-        >>> from hdhelpers.metadata.specs import _glom_dict_with_keys_of_current_dict_and_values_something_deeper_nested
+        >>> from hdhelpers.metadata._specs import _glom_dict_with_keys_of_current_dict_and_values_something_deeper_nested
         >>> from glom import glom
         >>> data = {
         ...     'some_other_field': 'value',

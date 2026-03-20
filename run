@@ -36,10 +36,10 @@ lint(){
 }
 
 create_docu(){
-    uv pip install .
+    python -m pip install .
     sphinx-build -M html docs/source docs/build
     sphinx-build -M doctest docs/source docs/build
-    python -m pytest --doctest-modules src/hdhelpers/metadata/specs.py
+    python -m pytest --doctest-modules src/hdhelpers/metadata/_specs.py
 }
 
 

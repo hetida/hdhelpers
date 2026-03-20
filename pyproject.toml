@@ -65,7 +65,8 @@ dev = [
     "pytest-cov",
     "ruff",
     "sqlalchemy",
-    "types-pytz"
+    "types-pytz",
+    "pip",
 ]
 docs = [
     "sphinx"
