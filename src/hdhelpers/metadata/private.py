@@ -7,6 +7,21 @@ from glom import Check, Coalesce, Spec, glom
 import hdhelpers.metadata.specs as specs
 
 
+def check_dataframe(data: pd.DataFrame):
+    if not isinstance(data, pd.DataFrame):
+        raise TypeError("Input is not a pd.DataFrame")
+
+
+def check_series(series: pd.Series):
+    if not isinstance(series, pd.Series):
+        raise TypeError("Input is not a pd.Series.")
+
+
+def check_series_or_dataframe(data: pd.Series | pd.DataFrame):
+    if not isinstance(data, pd.Series) and not isinstance(data, pd.DataFrame):
+        raise TypeError("Input os not a pd.Series or pd.DataFrame.")
+
+
 def spec_not_none(spec: str | Spec) -> Spec:
     """this entries must be given in the spec"""
     # TODO: Given the suite of tools introduced with Match, the Check specifier type may be deprecated in a future release

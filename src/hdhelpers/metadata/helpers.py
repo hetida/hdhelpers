@@ -17,6 +17,9 @@ import pandas as pd
 from glom import Coalesce, Spec, glom
 
 from hdhelpers.metadata.private import (
+    check_dataframe,
+    check_series,
+    check_series_or_dataframe,
     extract_from_metadata,
     get_value_dimension_info,
     spec_not_none,
@@ -70,6 +73,8 @@ def get_units(
         >>> result["metric2"]['value_dim_1'] is None
         True
     """
+
+    check_dataframe(multitsframe)
     return get_value_dimension_info(multitsframe, "unit")
 
 
@@ -80,8 +85,7 @@ def get_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, s
         multitsframe (pd.DataFrame): MTS with metadata following the convention.
 
     Returns:
-        dict[str, str | None]: Dictionary of metrics containing the names.
-            If the name is not present for a metric the corresponding value is None.
+        dict[str, str | None]: Dictionary of metrics containing the names. If the name is not present for a metric the corresponding value is None.
 
     Raises:
         TypeError: If `multitsframe` is not a DataFrame.
@@ -113,6 +117,7 @@ def get_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, s
         'Ruhr temperature [°C]'
     """
 
+    check_dataframe(multitsframe)
     return get_value_dimension_info(multitsframe, Coalesce("name", default=None))
 
 
@@ -156,6 +161,7 @@ def get_display_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdic
         'temperature [°C]'
     """
 
+    check_dataframe(multitsframe)
     return get_value_dimension_info(multitsframe, Coalesce("display_name", "name", default=None))
 
 
@@ -204,6 +210,7 @@ def get_short_display_names(
         'temp. [°C]'
     """
 
+    check_dataframe(multitsframe)
     return get_value_dimension_info(
         multitsframe, Coalesce("short_display_name", "display_name", "name", default=None)
     )
@@ -233,6 +240,7 @@ def get_measurements(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict
 
 
     """
+    check_dataframe(multitsframe)
     return get_value_dimension_info(multitsframe, "measurement")
 
 
@@ -247,8 +255,7 @@ def get_metric_info(multitsframe: pd.DataFrame, metric_info: str | Spec) -> defa
         metric_info (str | Spec): Name of information to retrieve. Note that metric_info is interpreted as a glom Spec.
 
     Returns:
-        defaultdict[str, Any]: dictionary, where keys are the entries of the metrics metadata specified via
-    "metric_key" in "dataset_metadata" and values are the entries specified via "metric_info" in the metrics metadata
+        defaultdict[str, Any]: dictionary, where keys are the entries of the metrics metadata specified via "metric_key" in "dataset_metadata" and values are the entries specified via "metric_info" in the metrics metadata
 
     .. doctest:: metadata.get_metric_info
 
@@ -291,6 +298,7 @@ def get_metric_info(multitsframe: pd.DataFrame, metric_info: str | Spec) -> defa
         >>> result["not-given"] is None
         True
     """
+    check_dataframe(multitsframe)
     spec = spec_by_metric_key(metric_info)
     metric_info = glom(multitsframe.attrs, spec)
     return defaultdict(lambda: None, metric_info)
@@ -301,6 +309,14 @@ def get_series_info(series: pd.Series, value_dim_info: str | Spec) -> Any:
 
     Since a series has only one value dimension named "value", this information is
     equivalent to information on the metric.
+
+    Args:
+        series (pd.Series): Series with metadata following the convention.
+        value_dim_info (str | Spec): Name of information to retrieve. Note that `value_dim_info` is interpreted as a glom Spec.
+
+    Returns:
+        Any: Retrieved information defined by `value_dim_info`
+
 
     .. doctest:: metadata.get_series_info
 
@@ -315,7 +331,7 @@ def get_series_info(series: pd.Series, value_dim_info: str | Spec) -> Any:
     # Since the fallback behaviour for this value dimension is to fall back to the metric
     # metadata, we can reuse the code that extracts value_dimension metadata for
     # this value dimension.
-
+    check_series(series)
     series_metric_key = extract_from_metadata(series.attrs, key="single_metric", default="series")
     from_new_convention = get_value_dimension_info(series, value_dim_info)[series_metric_key].get(
         "value"
@@ -349,7 +365,7 @@ def get_series_unit(series: pd.Series) -> str | None:
     """Gets name of the series from metadata
 
     Args:
-        series (pd.Series): Series with metadata following the convention
+        series (pd.Series): Series with metadata following the convention.
 
     Returns:
         str | None:
@@ -386,6 +402,7 @@ def get_series_unit(series: pd.Series) -> str | None:
         'm/s'
     """
 
+    check_series(series)
     return cast(str | None, get_series_info(series, spec_not_none("unit")))
 
 
@@ -393,7 +410,7 @@ def get_series_name(series: pd.Series) -> str | None:
     """Gets name of the series from metadata
 
     Args:
-        series (pd.Series): Series with metadata following the convention
+        series (pd.Series): Series with metadata following the convention.
 
     Returns:
         str | None:
@@ -432,7 +449,7 @@ def get_series_name(series: pd.Series) -> str | None:
         >>> get_series_name(series)
         'name_of_series_2'
     """
-
+    check_series(series)
     return cast(str | None, get_series_info(series, spec_not_none("name")))
 
 
@@ -440,13 +457,13 @@ def get_series_display_name(series: pd.Series) -> str | None:
     """Gets display name of the series from metadata
 
     Args:
-        series (pd.Series): Series with metadata following the convention
+        series (pd.Series): Series with metadata following the convention.
 
     Returns:
         str | None:
             Returns the display name of the value.
             If the display name of the metric is not present it returns the display name of the value.
-            If the metric display name is not present it returns the result of get_series_name().
+            If the metric display name is not present it returns the result of :func:`hdhelpers.metadata.get_series_name`.
 
     Raises:
         TypeError: If `series` is not a Series.
@@ -458,7 +475,7 @@ def get_series_display_name(series: pd.Series) -> str | None:
         >>> get_series_display_name(series)
         'display_name_of_series'
     """
-
+    check_series(series)
     return cast(
         str | None,
         get_series_info(
@@ -476,13 +493,13 @@ def get_series_short_display_name(series: pd.Series) -> str | None:
     """Gets short display name of the Series from metadata
 
     Args:
-        series (pd.Series): Series with metadata following the convention
+        series (pd.Series): Series with metadata following the convention.
 
     Returns:
         str | None:
             Returns the short display name of the value.
-            If the short display name of the mnetric is not present it returns the short display name of the value.
-            If the metric short display name is not present it returns the result of series_display_name().
+            If the short display name of the metric is not present it returns the short display name of the value.
+            If the metric short display name is not present it returns the result of :func:`hdhelpers.metadata.get_series_display_name`.
 
     Raises:
         TypeError: If `series` is not a Series.
@@ -494,7 +511,7 @@ def get_series_short_display_name(series: pd.Series) -> str | None:
         >>> get_series_short_display_name(series)
         'short_display_name_of_series'
     """
-
+    check_series(series)
     return cast(
         str | None,
         get_series_info(
@@ -512,7 +529,7 @@ def get_series_measurement(series: pd.Series) -> str | None:
     """Gets measurement (type) of the Series from metadata
 
     Args:
-        series (pd.Series): Series with metadata following the convention
+        series (pd.Series): Series with metadata following the convention.
 
     Returns:
         str | None:
@@ -529,6 +546,7 @@ def get_series_measurement(series: pd.Series) -> str | None:
         >>> get_series_measurement(series)
         'temperature'
     """
+    check_series(series)
     return cast(str | None, get_series_info(series, "measurement"))
 
 
@@ -541,10 +559,10 @@ def get_queried_interval(
         data (pd.Series | pd.DataFrame): Series or Dataframe with metadata following the convention
 
     Returns:
-        tuple[datetime.datetime|None, datetime.datetime|None]: Tuple of available start and end date of requested interval.
+        tuple[datetime.datetime | None, datetime.datetime | None]: Tuple of available start and end date of requested interval.
 
     Raises:
-        ValueError: If metadata of `data` is not None and not convertable to a datetime-object (ISO-format is expected).
+        ValueError: If metadata of `data` is not None and not convertible to a datetime-object (ISO-format is expected).
         TypeError: If `data` is not a Series or Dataframe.
 
     .. doctest:: metadata.get_queried_interval
@@ -562,9 +580,7 @@ def get_queried_interval(
         >>> end.isoformat()
         '2025-11-06T13:28:00+00:00'
     """
-    if data.attrs is None:
-        return None, None
-
+    check_series_or_dataframe(data)
     start = extract_from_metadata(data.attrs, key="ref_interval_start_timestamp", default=None)
     end = extract_from_metadata(data.attrs, key="ref_interval_end_timestamp", default=None)
 
