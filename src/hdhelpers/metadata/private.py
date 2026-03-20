@@ -16,6 +16,7 @@ def spec_not_none(spec: str | Spec) -> Spec:
 def extract_from_metadata(metadata: Any, key: str, default: str | None = None) -> Any:
     return glom(metadata, Coalesce(f"dataset_metadata.{key}", default=default))
 
+
 def extract_series_metric_key(metadata: Any) -> Any:
     """TODO: Not sure why it exists - have to check"""
     return glom(metadata, Coalesce("dataset_metadata.single_metric", default="series"))

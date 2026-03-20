@@ -47,7 +47,8 @@ def modify_timezone[T: (pd.Timestamp, pd.Series, pd.DataFrame)](  # noqa: PLR091
     to_timezone: str | None = None,
     column_name: str | None = None,
     column_names: list[str] | None = None,
-    convert_index: bool = True,) -> T:
+    convert_index: bool = True,
+) -> T:
     """Modifies timestamps to a certain timezone
 
     Args:
@@ -71,7 +72,6 @@ def modify_timezone[T: (pd.Timestamp, pd.Series, pd.DataFrame)](  # noqa: PLR091
         >>> int(modified_timezone.utcoffset().total_seconds())
         3600
     """
-
 
     if not isinstance(object_to_convert, pd.Timestamp | pd.Series | pd.DataFrame):
         raise TypeError(

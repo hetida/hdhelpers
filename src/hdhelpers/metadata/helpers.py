@@ -296,7 +296,6 @@ def get_metric_info(multitsframe: pd.DataFrame, metric_info: str | Spec) -> defa
     return defaultdict(lambda: None, metric_info)
 
 
-
 def get_series_info(series: pd.Series, value_dim_info: str | Spec) -> Any:
     """Get an arbitrary series info
 
