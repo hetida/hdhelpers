@@ -52,12 +52,12 @@ When the PR is accepted, the package can be published. To **publish** the build 
 
 1) tag your main branch with the specified package version using github interface
 
-2) use `uv publish`. To do so, you need a PyPI account with a token to enter in the command line as password following the username "\_\_token__",
-and you need maintainer or owner access to the [hdhelpers PyPI project](https://pypi.org/project/hdhelpers/).
+2) use `uv publish --index testpypi --token <API-token>`. You need a (Test-)PyPI account with a token and you need maintainer/owner access to the [hdhelpers (Test-)PyPI project](https://pypi.org/project/hdhelpers/).
 
 3) After publishing please communicate to the hetida designer team so upgrade there dependencies.
 The hetida designer docker compose setup installs hdhelpers from [PyPI](https://pypi.org) as it does with any dependency listed in `runtime/requirements.in`.
 
-
 ### Trouble Shooting
 - Please ensure that dependencies specified for hdhelpers do work in current designer versions.
+- Test your uploaded packages on testpypi results in dependency problems: Pleas specify testpypi as extra-index, e.g.
+`uv pip install --extra-index-url https://test.pypi.org/simple/ --index-url https://pypi.org/simple --refresh --index-strategy unsafe-best-match hdhelpers`
