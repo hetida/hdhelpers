@@ -1,4 +1,12 @@
-# hdhelpers
+# Welcome to hdhelpers
+
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/hetida/hdhelpers/graphs/commit-activity)
+[![build](https://github.com/hetida/hdhelpers/actions/workflows/check_pull_request.yml/badge.svg)](https://github.com/hetida/hdhelpers/actions/workflows/check_pull_request.yml)
+![python](https://img.shields.io/badge/python-%203.12%20|%203.13|%203.14%20-blue)
+[![PyPI version](https://badge.fury.io/py/hdhelpers.svg)](https://badge.fury.io/py/hdhelpers)
+![PyPI - License](https://img.shields.io/pypi/l/hdhelpers)
+[![Downloads](https://pepy.tech/badge/hdhelpers)](https://pepy.tech/project/hdhelpers)
+
 ## What is hdhelpers?
 hdhelpers is a package designed for and included in the standard installation of the [hetida
 designer](https://github.com/hetida/hetida-designer).
@@ -49,6 +57,7 @@ This will:
 - Update pyproject.toml accordingly
 - Update `./run test-py-versions` accordingly for local testing using uv
 - Update `check_pull_request.yml` accordingly for automated pipeline execution of checks
+- Update badge in this file for Python versions above
 
 3) Update CHANGELOG.md manually
 
