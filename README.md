@@ -15,7 +15,7 @@ designer](https://github.com/hetida/hetida-designer).
 Since the intended use of the hdhelpers package is as a part of the hetida designer, it is highly recommended to follow
 the [hetida designer setup guide](https://github.com/hetida/hetida-designer/blob/release/README.md#getting-started-with-hetida-designer).
 
-For a specific example of how to use hdhelpers functionality in a hetida designer component, see [Example](#example).
+For a specific example of how to use hdhelpers functionality in a hetida designer component, a base component will be implemented.
 
 ## Developing for hdhelpers
 For dependency management and venv setup, building and publishing, [uv](https://docs.astral.sh/uv/) is used.
@@ -39,7 +39,7 @@ To test designer images with current hdhelpers version please use docker-compose
 Once you are done writing your code, including unit tests, use `./run check` to see if your code quality is sufficient.
 
 ### Documentation
-Fr documentation we use the tool sphinx. Please apply `run create_docu` to create the current state of documentation. It will be stored in **docs/build**.
+Fr documentation we use the tool sphinx. Please apply `./run create_docu` to create the current state of documentation. It will be stored in **docs/build**.
 
 ### Build, Release and Publish
 This process is usually triggered when a PR from develop to main is created.
