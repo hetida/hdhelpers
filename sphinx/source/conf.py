@@ -19,14 +19,16 @@ extensions = []
 templates_path = ['_templates']
 exclude_patterns = []
 
-
-
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme =  'nature' #'sphinxdoc'
+html_theme =  'classic' #'sphinxdoc'
 html_static_path = ['_static']
 templates_path = ["_templates"]
+html_css_files = [
+    'stylesheet.css',
+]
+
 
 extensions = [
     'sphinx.ext.autodoc', # docstrings to documentation

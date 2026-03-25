@@ -1,3 +1,15 @@
-.wy-nav-content {
-    max-width: 1200px !important;
+
+
+/* if content is to big in x or y direction specifiy scroll for overflow-y or overflow-x */
+.sphinxsidebarwrapper {
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+div.sphinxsidebar {
+   width: 300px;
+}
+
+div.bodywrapper {
+   margin: 0 0 0 300px;
 }
