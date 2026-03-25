@@ -54,7 +54,7 @@ classifiers = [
 
 [project.urls]
 homepage = "https://fuseki.com/data-science/hetida-designer/"
-documentation = "https://github.com/hetida/hetida-designer/tree/release/docs"
+documentation = "https://hetida.github.io/hdhelpers/"
 repository = "https://github.com/hetida/hetida-designer"
 hetidadesigner = "https://github.com/hetida/hetida-designer/tree/release/docs"
 
