@@ -50,7 +50,7 @@ To **build** and **release** a new package version
 This will:
 - Runs `uv lock --upgrade` to upgrade dependencies.
 - Update version in pyproject.toml
-- Update __version__ in __init__.py
+Update \__version__ in \__init__.py
 - Builds wheels of hdhelpers in ./dist
 
 2) Ensure that listed `classifiers` in `pyproject.toml`are up to date. If not
@@ -59,7 +59,7 @@ This will:
 - Update `check_pull_request.yml` accordingly for automated pipeline execution of checks
 - Update badge in this file for Python versions above
 
-3) Update CHANGELOG.md manually
+3) Update CHANGELOG.md manually following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 
 When the PR is accepted, the package can be published. To **publish** the build from the `dist` subdirectory to PyPI,
