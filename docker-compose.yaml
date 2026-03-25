@@ -1,0 +1,90 @@
+x-common-variables:
+  hd_version: &hd_version_number hd_version=0.13.10
+
+x-images:
+  frontend: &frontend hetida/designer-frontend:0.13.10
+  backend: &backend hetida/designer-backend:0.13.10
+
+volumes:
+  postgres_data:
+    driver: local
+
+services:
+  hetida-designer-frontend:
+    image: *frontend
+    restart: unless-stopped
+    depends_on:
+      - hetida-designer-backend
+    ports:
+      - 80:8080
+
+
+  hetida-designer-backend:
+    image: *backend
+    restart: unless-stopped
+    ports:
+      - 8080:8090
+    environment:
+      - HD_DATABASE_URL=postgresql+psycopg://hetida_designer_dbuser:hetida_designer_dbpasswd@hetida-designer-db:5434/hetida_designer_db
+      - HD_ENSURE_DB_SCHEMA=true
+      - HD_IS_RUNTIME_SERVICE=false
+      - HD_USE_AUTH=false
+      - HD_MAINTENANCE_SECRET=test123
+      - COMPONENT_ADAPTER_ACTIVE=true
+      - HETIDA_DESIGNER_ADAPTERS=component-adapter|Component Adapter|http://localhost:8080/adapters/component|http://localhost:8080/adapters/component
+      - HD_BACKEND_AUTODEPLOY_BASE_TRANSFORMATIONS=true
+      - HD_BACKEND_PRESERVE_DB_ON_AUTODEPLOY=false
+      - HD_BACKEND_ALLOW_OVERWRITE_RELEASED=true
+      - HETIDA_DESIGNER_PURE_UVICORN=true
+    depends_on:
+      hetida-designer-db:
+        condition: service_healthy
+      hetida-designer-runtime:
+        condition: service_started
+
+  hetida-designer-runtime:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - *hd_version_number
+    restart: unless-stopped
+    ports:
+      - 8090:8090
+    environment:
+      - HD_IS_BACKEND_SERVICE=false
+      - HD_USE_AUTH=false
+      - LOG_LEVEL=DEBUG
+      - HD_LOG_EXECUTION_PERFORMANCE_INFO=false
+      - HD_ADVANCED_PERFORMANCE_MEASUREMENT_INFORMATION=false
+      - LOG_DIRECT_PROVISIONING_OUTPUTS=false
+      - LOG_NESTINGS_AND_DESCENDANTS=false
+      - LOG_RESOLVED_VIRTUAL_STRUCTURE_WIRINGS=false
+      - LOG_UPDATED_TRAFO_REVISION=false
+      - LOG_FULL_EXEC_INPUT=false
+      - LOG_FULL_BACKEND_EXEC_INPUT=false
+      - LOG_TECHNICAL_NODES=false
+      - LOG_HTTPX=false
+      - HETIDA_DESIGNER_PURE_UVICORN=true
+
+
+  hetida-designer-db:
+    image: postgres:15.6
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: hetida_designer_db
+      POSTGRES_USER: hetida_designer_dbuser
+      POSTGRES_PASSWORD: hetida_designer_dbpasswd
+    command: -p 5434
+    ports:
+      - 5434:5434
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hetida_designer_dbuser -d hetida_designer_db -p 5434"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+networks:
+  default:
+    name: hetida-designer-network

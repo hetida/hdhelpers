@@ -13,6 +13,7 @@ For a specific example of how to use hdhelpers functionality in a hetida designe
 For dependency management and venv setup, building and publishing, [uv](https://docs.astral.sh/uv/) is used.
 
 ### Setting up a Development Environment
+#### Python environment
 1) Create a virtual environment with `uv venv`. This will create a hidden `.venv` directory.
 2) Activate the virtual environment via `source .venv/bin/activate`
 3) Run `uv sync --all-extras` to install all dependencies given in pyproject.toml.
@@ -21,6 +22,10 @@ For dependency management and venv setup, building and publishing, [uv](https://
 5) In case you need a new requirement for development purposes please use `uv add --dev <new_dependency>`
 
 Note: To install hdhelpers in editable mode in your venv please run `uv pip install -e .`
+
+#### hetida designer with hdhelpers
+To test designer images with current hdhelpers version please use docker-compose.yaml, e.g. via
+`docker compose -f 'docker-compose.yaml' up -d --build`
 
 ### Code Quality
 Once you are done writing your code, including unit tests, use `./run check` to see if your code quality is sufficient.
