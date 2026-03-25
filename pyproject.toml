@@ -24,7 +24,7 @@ version = "0.1.9"
 description = "Streamlines metadata & timezone handling, and plotting in hetida designer components"
 readme = "README.md"
 maintainers = [
-    {name = "hetida", email = "hetida@neusta-sd-west.de"},
+    {name = "hetida", email = "hetida@fuseki.com"},
     {name = "Steffen Wittkamp", email = "swittkamp@fuseki.com"},
     {name = "Jenny Kupzig", email = "jkupzig@fuseki.com"},
     {name = "Christoph Dingel", email = "cdingel@fuseki.com"}
