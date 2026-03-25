@@ -50,7 +50,7 @@ To **build** and **release** a new package version
 This will:
 - Runs `uv lock --upgrade` to upgrade dependencies.
 - Update version in pyproject.toml
-Update \_\_version___ in \_\_init___.py
+Update \_\_version__ in \_\_init__.py
 - Builds wheels of hdhelpers in ./dist
 
 2) Ensure that listed `classifiers` in `pyproject.toml`are up to date. If not
