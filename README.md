@@ -39,7 +39,7 @@ To test designer images with current hdhelpers version please use docker-compose
 Once you are done writing your code, including unit tests, use `./run check` to see if your code quality is sufficient.
 
 ### Documentation
-Fr documentation we use the tool sphinx. Please apply `./run create_docu` to create the current state of documentation. It will be stored in **docs/build**.
+Fr documentation we use the tool sphinx. Please apply `./run create_docu` to create the current state of documentation. It will be stored in **docs**.
 
 ### Build, Release and Publish
 This process is usually triggered when a PR from develop to main is created.
@@ -50,11 +50,11 @@ To **build** and **release** a new package version
 This will:
 - Runs `uv lock --upgrade` to upgrade dependencies.
 - Update version in pyproject.toml
-Update \__version__ in \__init__.py
+Update \___version___ in \___init___.py
 - Builds wheels of hdhelpers in ./dist
 
 2) Ensure that listed `classifiers` in `pyproject.toml`are up to date. If not
-- Update pyproject.toml accordingly
+- Update `pyproject.toml` accordingly
 - Update `./run test-py-versions` accordingly for local testing using uv
 - Update `check_pull_request.yml` accordingly for automated pipeline execution of checks
 - Update badge in this file for Python versions above
