@@ -5,8 +5,12 @@
 .ruff_cache
 coverage*
 
+# documentation
+sphinx/build
+
 # venv
 .venv
+.env
 
 # packaging
 dist/*
@@ -15,11 +19,10 @@ dist/*
 __pycache__
 *.pyc
 *.pyo
+
+# other stuff
 launch.json
 requirements*.txt
 requirements*.in
-
 todo
-docs/build
 untracked
-.env

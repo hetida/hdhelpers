@@ -37,10 +37,10 @@ lint(){
 
 create_docu(){
     python -m pip install .
-    sphinx-build -M html docs/source docs/build
-    sphinx-build -M doctest docs/source docs/build
+    sphinx-build -M html sphinx/source sphinx/build
+    sphinx-build -M doctest sphinx/source sphinx/build
     python -m pytest --doctest-modules src/hdhelpers/metadata/_specs.py
-    cp -r docs/build/html/* docs/
+    cp -r sphinx/build/html/* docs/
 }
 
 
