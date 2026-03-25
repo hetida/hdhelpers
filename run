@@ -111,7 +111,7 @@ install_editable_package(){
 
 build_package(){
     uv lock --upgrade
-    rm -r dist
+    rm -f -r dist
     uv version $@
     sed -i "s/^__version__ = .*/__version__ = \"$@\"/" src/hdhelpers/__init__.py
     uv build --no-sources

@@ -20,14 +20,16 @@ exclude = [
 
 [project]
 name = "hdhelpers"
-version = "0.1.6"
-description = "Streamlines plotting and timezone handling in hetida designer components"
+version = "0.1.9"
+description = "Streamlines metadata & timezone handling, and plotting in hetida designer components"
 readme = "README.md"
-authors = [
-    {name = "Christoph Dingel", email = "cdingel@fuseki.com"},
+maintainers = [
+    {name = "hetida", email = "hetida@neusta-sd-west.de"},
     {name = "Steffen Wittkamp", email = "swittkamp@fuseki.com"},
-    {name = "Jenny Kupzig", email = "jkupzig@fuseki.com"}
+    {name = "Jenny Kupzig", email = "jkupzig@fuseki.com"},
+    {name = "Christoph Dingel", email = "cdingel@fuseki.com"}
 ]
+
 requires-python = ">=3.12"
 dependencies = [
     "pandas>=2,<3",
@@ -36,15 +38,18 @@ dependencies = [
     "glom>25,<26",
     "numpy>=2.3.3",
 ]
-license = {file = "LICENSE"}
+license = "MIT"
+license-files = ["LICENSE"]
 
 classifiers = [
     'Development Status :: 2 - Pre-Alpha',
     'Environment :: Console',
     'Intended Audience :: Science/Research',
+    "Intended Audience :: Developers",
     'License :: OSI Approved :: MIT License',
     'Operating System :: Unix',
     'Topic :: Scientific/Engineering',
+    "Topic :: Software Development",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
