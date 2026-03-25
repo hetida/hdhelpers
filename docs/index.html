@@ -73,10 +73,10 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_display_names">
 <span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_display_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_display_names" title="Link to this definition">¶</a></dt>
-<dd><p>Gets display names of the MTS metrics from the metadata</p>
+<dd><p>Gets display names of the MTSF metrics from the metadata</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTS with metadata following the convention.</p>
+<dd class="field-odd"><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Dictionary of metrics containing the display names.
@@ -99,7 +99,7 @@ If the display name of the metrics is not present it returns the result of <a cl
 <span class="go">&#39;name_of_metric2&#39;</span>
 </pre></div>
 </div>
-<p>Lets try another MTS format</p>
+<p>Lets try another MTSF format</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attr</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;metric_key&quot;</span><span class="p">:</span> <span class="s2">&quot;external_id&quot;</span><span class="p">},</span>
 <span class="gp">... </span>         <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;external_id&quot;</span><span class="p">:</span> <span class="s2">&quot;ruhr-temperature&quot;</span><span class="p">,</span>
 <span class="gp">... </span>                      <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Ruhr temperature [°C]&quot;</span><span class="p">,</span>
@@ -117,14 +117,14 @@ If the display name of the metrics is not present it returns the result of <a cl
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_measurements">
 <span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_measurements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_measurements" title="Link to this definition">¶</a></dt>
-<dd><p>Gets measurement (type) of the MTS metrics from the metadata</p>
+<dd><p>Gets measurement (type) of the MTSF metrics from the metadata</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTS with metadata following the convention.</p>
+<dd class="field-odd"><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Dictionary of metrics containing the measurement (type) of the MTS metrics.
-If the short measurement (type) of the MTS metrics is not present it returns None.</p>
+<dd class="field-even"><p>Dictionary of metrics containing the measurement (type) of the MTSF metrics.
+If the short measurement (type) of the MTSF metrics is not present it returns None.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>defaultdict[str, defaultdict[str, str | None]]</p>
@@ -152,7 +152,7 @@ function abstracts access to metadata associated to the underlying metric.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTS with metadata following the convention.</p></li>
+<li><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p></li>
 <li><p><strong>metric_info</strong> (<em>str</em><em> | </em><em>Spec</em>) – Name of information to retrieve. Note that metric_info is interpreted as a glom Spec.</p></li>
 </ul>
 </dd>
@@ -208,10 +208,10 @@ function abstracts access to metadata associated to the underlying metric.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_names">
 <span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_names" title="Link to this definition">¶</a></dt>
-<dd><p>Gets names of the MTS metrics from Metadata</p>
+<dd><p>Gets names of the MTSF metrics from Metadata</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTS with metadata following the convention.</p>
+<dd class="field-odd"><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Dictionary of metrics containing the names. If the name is not present for a metric the corresponding value is None.</p>
@@ -233,7 +233,7 @@ function abstracts access to metadata associated to the underlying metric.</p>
 <span class="go">True</span>
 </pre></div>
 </div>
-<p>Lets try another MTS format</p>
+<p>Lets try another MTSF format</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attr</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;metric_key&quot;</span><span class="p">:</span> <span class="s2">&quot;external_id&quot;</span><span class="p">},</span>
 <span class="gp">... </span>         <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;external_id&quot;</span><span class="p">:</span> <span class="s2">&quot;ruhr-temperature&quot;</span><span class="p">,</span>
 <span class="gp">... </span>                      <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Ruhr temperature [°C]&quot;</span><span class="p">,</span>
@@ -486,10 +486,10 @@ If the unit of the series is not present it returns None.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_short_display_names">
 <span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_short_display_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_short_display_names" title="Link to this definition">¶</a></dt>
-<dd><p>Gets short display names of the MTS metrics from the metadata</p>
+<dd><p>Gets short display names of the MTSF metrics from the metadata</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTS with metadata following the convention.</p>
+<dd class="field-odd"><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Dictionary of metrics containing the short display names.
@@ -515,7 +515,7 @@ If the short display name of the metrics is not present it returns the result of
 <span class="go">True</span>
 </pre></div>
 </div>
-<p>Lets try another MTS format</p>
+<p>Lets try another MTSF format</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attr</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;metric_key&quot;</span><span class="p">:</span> <span class="s2">&quot;external_id&quot;</span><span class="p">},</span>
 <span class="gp">... </span>         <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;external_id&quot;</span><span class="p">:</span> <span class="s2">&quot;ruhr-temperature&quot;</span><span class="p">,</span>
 <span class="gp">... </span>                      <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Ruhr temperature [°C]&quot;</span><span class="p">,</span>
@@ -533,10 +533,10 @@ If the short display name of the metrics is not present it returns the result of
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_units">
 <span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_units</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_units" title="Link to this definition">¶</a></dt>
-<dd><p>Gets unit of value dimensions in MTS metrics from Metadata</p>
+<dd><p>Gets unit of value dimensions in MTSF metrics from Metadata</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTS with metadata following the convention.</p>
+<dd class="field-odd"><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Dictionary of metrics containing the names of the value dimensions.

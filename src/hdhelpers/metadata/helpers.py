@@ -30,10 +30,10 @@ from hdhelpers.metadata._specs import spec_by_metric_key
 def get_units(
     multitsframe: pd.DataFrame,
 ) -> defaultdict[str, defaultdict[str, str | None]]:
-    """Gets unit of value dimensions in MTS metrics from Metadata
+    """Gets unit of value dimensions in MTSF metrics from Metadata
 
     Args:
-        multitsframe (pd.DataFrame): MTS with metadata following the convention.
+        multitsframe (pd.DataFrame): MTSF with metadata following the convention.
 
     Returns:
         dict[str, dict[str | None] | None]: Dictionary of metrics containing the names of the value dimensions.
@@ -79,10 +79,10 @@ def get_units(
 
 
 def get_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, str | None]]:
-    """Gets names of the MTS metrics from Metadata
+    """Gets names of the MTSF metrics from Metadata
 
     Args:
-        multitsframe (pd.DataFrame): MTS with metadata following the convention.
+        multitsframe (pd.DataFrame): MTSF with metadata following the convention.
 
     Returns:
         dict[str, str | None]: Dictionary of metrics containing the names. If the name is not present for a metric the corresponding value is None.
@@ -101,7 +101,7 @@ def get_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, s
         >>> result["metric2"]["value"] is None
         True
 
-    Lets try another MTS format
+    Lets try another MTSF format
 
     .. doctest:: metadata.get_names
 
@@ -122,10 +122,10 @@ def get_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, s
 
 
 def get_display_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, str | None]]:
-    """Gets display names of the MTS metrics from the metadata
+    """Gets display names of the MTSF metrics from the metadata
 
     Args:
-        multitsframe (pd.DataFrame): MTS with metadata following the convention.
+        multitsframe (pd.DataFrame): MTSF with metadata following the convention.
 
     Returns:
         defaultdict[str, defaultdict[str, str | None]]: Dictionary of metrics containing the display names.
@@ -145,7 +145,7 @@ def get_display_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdic
         >>> result["metric2"]["value"]
         'name_of_metric2'
 
-    Lets try another MTS format
+    Lets try another MTSF format
 
     .. doctest:: metadata.get_display_names
 
@@ -168,10 +168,10 @@ def get_display_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdic
 def get_short_display_names(
     multitsframe: pd.DataFrame,
 ) -> defaultdict[str, defaultdict[str, str | None]]:
-    """Gets short display names of the MTS metrics from the metadata
+    """Gets short display names of the MTSF metrics from the metadata
 
     Args:
-        multitsframe (pd.DataFrame): MTS with metadata following the convention.
+        multitsframe (pd.DataFrame): MTSF with metadata following the convention.
 
     Returns:
         defaultdict[str, defaultdict[str, str | None]]: Dictionary of metrics containing the short display names.
@@ -194,7 +194,7 @@ def get_short_display_names(
         >>> result["metric3"]["value"] is None
         True
 
-    Lets try another MTS format
+    Lets try another MTSF format
 
     .. doctest:: metadata.get_short_display_names
 
@@ -217,14 +217,14 @@ def get_short_display_names(
 
 
 def get_measurements(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, str | None]]:
-    """Gets measurement (type) of the MTS metrics from the metadata
+    """Gets measurement (type) of the MTSF metrics from the metadata
 
     Args:
-        multitsframe (pd.DataFrame): MTS with metadata following the convention.
+        multitsframe (pd.DataFrame): MTSF with metadata following the convention.
 
     Returns:
-        defaultdict[str, defaultdict[str, str | None]]: Dictionary of metrics containing the measurement (type) of the MTS metrics.
-        If the short measurement (type) of the MTS metrics is not present it returns None.
+        defaultdict[str, defaultdict[str, str | None]]: Dictionary of metrics containing the measurement (type) of the MTSF metrics.
+        If the short measurement (type) of the MTSF metrics is not present it returns None.
 
     Raises:
         TypeError: If `multitsframe` is not a DataFrame.
@@ -251,7 +251,7 @@ def get_metric_info(multitsframe: pd.DataFrame, metric_info: str | Spec) -> defa
     function abstracts access to metadata associated to the underlying metric.
 
     Args:
-        multitsframe (pd.DataFrame): MTS with metadata following the convention.
+        multitsframe (pd.DataFrame): MTSF with metadata following the convention.
         metric_info (str | Spec): Name of information to retrieve. Note that metric_info is interpreted as a glom Spec.
 
     Returns:

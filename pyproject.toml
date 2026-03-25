@@ -20,7 +20,7 @@ exclude = [
 
 [project]
 name = "hdhelpers"
-version = "0.1.9"
+version = "0.1.10"
 description = "Streamlines metadata & timezone handling, and plotting in hetida designer components"
 readme = "README.md"
 maintainers = [
