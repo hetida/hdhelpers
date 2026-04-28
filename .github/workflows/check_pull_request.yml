@@ -12,20 +12,23 @@ on:
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
+
 jobs:
-  # This workflow contains a single job called "build"
-  test_pypy_version:
-    # The type of runner that the job will run on
+  build:
+    name: test_pypy_version
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.12", "3.13", "3.14"]
+        python-version:
+          - "3.12"
+          - "3.13"
+          - "3.14"
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      - uses: actions/checkout@v5
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+
+      - name: Install uv and set the Python version
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -36,25 +39,22 @@ jobs:
         run: |
           set -e
           echo "Installing hdhelpers"
-          pip install ".[dev, docs]"
+          uv pip install .
           echo "Running tests..."
           ./run test
+
 
   check_lint_format_mypy:
     runs-on: ubuntu-latest
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
 
-      - name: Setup Python
-        uses: actions/setup-python@v5.0.0
-        with:
-          # Version range or exact version of Python to use, using SemVer's version range syntax. Reads from .python-version if unset.
-          python-version: "3.14"
-          # Used to specify a package manager for caching in the default directory. Supported values: pip, pipenv, poetry.
-          cache: pip
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
 
-      # Runs a single command using the runners shell
+      - name: Set up Python
+        run: uv python install
+
       - name: Info
         run: echo "Applying checks"
 
@@ -62,6 +62,6 @@ jobs:
         run: |
           set -e
           echo "Installing hdhelpers"
-          pip install ".[dev, docs]"
+          uv pip install .
           echo "Running checks..."
           ./run check --no-tests
