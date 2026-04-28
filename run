@@ -92,7 +92,7 @@ check() {
     if [[ "$no_tests" == "true" ]]; then
         echo "--> Running ruff format in check mode" && uv run ruff format src tests --check &&
         echo "--> Running mypy" && uv run mypy src &&
-        echo "--> Running ruff" && ruff check src tests &&
+        echo "--> Running ruff" && uv run ruff check src tests &&
         echo "--> Creating docu" && install_editable_package && build_docs &&
         echo "CHECKS EXECUTION RESULTS: All checks were successful!"
     else
