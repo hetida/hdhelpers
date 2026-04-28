@@ -36,29 +36,29 @@ lint(){
 }
 
 build_docs(){
-    python -m pip install .
-    sphinx-build -M html sphinx/source sphinx/build
-    sphinx-build -M doctest sphinx/source sphinx/build
-    python -m pytest --doctest-modules src/hdhelpers/metadata/_specs.py
+    uv pip install .
+    uv run sphinx-build -M html sphinx/source sphinx/build
+    uv run sphinx-build -M doctest sphinx/source sphinx/build
+    uv run pytest --doctest-modules src/hdhelpers/metadata/_specs.py
     cp -r sphinx/build/html/* docs/
 }
 
 
 format() {
-    ruff check --select I src tests --fix "${@}" && echo "--> Ruff import sorting run."
-    ruff format src tests "${@}" && echo "--> ruff format run."
+    uv run ruff check --select I src tests --fix "${@}" && echo "--> Ruff import sorting run."
+    uv run ruff format src tests "${@}" && echo "--> ruff format run."
 }
 
 
 test() {
     if (( ${#} == 0 )) ; then
         echo "Testing hdhelpers package code ..."
-        python -m pytest tests -c pytest.ini \
+        uv run pytest tests -c pytest.ini \
         --cov=hdhelpers --no-cov-on-fail \
         --ignore=*/__init__.py
-        coverage xml -i -o coverage.xml
+        uv run coverage xml -i -o coverage.xml
     else
-        python -m pytest "${@}" \
+        uv run pytest "${@}" \
         --cov="${@}" \
         --no-cov-on-fail --cov-report=term-missing:skip-covered
     fi
@@ -66,7 +66,7 @@ test() {
 
 
 typecheck() {
-    python -m mypy "${@}" src
+    uv run mypy "${@}" src
 }
 
 
@@ -106,7 +106,7 @@ check() {
 }
 
 install_editable_package(){
-    pip install -e .
+    uv pip install -e .
 }
 
 build_package(){
