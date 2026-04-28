@@ -11,11 +11,14 @@
 hdhelpers is a package designed for and included in the standard installation of the [hetida
 designer](https://github.com/hetida/hetida-designer).
 
-## Getting Started with hdhelpers
-Since the intended use of the hdhelpers package is as a part of the hetida designer, it is highly recommended to follow
-the [hetida designer setup guide](https://github.com/hetida/hetida-designer/blob/release/README.md#getting-started-with-hetida-designer).
+Currently, the package provides functions to retrieve metadata from Pandas objects (stored in the `attr` of the Pandas object). Pandas objects are the standard for processing time series data in the hetida designer. Additionally, a function is provided to handle time zone information. In the future, the package is planned to be expanded, for example by providing functions to facilitate visualization.
 
-For a specific example of how to use hdhelpers functionality in a hetida designer component, a base component will be implemented.
+The documentation of the package is a [GitHub page](https://hetida.github.io/hdhelpers/), on which the functions of the package are described and some tips for getting started with using the package are given.
+
+## Getting Started with hdhelpers
+Since version >0.13.10 the hetida designer runtime comes with an installed version of hdhelpers. To start the hetida designer we recommend following the [hetida designer setup guide](https://github.com/hetida/hetida-designer/blob/release/README.md#getting-started-with-hetida-designer).
+
+An example is given in [GitHub page](https://hetida.github.io/hdhelpers/first_steps.html#how-to-get-metadata-with-hdhelpers) of how to use functionalities of hdhelpers inside a hetida designer component. Furthermore the base component [Single Time Series Plot](https://github.com/hetida/hetida-designer/blob/release/runtime/transformations/components/visualization) uses hdhelpers to demonstrate the usage (since version >0.13.10).
 
 ## Developing for hdhelpers
 For dependency management and venv setup, building and publishing, [uv](https://docs.astral.sh/uv/) is used.
@@ -33,22 +36,24 @@ Note: To install hdhelpers in editable mode in your venv please run `uv pip inst
 
 #### hetida designer with hdhelpers
 To test designer images with current hdhelpers version please use docker-compose.yaml, e.g. via
-`docker compose -f 'docker-compose.yaml' up -d --build`
+`docker compose -f 'docker-compose.yaml' up -d --build`. This compose setup loads the current
+hetida designer images and installs the hdhelpers package in the runtime. Thus, you can use functions of hdhelpers
+writing component code.
 
 ### Code Quality
 Once you are done writing your code, including unit tests, use `./run check` to see if your code quality is sufficient.
 
 ### Documentation
-Fr documentation we use the tool sphinx. Please apply `./run create_docu` to create the current state of documentation. It will be stored in **docs**.
+Fr documentation we use the tool sphinx. Please apply `./run build_docs` to create the current state of documentation. It will be stored in **docs**. You can open the documentation by opening `docs/index.html`, e.g. with your browser.
 
 ### Build, Release and Publish
-This process is usually triggered when a PR from develop to main is created.
+This process is usually started when a PR from develop to main is successfully merged.
 
 To **build** and **release** a new package version
 
 1) Please execute `./run build_package <version_nr>` where version number should follow [semantic versioning](https://semver.org/).
 This will:
-- Runs `uv lock --upgrade` to upgrade dependencies.
+- Runs `uv sync --frozen` to upgrade dependencies.
 - Update version in pyproject.toml
 - Update \_\_version__ in \_\_init__.py
 - Builds wheels of hdhelpers in ./dist
@@ -64,14 +69,15 @@ This will:
 
 When the PR is accepted, the package can be published. To **publish** the build from the `dist` subdirectory to PyPI,
 
-1) tag your main branch with the specified package version 
+1) tag your main branch with the specified package version
 
 2) use `uv publish --index testpypi --token <API-token>`. You need a (Test-)PyPI account with a token and you need maintainer/owner access to the [hdhelpers (Test-)PyPI project](https://pypi.org/project/hdhelpers/).
 
 3) After publishing please communicate to the hetida designer team so upgrade there dependencies.
 The hetida designer docker compose setup installs hdhelpers from [PyPI](https://pypi.org) as it does with any dependency listed in `runtime/requirements.in`.
 
-### Trouble Shooting
+### Notes
 - Please ensure that dependencies specified for hdhelpers do work in current designer versions.
-- How to install hdhelpers from testpypi:
+- If you want to upgrade dependencies please run `uv lock --upgrade`
+- to install hdhelpers from testpypi you can use:
 `uv pip install --extra-index-url https://test.pypi.org/simple/ --index-url https://pypi.org/simple --refresh --index-strategy unsafe-best-match hdhelpers`

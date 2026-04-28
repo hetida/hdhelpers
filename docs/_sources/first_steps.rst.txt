@@ -2,8 +2,8 @@
 First steps
 #######################
 
-Example for plotting (tbd)
-==========================
+How to get metadata with hdhelpers?
+===================================
 
 Let's say we want to plot a timeseries with data points.
 In hetida designer this series can be represented as json for *direct provisioning* :
@@ -34,7 +34,56 @@ In hetida designer this series can be represented as json for *direct provisioni
         }
     }
 
-Our component code might look like this:
+We can retrieve the name and unit for example with the following code
+
+.. code-block:: python
+
+    from hdhelpers.metadata import get_series_name, get_series_unit
+
+    def main(*, series):
+        # entrypoint function for this component
+        # ***** DO NOT EDIT LINES ABOVE *****
+        # write your function code here.
+        name = get_series_name(series)
+        unit = get_series_unit(series)
+
+        ...
+
+
+
+How to use hdhelpers for plotting? (tbd)
+========================================
+
+Let's say we want to plot a timeseries with data points.
+In hetida designer this series can be represented as json for *direct provisioning* :
+
+.. code-block:: json
+
+    {
+        "__hd_wrapped_data_object__":"SERIES",
+        "__metadata__": {
+            "single_metric_dataset_metadata": {
+                "ref_interval_end_timestamp":"2020-01-01T08:20:00.000Z",
+                "ref_interval_start_timestamp": "2020-01-01T08:10:00.000Z"
+            },
+            "single_metric_metadata": {
+                "structured_metadata": {
+                    "metric": {
+                        "short_display_name": "Water Level",
+                        "unit": "cm"
+                    }
+                }
+            }
+        },
+        "__data__": {
+            "2020-01-01T08:10:00+00:00": 1,
+            "2020-01-01T08:15:00+00:00": 2,
+            "2020-01-01T08:16:00+00:00": 3,
+            "2020-01-01T08:17:00+00:00": 4,
+        }
+    }
+
+Our component code might look like this to plot this series:
 
 .. code-block:: python
 

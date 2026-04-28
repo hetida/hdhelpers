@@ -26,3 +26,5 @@ requirements*.txt
 requirements*.in
 todo
 untracked
+Dockerfile
+docker-compose.yaml

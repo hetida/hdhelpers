@@ -8,7 +8,7 @@
     <title>First steps &#8212; hdhelpers - documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css?v=2bf1fcf8" />
-    <link rel="stylesheet" type="text/css" href="_static/stylesheet.css?v=4e639763" />
+    <link rel="stylesheet" type="text/css" href="_static/stylesheet.css?v=9d93a8a4" />
     
     <script src="_static/documentation_options.js?v=b1628c55"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
@@ -42,8 +42,8 @@
             
   <section id="first-steps">
 <h1>First steps<a class="headerlink" href="#first-steps" title="Link to this heading">¶</a></h1>
-<section id="example-for-plotting-tbd">
-<h2>Example for plotting (tbd)<a class="headerlink" href="#example-for-plotting-tbd" title="Link to this heading">¶</a></h2>
+<section id="how-to-get-metadata-with-hdhelpers">
+<h2>How to get metadata with hdhelpers?<a class="headerlink" href="#how-to-get-metadata-with-hdhelpers" title="Link to this heading">¶</a></h2>
 <p>Let’s say we want to plot a timeseries with data points.
 In hetida designer this series can be represented as json for <em>direct provisioning</em> :</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
@@ -71,7 +71,50 @@ In hetida designer this series can be represented as json for <em>direct provisi
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Our component code might look like this:</p>
+<p>We can retrieve the name and unit for example with the following code</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hdhelpers.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_series_name</span><span class="p">,</span> <span class="n">get_series_unit</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">series</span><span class="p">):</span>
+    <span class="c1"># entrypoint function for this component</span>
+    <span class="c1"># ***** DO NOT EDIT LINES ABOVE *****</span>
+    <span class="c1"># write your function code here.</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">get_series_name</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+    <span class="n">unit</span> <span class="o">=</span> <span class="n">get_series_unit</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+
+    <span class="o">...</span>
+</pre></div>
+</div>
+</section>
+<section id="how-to-use-hdhelpers-for-plotting-tbd">
+<h2>How to use hdhelpers for plotting? (tbd)<a class="headerlink" href="#how-to-use-hdhelpers-for-plotting-tbd" title="Link to this heading">¶</a></h2>
+<p>Let’s say we want to plot a timeseries with data points.
+In hetida designer this series can be represented as json for <em>direct provisioning</em> :</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;__hd_wrapped_data_object__&quot;</span><span class="p">:</span><span class="s2">&quot;SERIES&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;__metadata__&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;single_metric_dataset_metadata&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;ref_interval_end_timestamp&quot;</span><span class="p">:</span><span class="s2">&quot;2020-01-01T08:20:00.000Z&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;ref_interval_start_timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2020-01-01T08:10:00.000Z&quot;</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;single_metric_metadata&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;structured_metadata&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">&quot;metric&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;short_display_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Water Level&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;unit&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cm&quot;</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;__data__&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;2020-01-01T08:10:00+00:00&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;2020-01-01T08:15:00+00:00&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;2020-01-01T08:16:00+00:00&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;2020-01-01T08:17:00+00:00&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Our component code might look like this to plot this series:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hdhelpers.plotting</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_and_pad_start_and_end_timestamp</span><span class="p">,</span> <span class="n">get_y_axis_label</span><span class="p">,</span> <span class="n">plotly_fig_to_json_dict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hdhelpers.helpers</span><span class="w"> </span><span class="kn">import</span> <span class="n">modify_timezone</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">go</span>
@@ -178,7 +221,8 @@ is rarely necessary. * <cite>use_simple_white_template</cite> sets the plotly la
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">First steps</a><ul>
-<li><a class="reference internal" href="#example-for-plotting-tbd">Example for plotting (tbd)</a></li>
+<li><a class="reference internal" href="#how-to-get-metadata-with-hdhelpers">How to get metadata with hdhelpers?</a></li>
+<li><a class="reference internal" href="#how-to-use-hdhelpers-for-plotting-tbd">How to use hdhelpers for plotting? (tbd)</a></li>
 <li><a class="reference internal" href="#further-explanation">Further Explanation</a></li>
 </ul>
 </li>

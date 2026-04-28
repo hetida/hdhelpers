@@ -10,7 +10,7 @@ usage() {
     echo "  - typecheck           :    run mypy static type check"
     echo "  - format              :    run ruff format"
     echo "  - check               :    run format check, tests, typechecking"
-    echo "  - create_docu         :    runs sphinx to generate python package documentation"
+    echo "  - build_docs         :    runs sphinx to generate python package documentation"
     echo "  - build_package       :    builds package with defined version"
     echo "  - test-py-versions    :    runs tests on several python version using uv run --python"
 }
@@ -35,7 +35,7 @@ lint(){
     fi
 }
 
-create_docu(){
+build_docs(){
     python -m pip install .
     sphinx-build -M html sphinx/source sphinx/build
     sphinx-build -M doctest sphinx/source sphinx/build
@@ -93,14 +93,14 @@ check() {
         echo "--> Running ruff format in check mode" && ruff format src tests --check &&
         echo "--> Running mypy" && python -m mypy src &&
         echo "--> Running ruff" && ruff check src tests &&
-        echo "--> Creating docu" && install_editable_package && create_docu &&
+        echo "--> Creating docu" && install_editable_package && build_docs &&
         echo "CHECKS EXECUTION RESULTS: All checks were successful!"
     else
         echo "--> Running ruff format in check mode" && ruff format src tests --check &&
         echo "--> Running tests" && python -m pytest tests -c pytest.ini --cov=. --cov-report=term-missing --cov-fail-under=80 &&
         echo "--> Running mypy" && python -m mypy src &&
         echo "--> Running ruff" && ruff check src tests &&
-        echo "--> Creating docu" && install_editable_package && create_docu &&
+        echo "--> Creating docu" && install_editable_package && build_docs &&
         echo "CHECKS EXECUTION RESULTS: All checks were successful!"
     fi
 }
@@ -110,7 +110,7 @@ install_editable_package(){
 }
 
 build_package(){
-    uv lock --upgrade
+    uv sync --frozen
     rm -f -r dist
     uv version $@
     sed -i "s/^__version__ = .*/__version__ = \"$@\"/" src/hdhelpers/__init__.py
