@@ -51,7 +51,7 @@ def test_modify_timezone_timestamp_offset(timestamp, timezone, result):
 
 def test_modify_timezone_good_dataframe(dataframe):
     local_summertime = modify_timezone(
-        dataframe, to_timezone="Europe/Berlin", column_name="timestamp"
+        dataframe, to_timezone="Europe/Berlin", column_names=["timestamp"]
     )
 
     # German summer time starts in last Sunday in March at 2 am. --> UTC 1am
@@ -101,7 +101,7 @@ def test_named_series(series_summer):
     data = pd.Series(series_summer.index)
     data.name = "timestamp"
     data.attrs = series_summer.attrs
-    modified_data = modify_timezone(data, to_timezone="Europe/Berlin", column_name="timestamp")
+    modified_data = modify_timezone(data, to_timezone="Europe/Berlin", column_names=["timestamp"])
     assert modified_data[1].utcoffset() == datetime.timedelta(seconds=3600)
     assert "foo" in modified_data.attrs
 
@@ -109,7 +109,7 @@ def test_named_series(series_summer):
 def test_named_series_using_index(series_summer):
     data = series_summer
     data.name = "timestamp"
-    modified_data = modify_timezone(data, to_timezone="Europe/Berlin", column_name=None)
+    modified_data = modify_timezone(data, to_timezone="Europe/Berlin")
     assert modified_data.index[0].utcoffset() == datetime.timedelta(seconds=3600)
     assert "foo" in modified_data.attrs
 
@@ -118,11 +118,11 @@ def test_column_not_known(series_summer, dataframe):
     data = pd.Series(series_summer.index)
     data.name = "timestamp"
 
-    with pytest.raises(KeyError, match="Column name*"):
-        _ = modify_timezone(data, to_timezone="Europe/Berlin", column_name="timestamp2")
+    with pytest.raises(KeyError, match="At least one column name*"):
+        _ = modify_timezone(data, to_timezone="Europe/Berlin", column_names=["timestamp2"])
 
-    with pytest.raises(KeyError, match="Column name*"):
-        _ = modify_timezone(dataframe, to_timezone="Europe/Berlin", column_name="timestamp2")
+    with pytest.raises(KeyError, match="At least one column name*"):
+        _ = modify_timezone(dataframe, to_timezone="Europe/Berlin", column_names=["timestamp2"])
 
 
 def test_modify_timezone_no_tz_known(series_summer):
@@ -133,26 +133,26 @@ def test_modify_timezone_no_tz_known(series_summer):
 
 def test_modify_timezone_multicolumn_dataframe(multicolumn_frame):
     local_summertime = modify_timezone(
-        multicolumn_frame,
+        multicolumn_frame.copy(),
         to_timezone="Europe/Berlin",
         column_names=["timestamp", "more_timestamps"],
+        convert_index=True
     )
 
-    # German summer time starts in last Sunday in March at 2 am. --> UTC 1am
     timestamp_id = local_summertime.columns.get_loc("timestamp")
     timestamp_id_2 = local_summertime.columns.get_loc("more_timestamps")
     assert local_summertime.iloc[1, timestamp_id].utcoffset() == datetime.timedelta(seconds=7200)
     assert local_summertime.iloc[1, timestamp_id_2].utcoffset() == datetime.timedelta(seconds=7200)
-    assert local_summertime.index[1].utcoffset() == datetime.timedelta(seconds=7200)
+    assert local_summertime.index[0].utcoffset() == datetime.timedelta(seconds=7200)
     assert "foo" in local_summertime.attrs
 
 
 def test_modify_timezone_multicolumn_dataframe_without_index(multicolumn_frame):
     local_summertime = modify_timezone(
-        multicolumn_frame,
+        multicolumn_frame.copy(),
         to_timezone="Europe/Berlin",
         column_names=["timestamp", "more_timestamps"],
-        convert_index=False,
+        convert_index=False
     )
 
     # German summer time starts in last Sunday in March at 2 am. --> UTC 1am
@@ -160,7 +160,7 @@ def test_modify_timezone_multicolumn_dataframe_without_index(multicolumn_frame):
     timestamp_id_2 = local_summertime.columns.get_loc("more_timestamps")
     assert local_summertime.iloc[1, timestamp_id].utcoffset() == datetime.timedelta(seconds=7200)
     assert local_summertime.iloc[1, timestamp_id_2].utcoffset() == datetime.timedelta(seconds=7200)
-    assert local_summertime.index[1].utcoffset() == datetime.timedelta(seconds=0)
+    assert local_summertime.index[1].utcoffset() == multicolumn_frame.index[0].utcoffset() # index of dataframe is not modified
     assert "foo" in local_summertime.attrs
 
 

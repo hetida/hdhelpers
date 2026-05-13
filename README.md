@@ -27,7 +27,7 @@ For dependency management and venv setup, building and publishing, [uv](https://
 #### Python environment
 1) Create a virtual environment with `uv venv`. This will create a hidden `.venv` directory.
 2) Activate the virtual environment via `source .venv/bin/activate`
-3) Run `uv sync --all-extras` to install all dependencies given in pyproject.toml.
+3) Run `uv sync` to install all dependencies given in pyproject.toml.
 4) In case you need to add a new dependency, do so via `uv add <new_dependency>`. That way, uv finds versions of all
    dependencies that are compatible with each other.
 5) In case you need a new requirement for development purposes please use `uv add --dev <new_dependency>`
@@ -35,7 +35,33 @@ For dependency management and venv setup, building and publishing, [uv](https://
 Note: To install hdhelpers in editable mode in your venv please run `uv pip install -e .`
 
 #### hetida designer with hdhelpers
-To test designer images with current hdhelpers version please use docker-compose.yaml, e.g. via
+To test designer images with current hdhelpers version please save a copy of [docker-compose.yml](https://github.com/hetida/hetida-designer/blob/release/docker-compose.yml) from the hetida designer repository.
+
+Then write a `Dockerfile` to install the current hdhelpers version in the required designer backend.
+```yaml
+FROM hetida/designer-backend:<<hd_version>>
+
+USER root
+
+RUN pip install .
+
+USER hd_app
+
+CMD ["bash", "/app/start.sh"]
+```
+
+Then modify the docker-compose.yml to work with the backend version defined by the modified Dockerfile.
+```yaml
+...
+  hetida-designer-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+...
+```
+
+
+use docker-compose.yaml, e.g. via
 `docker compose -f 'docker-compose.yaml' up -d --build`. This compose setup loads the current
 hetida designer images and installs the hdhelpers package in the runtime. Thus, you can use functions of hdhelpers
 writing component code.
@@ -47,9 +73,8 @@ Once you are done writing your code, including unit tests, use `./run check` to 
 Fr documentation we use the tool sphinx. Please apply `./run build_docs` to create the current state of documentation. It will be stored in **docs**. You can open the documentation by opening `docs/index.html`, e.g. with your browser.
 
 ### Build, Release and Publish
-This process is usually started when a PR from develop to main is successfully merged.
-
-To **build** and **release** a new package version
+The first step for publishing a new package version is creating and merging a pull request from develop to main.
+In detail the following steps should be executed beforehand:
 
 1) Please execute `./run build_package <version_nr>` where version number should follow [semantic versioning](https://semver.org/).
 This will:
@@ -66,8 +91,8 @@ This will:
 
 3) Update CHANGELOG.md manually following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
-
-When the PR is accepted, the package can be published. To **publish** the build from the `dist` subdirectory to PyPI,
+When the PR is accepted, the package can be **published** in a second step.
+To **publish** the build from the `dist` subdirectory to PyPI,
 
 1) tag your main branch with the specified package version
 

@@ -45,19 +45,16 @@ def _(object_to_convert: pd.Series, to_timezone: str | None) -> pd.Series:
 def modify_timezone[T: (pd.Timestamp, pd.Series, pd.DataFrame)](  # noqa: PLR0912
     object_to_convert: T,
     to_timezone: str | None = None,
-    column_name: str | None = None,
     column_names: list[str] | None = None,
     convert_index: bool = True,
 ) -> T:
-    """Modifies timestamps to a certain timezone
+    """Converts time information of pandas objects to a certain timezone. This function is applicable to index and/or columns of pd.Series or pd.DataFrame as well as for single pd.Timestamp objects.
 
     Args:
         object_to_convert (pd.Timestamp | pd.Series | pd.DataFrame): Timestamp, Series or DataFrame where timezone is modified
-        to_timezone (str | None): timezone to convert to, e.g. for German time use Europe/Berlin. See possible timezone strings in pandas tz_convert method or pytz all_timezones list. Default is None.
-        column_name (str | None): column_name to apply, default is index as pd.Series have timestamps in index. Will be deprecated soon. Default is None.
-        column_names (str | None): list of column_names to apply, default is index as pd.Series have timestamps in index. Default is None.
-        convert_index (bool | None): Convert index. Default is true.
-
+        to_timezone (str | None): Timezone to convert to, e.g. for German time use Europe/Berlin. See possible timezone strings in pandas tz_convert method or pytz all_timezones list. If to_timezone is not defined, the global timezone from plot_target_settings is used. .
+        column_names (str | None): List of column_names to modify. For pd.Series the default behaviour is modifying the index and for pd.DataFrame the default behaviour is modifyng the column timestamp. This option is not applicable in case object_to_convert is a pd.Timestamp.
+        convert_index (bool | None): Boolean that controls whether the index of pd.Dataframe or pd.Series should be transformed. Note that for a pd.Series settings this to true results in same output as using column_names=None. This option is not applicable in case object_to_convert is a pd.Timestamp.
     Returns:
         pd.Timestamp | pd.Series | pd.DataFrame:
             Returns the modified timezone object.
@@ -94,23 +91,6 @@ def modify_timezone[T: (pd.Timestamp, pd.Series, pd.DataFrame)](  # noqa: PLR091
         else:
             new_object = object_to_convert.copy(deep=True)
 
-        # Both column_name branches exist purely for backwards compatibility,
-        # only convert_index should stay.
-        if column_name is None and convert_index:
-            new_object.index = _convert_to_optional_timezone(
-                pd.to_datetime(new_object.index), to_timezone
-            )
-        if column_name is not None:
-            warn(
-                """The parameter 'column_name' will soon be deprecated in favor of
-                the more flexible 'columns_names'""",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            new_object[column_name] = _convert_to_optional_timezone(
-                pd.to_datetime(new_object[column_name]), to_timezone
-            )
-            column_names.append(column_name)
 
         if len(column_names) == 0:
             if isinstance(object_to_convert, pd.Series):
@@ -126,11 +106,17 @@ def modify_timezone[T: (pd.Timestamp, pd.Series, pd.DataFrame)](  # noqa: PLR091
                 msg = f"""Converted column "timestamp" to datetime starting with
                 {object_to_convert["timestamp"][0]}"""
                 logger.debug(msg=msg)
+
         if len(column_names) > 0:
             for column in column_names:
                 new_object[column] = _convert_to_optional_timezone(
                     pd.to_datetime(new_object[column]), to_timezone
                 )
+
+        if convert_index:
+            new_object.index = _convert_to_optional_timezone(
+                pd.to_datetime(new_object.index), to_timezone
+            )
 
         if not isinstance(object_to_convert, pd.Series):
             new_object.attrs = object_to_convert.attrs
@@ -151,5 +137,5 @@ def modify_timezone[T: (pd.Timestamp, pd.Series, pd.DataFrame)](  # noqa: PLR091
     except (AttributeError, pytz.exceptions.NonExistentTimeError) as exc:
         raise TypeError("Entries to convert do not contain valid timestamps") from exc
     except KeyError as exc:
-        exc.add_note(f"Column name {column_name} not in object_to_convert")
+        exc.add_note(f"At least one column name of {column_names} not in object_to_convert")
         raise
