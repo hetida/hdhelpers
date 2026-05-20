@@ -1,0 +1,30 @@
+# quality checks
+.coverage
+.pytest_cache
+.mypy_cache
+.ruff_cache
+coverage*
+
+# documentation
+sphinx/build
+
+# venv
+.venv
+.env
+
+# packaging
+dist/*
+
+# generals
+__pycache__
+*.pyc
+*.pyo
+
+# other stuff
+launch.json
+requirements*.txt
+requirements*.in
+todo
+untracked
+Dockerfile
+docker-compose.yaml
