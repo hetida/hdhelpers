@@ -70,7 +70,9 @@
 <h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">¶</a></h2>
 <section id="module-hdhelpers.metadata">
 <span id="metadata"></span><h3>metadata<a class="headerlink" href="#module-hdhelpers.metadata" title="Link to this heading">¶</a></h3>
-<p>Collection of functions to access metadata information from timeseries objects</p>
+<p>Collection of functions to access metadata information from timeseries objects.
+Metadata information can follow varying conventions as the package glom is used to
+extract the requested information.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_display_names">
 <span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_display_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_display_names" title="Link to this definition">¶</a></dt>
@@ -90,6 +92,7 @@ If the display name of the metrics is not present it returns the result of <a cl
 <dd class="field-even"><p><strong>TypeError</strong> – If <cite>multitsframe</cite> is not a DataFrame.</p>
 </dd>
 </dl>
+<p>Code example:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attr</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;by_metric&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;metric1&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;metric&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;display_name&quot;</span><span class="p">:</span> <span class="s2">&quot;display_name_of_metric1&quot;</span><span class="p">}},</span>
 <span class="gp">... </span>                        <span class="s2">&quot;metric2&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;metric&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;name_of_metric2&quot;</span><span class="p">}}}}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dataframe</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">attr</span>
@@ -100,7 +103,7 @@ If the display name of the metrics is not present it returns the result of <a cl
 <span class="go">&#39;name_of_metric2&#39;</span>
 </pre></div>
 </div>
-<p>Lets try another MTSF format</p>
+<p>Lets try another MTSF format:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attr</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;metric_key&quot;</span><span class="p">:</span> <span class="s2">&quot;external_id&quot;</span><span class="p">},</span>
 <span class="gp">... </span>         <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;external_id&quot;</span><span class="p">:</span> <span class="s2">&quot;ruhr-temperature&quot;</span><span class="p">,</span>
 <span class="gp">... </span>                      <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Ruhr temperature [°C]&quot;</span><span class="p">,</span>
@@ -134,6 +137,7 @@ If the short measurement (type) of the MTSF metrics is not present it returns No
 <dd class="field-even"><p><strong>TypeError</strong> – If <cite>multitsframe</cite> is not a DataFrame.</p>
 </dd>
 </dl>
+<p>Code example:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attr</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;metric_key&quot;</span><span class="p">:</span> <span class="s2">&quot;external_id&quot;</span><span class="p">},</span>
 <span class="gp">... </span>         <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;external_id&quot;</span><span class="p">:</span> <span class="s2">&quot;column_name&quot;</span><span class="p">,</span> <span class="s2">&quot;value_dimensions&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;temp&quot;</span><span class="p">,</span> <span class="s2">&quot;measurement&quot;</span><span class="p">:</span> <span class="s2">&quot;temperature&quot;</span><span class="p">}]}]}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dataframe</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">attr</span>
@@ -147,23 +151,24 @@ If the short measurement (type) of the MTSF metrics is not present it returns No
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_metric_info">
 <span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_metric_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_info</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_metric_info" title="Link to this definition">¶</a></dt>
-<dd><p>Get a dictionary of metadata associated to metrics</p>
+<dd><p>Gets a dictionary of metadata associated to metrics.</p>
 <p>In contrast to metadata associated to concrete value dimensions, this
 function abstracts access to metadata associated to the underlying metric.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p></li>
-<li><p><strong>metric_info</strong> (<em>str</em><em> | </em><em>Spec</em>) – Name of information to retrieve. Note that metric_info is interpreted as a glom Spec.</p></li>
+<li><p><strong>metric_info</strong> (<em>str</em><em> | </em><em>Spec</em>) – Name of information to retrieve. Note that <cite>metric_info</cite> is interpreted as a glom Spec.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>dictionary, where keys are the entries of the metrics metadata specified via “metric_key” in “dataset_metadata” and values are the entries specified via “metric_info” in the metrics metadata</p>
+<dd class="field-even"><p>Dictionary, where keys are the entries of the metrics metadata specified via “metric_key” in “dataset_metadata” and values are the entries specified via “metric_info” in the metrics metadata</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>defaultdict[str, Any]</p>
 </dd>
 </dl>
+<p>Code example:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">multitsframe</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
 <span class="gp">... </span>   <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span>
 <span class="gp">... </span>       <span class="s2">&quot;metric_key&quot;</span><span class="p">:</span> <span class="s2">&quot;id&quot;</span>
@@ -209,7 +214,7 @@ function abstracts access to metadata associated to the underlying metric.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_names">
 <span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_names" title="Link to this definition">¶</a></dt>
-<dd><p>Gets names of the MTSF metrics from Metadata</p>
+<dd><p>Gets names of the MTSF metrics from the metadata</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p>
@@ -224,6 +229,7 @@ function abstracts access to metadata associated to the underlying metric.</p>
 <dd class="field-even"><p><strong>TypeError</strong> – If <cite>multitsframe</cite> is not a DataFrame.</p>
 </dd>
 </dl>
+<p>Code example:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attr</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;by_metric&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;metric1&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;metric&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;name_of_metric1&quot;</span><span class="p">}},</span>
 <span class="gp">... </span>                       <span class="s2">&quot;metric2&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;metric&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="kc">None</span> <span class="p">}}</span> <span class="p">}}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dataframe</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">attr</span>
@@ -234,7 +240,7 @@ function abstracts access to metadata associated to the underlying metric.</p>
 <span class="go">True</span>
 </pre></div>
 </div>
-<p>Lets try another MTSF format</p>
+<p>Lets try another MTSF format:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attr</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;metric_key&quot;</span><span class="p">:</span> <span class="s2">&quot;external_id&quot;</span><span class="p">},</span>
 <span class="gp">... </span>         <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;external_id&quot;</span><span class="p">:</span> <span class="s2">&quot;ruhr-temperature&quot;</span><span class="p">,</span>
 <span class="gp">... </span>                      <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Ruhr temperature [°C]&quot;</span><span class="p">,</span>
@@ -270,6 +276,7 @@ function abstracts access to metadata associated to the underlying metric.</p>
 </ul>
 </dd>
 </dl>
+<p>Code example:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attr</span> <span class="o">=</span> <span class="p">{</span>
 <span class="gp">... </span>       <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span>
 <span class="gp">... </span>       <span class="s2">&quot;ref_interval_start_timestamp&quot;</span><span class="p">:</span> <span class="s2">&quot;2025-11-05T13:28:00Z&quot;</span><span class="p">,</span>
@@ -306,6 +313,7 @@ If the metric display name is not present it returns the result of <a class="ref
 <dd class="field-even"><p><strong>TypeError</strong> – If <cite>series</cite> is not a Series.</p>
 </dd>
 </dl>
+<p>Code example:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attr</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;by_metric&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;series&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;metric&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;display_name&quot;</span><span class="p">:</span> <span class="s2">&quot;display_name_of_series&quot;</span><span class="p">}}}}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">series</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">attr</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">get_series_display_name</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
@@ -317,7 +325,7 @@ If the metric display name is not present it returns the result of <a class="ref
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_series_info">
 <span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_series_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_dim_info</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_series_info" title="Link to this definition">¶</a></dt>
-<dd><p>Get an arbitrary series info</p>
+<dd><p>Gets an arbitrary series info</p>
 <p>Since a series has only one value dimension named “value”, this information is
 equivalent to information on the metric.</p>
 <dl class="field-list simple">
@@ -334,6 +342,7 @@ equivalent to information on the metric.</p>
 <dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
+<p>Code example:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attr</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;by_metric&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;series&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;value_dimensions&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;m&quot;</span><span class="p">}}}}}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">series</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">attr</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">get_series_info</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">)</span>
@@ -363,6 +372,7 @@ If “measurement” is not given in the metadata, None is returned.</p>
 <dd class="field-even"><p><strong>TypeError</strong> – If <cite>series</cite> is not a Series.</p>
 </dd>
 </dl>
+<p>Code example:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attr</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;by_metric&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;series&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;metric&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;measurement&quot;</span><span class="p">:</span> <span class="s2">&quot;temperature&quot;</span><span class="p">}}}}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">series</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">attr</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">get_series_measurement</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
@@ -391,21 +401,21 @@ If the value name is not present it returns None.</p>
 <dd class="field-even"><p><strong>TypeError</strong> – If <cite>series</cite> is not a Series.</p>
 </dd>
 </dl>
-<p>Let’s test what happens if series has name in value_dimensions.</p>
+<p>Let’s test what happens if series has name in value_dimensions:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attr</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;by_metric&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;series&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;value_dimensions&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;value_name_of_series&quot;</span><span class="p">}}}}}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">series</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">attr</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">get_series_name</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
 <span class="go">&#39;value_name_of_series&#39;</span>
 </pre></div>
 </div>
-<p>Let’s test what happens if series has name in metric.</p>
+<p>Let’s test what happens if series has name in metric:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attr</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;by_metric&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;series&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;metric&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;name_of_series_1&quot;</span><span class="p">}}}}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">series</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">attr</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">get_series_name</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
 <span class="go">&#39;name_of_series_1&#39;</span>
 </pre></div>
 </div>
-<p>Let’s test what happens if series has name in metric and value_dimensions.</p>
+<p>Let’s test what happens if series has name in metric and value_dimensions:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attr</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;single_metric_metadata&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;structured_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;metric&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;name_of_series_2&quot;</span><span class="p">}},</span>
 <span class="gp">... </span>                                                             <span class="s2">&quot;value_dimensions&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;value_name_of_series&quot;</span><span class="p">}}}}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">series</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">attr</span>
@@ -435,6 +445,7 @@ If the metric short display name is not present it returns the result of <a clas
 <dd class="field-even"><p><strong>TypeError</strong> – If <cite>series</cite> is not a Series.</p>
 </dd>
 </dl>
+<p>Code example:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attr</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;by_metric&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;series&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;metric&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;short_display_name&quot;</span><span class="p">:</span> <span class="s2">&quot;short_display_name_of_series&quot;</span><span class="p">}}}}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">series</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">attr</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">get_series_short_display_name</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
@@ -462,20 +473,20 @@ If the unit of the series is not present it returns None.</p>
 <dd class="field-even"><p><strong>TypeError</strong> – If <cite>series</cite> is not a Series.</p>
 </dd>
 </dl>
-<p>Let’s test what happens if series has no attr.</p>
+<p>Let’s test what happens if series has no attr:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">series</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">get_series_unit</span><span class="p">(</span><span class="n">series</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
 <span class="go">True</span>
 </pre></div>
 </div>
-<p>Let’s test what happens if series has attr but no entry for unit.</p>
+<p>Let’s test what happens if series has attr but no entry for unit:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attr</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;by_metric&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;series&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;value_dimensions&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;unit&quot;</span><span class="p">:</span><span class="kc">None</span><span class="p">}}}}}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">series</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">attr</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">get_series_unit</span><span class="p">(</span><span class="n">series</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
 <span class="go">True</span>
 </pre></div>
 </div>
-<p>Let’s test what happens if series has unit in attr.</p>
+<p>Let’s test what happens if series has unit in attr:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attr</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;by_metric&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;series&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;value_dimensions&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;unit&quot;</span><span class="p">:</span><span class="s2">&quot;m/s&quot;</span><span class="p">}}}}}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">series</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">attr</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">get_series_unit</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
@@ -503,6 +514,7 @@ If the short display name of the metrics is not present it returns the result of
 <dd class="field-even"><p><strong>TypeError</strong> – If <cite>multitsframe</cite> is not a DataFrame.</p>
 </dd>
 </dl>
+<p>Code example:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attr</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;by_metric&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;metric1&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;metric&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;short_display_name&quot;</span><span class="p">:</span> <span class="s2">&quot;short_display_name_of_metric1&quot;</span><span class="p">}},</span>
 <span class="gp">... </span>                        <span class="s2">&quot;metric2&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;metric&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;name_of_metric2&quot;</span><span class="p">}},</span>
 <span class="gp">... </span>                        <span class="s2">&quot;metric3&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;metric&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}}</span> <span class="p">}}</span>
@@ -516,7 +528,7 @@ If the short display name of the metrics is not present it returns the result of
 <span class="go">True</span>
 </pre></div>
 </div>
-<p>Lets try another MTSF format</p>
+<p>Lets try another MTSF format:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attr</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;metric_key&quot;</span><span class="p">:</span> <span class="s2">&quot;external_id&quot;</span><span class="p">},</span>
 <span class="gp">... </span>         <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;external_id&quot;</span><span class="p">:</span> <span class="s2">&quot;ruhr-temperature&quot;</span><span class="p">,</span>
 <span class="gp">... </span>                      <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Ruhr temperature [°C]&quot;</span><span class="p">,</span>
@@ -550,6 +562,7 @@ If the short display name of the value_dimension is not present it returns the r
 <dd class="field-even"><p><strong>TypeError</strong> – If <cite>multitsframe</cite> is not a DataFrame.</p>
 </dd>
 </dl>
+<p>Code example:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attr</span> <span class="o">=</span> <span class="p">{</span>
 <span class="gp">... </span>   <span class="s2">&quot;by_metric&quot;</span><span class="p">:</span> <span class="p">{</span>
 <span class="gp">... </span>       <span class="s2">&quot;metric1&quot;</span><span class="p">:</span> <span class="p">{</span>
@@ -586,16 +599,16 @@ If the short display name of the value_dimension is not present it returns the r
 <p>Collection of useful functions to ease some operations in hetida designer code.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.helpers.modify_timezone">
-<span class="sig-prename descclassname"><span class="pre">hdhelpers.helpers.</span></span><span class="sig-name descname"><span class="pre">modify_timezone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object_to_convert</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_timezone</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convert_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.helpers.modify_timezone" title="Link to this definition">¶</a></dt>
-<dd><p>Modifies timestamps to a certain timezone</p>
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.helpers.</span></span><span class="sig-name descname"><span class="pre">modify_timezone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object_to_convert</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_timezone</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convert_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.helpers.modify_timezone" title="Link to this definition">¶</a></dt>
+<dd><p>Converts time information of pandas objects to a certain timezone</p>
+<p>This function is applicable to index and/or columns of pd.Series or pd.DataFrame as well as for single pd.Timestamp objects.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>object_to_convert</strong> (<em>pd.Timestamp</em><em> | </em><em>pd.Series</em><em> | </em><em>pd.DataFrame</em>) – Timestamp, Series or DataFrame where timezone is modified</p></li>
-<li><p><strong>to_timezone</strong> (<em>str</em><em> | </em><em>None</em>) – timezone to convert to, e.g. for German time use Europe/Berlin. See possible timezone strings in pandas tz_convert method or pytz all_timezones list. Default is None.</p></li>
-<li><p><strong>column_name</strong> (<em>str</em><em> | </em><em>None</em>) – column_name to apply, default is index as pd.Series have timestamps in index. Will be deprecated soon. Default is None.</p></li>
-<li><p><strong>column_names</strong> (<em>str</em><em> | </em><em>None</em>) – list of column_names to apply, default is index as pd.Series have timestamps in index. Default is None.</p></li>
-<li><p><strong>convert_index</strong> (<em>bool</em><em> | </em><em>None</em>) – Convert index. Default is true.</p></li>
+<li><p><strong>to_timezone</strong> (<em>str</em><em> | </em><em>None</em>) – Timezone to convert to, e.g. for German time use “Europe/Berlin”. See possible timezone strings in pandas’ <cite>tz_convert</cite> method or pytz all_timezones list. If to_timezone is not defined, the global timezone from plot_target_settings is used. .</p></li>
+<li><p><strong>column_names</strong> (<em>str</em><em> | </em><em>None</em>) – List of column_names to modify. For pd.Series the default behaviour is modifying the index and for pd.DataFrame the default behaviour is modifying the column “timestamp”. This option is not applicable in case object_to_convert is a pd.Timestamp.</p></li>
+<li><p><strong>convert_index</strong> (<em>bool</em><em> | </em><em>None</em>) – Boolean that controls whether the index of pd.Dataframe or pd.Series should be transformed. Note that for a pd.Series setting this option to true results in the same output as using <cite>column_names=None</cite>. This option is not applicable in case <cite>object_to_convert</cite> is a pd.Timestamp.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -605,9 +618,10 @@ If the short display name of the value_dimension is not present it returns the r
 <dd class="field-odd"><p>pd.Timestamp | pd.Series | pd.DataFrame</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>TypeError</strong> – If <cite>object_to_convert</cite> is not a Series, Timestamp, DataFrame.</p>
+<dd class="field-even"><p><strong>TypeError</strong> – If <cite>object_to_convert</cite> is not a pd.Series, pd.Timestamp, pd.DataFrame.</p>
 </dd>
 </dl>
+<p>Code example:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">hdhelpers.helpers</span><span class="w"> </span><span class="kn">import</span> <span class="n">modify_timezone</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">modified_timezone</span> <span class="o">=</span> <span class="n">modify_timezone</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="s2">&quot;2025-01-01T01:00:00+05:00&quot;</span><span class="p">),</span> <span class="n">to_timezone</span><span class="o">=</span><span class="s2">&quot;Europe/Berlin&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">int</span><span class="p">(</span><span class="n">modified_timezone</span><span class="o">.</span><span class="n">utcoffset</span><span class="p">()</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">())</span>

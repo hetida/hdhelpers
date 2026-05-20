@@ -1,4 +1,6 @@
-"""Collection of functions to access metadata information from timeseries objects"""
+"""Collection of functions to access metadata information from timeseries objects.
+Metadata information can follow varying conventions as the package glom is used to
+extract the requested information."""
 
 from .helpers import (
     get_display_names,

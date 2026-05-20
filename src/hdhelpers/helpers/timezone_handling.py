@@ -1,6 +1,5 @@
 import logging
 from functools import singledispatch
-from warnings import warn
 
 import pandas as pd
 import pytz
@@ -48,19 +47,23 @@ def modify_timezone[T: (pd.Timestamp, pd.Series, pd.DataFrame)](  # noqa: PLR091
     column_names: list[str] | None = None,
     convert_index: bool = True,
 ) -> T:
-    """Converts time information of pandas objects to a certain timezone. This function is applicable to index and/or columns of pd.Series or pd.DataFrame as well as for single pd.Timestamp objects.
+    """Converts time information of pandas objects to a certain timezone
+
+    This function is applicable to index and/or columns of pd.Series or pd.DataFrame as well as for single pd.Timestamp objects.
 
     Args:
         object_to_convert (pd.Timestamp | pd.Series | pd.DataFrame): Timestamp, Series or DataFrame where timezone is modified
-        to_timezone (str | None): Timezone to convert to, e.g. for German time use Europe/Berlin. See possible timezone strings in pandas tz_convert method or pytz all_timezones list. If to_timezone is not defined, the global timezone from plot_target_settings is used. .
-        column_names (str | None): List of column_names to modify. For pd.Series the default behaviour is modifying the index and for pd.DataFrame the default behaviour is modifyng the column timestamp. This option is not applicable in case object_to_convert is a pd.Timestamp.
-        convert_index (bool | None): Boolean that controls whether the index of pd.Dataframe or pd.Series should be transformed. Note that for a pd.Series settings this to true results in same output as using column_names=None. This option is not applicable in case object_to_convert is a pd.Timestamp.
+        to_timezone (str | None): Timezone to convert to, e.g. for German time use "Europe/Berlin". See possible timezone strings in pandas' `tz_convert` method or pytz all_timezones list. If to_timezone is not defined, the global timezone from plot_target_settings is used. .
+        column_names (str | None): List of column_names to modify. For pd.Series the default behaviour is modifying the index and for pd.DataFrame the default behaviour is modifying the column "timestamp". This option is not applicable in case object_to_convert is a pd.Timestamp.
+        convert_index (bool | None): Boolean that controls whether the index of pd.Dataframe or pd.Series should be transformed. Note that for a pd.Series setting this option to true results in the same output as using `column_names=None`. This option is not applicable in case `object_to_convert` is a pd.Timestamp.
     Returns:
         pd.Timestamp | pd.Series | pd.DataFrame:
             Returns the modified timezone object.
 
     Raises:
-        TypeError: If `object_to_convert` is not a Series, Timestamp, DataFrame.
+        TypeError: If `object_to_convert` is not a pd.Series, pd.Timestamp, pd.DataFrame.
+
+    Code example:
 
     .. doctest::
 
@@ -90,7 +93,6 @@ def modify_timezone[T: (pd.Timestamp, pd.Series, pd.DataFrame)](  # noqa: PLR091
             new_object = object_to_convert.to_frame(name=object_to_convert.name)
         else:
             new_object = object_to_convert.copy(deep=True)
-
 
         if len(column_names) == 0:
             if isinstance(object_to_convert, pd.Series):

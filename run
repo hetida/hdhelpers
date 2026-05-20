@@ -10,7 +10,7 @@ usage() {
     echo "  - typecheck           :    run mypy static type check"
     echo "  - format              :    run ruff format"
     echo "  - check               :    run format check, tests, typechecking"
-    echo "  - build_docs         :    runs sphinx to generate python package documentation"
+    echo "  - build_docs          :    runs sphinx to generate python package documentation"
     echo "  - build_package       :    builds package with defined version"
     echo "  - test-py-versions    :    runs tests on several python version using uv run --python"
 }
@@ -29,9 +29,9 @@ ARGUMENTS=("${@}")
 
 lint(){
     if (( ${#} == 0 )) ; then
-        uv ruff check hdhelpers --exclude "**/__init__.py"
+        uv run ruff check src/hdhelpers --exclude "**/__init__.py"
     else
-        uv ruff check "${@}"
+        uv run ruff check "${@}"
     fi
 }
 

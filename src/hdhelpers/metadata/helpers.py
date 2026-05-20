@@ -42,7 +42,7 @@ def get_units(
     Raises:
         TypeError: If `multitsframe` is not a DataFrame.
 
-
+    Code example:
 
     .. doctest:: metadata.get_units
 
@@ -79,7 +79,7 @@ def get_units(
 
 
 def get_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, str | None]]:
-    """Gets names of the MTSF metrics from Metadata
+    """Gets names of the MTSF metrics from the metadata
 
     Args:
         multitsframe (pd.DataFrame): MTSF with metadata following the convention.
@@ -89,6 +89,8 @@ def get_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, s
 
     Raises:
         TypeError: If `multitsframe` is not a DataFrame.
+
+    Code example:
 
     .. doctest:: metadata.get_names
 
@@ -101,7 +103,7 @@ def get_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, s
         >>> result["metric2"]["value"] is None
         True
 
-    Lets try another MTSF format
+    Lets try another MTSF format:
 
     .. doctest:: metadata.get_names
 
@@ -134,6 +136,8 @@ def get_display_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdic
     Raises:
         TypeError: If `multitsframe` is not a DataFrame.
 
+    Code example:
+
     .. doctest:: metadata.get_display_names
 
         >>> attr = { "by_metric": { "metric1": {"metric": {"display_name": "display_name_of_metric1"}},
@@ -145,7 +149,7 @@ def get_display_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdic
         >>> result["metric2"]["value"]
         'name_of_metric2'
 
-    Lets try another MTSF format
+    Lets try another MTSF format:
 
     .. doctest:: metadata.get_display_names
 
@@ -180,6 +184,8 @@ def get_short_display_names(
     Raises:
         TypeError: If `multitsframe` is not a DataFrame.
 
+    Code example:
+
     .. doctest:: metadata.get_short_display_names
 
         >>> attr = { "by_metric": { "metric1": {"metric": {"short_display_name": "short_display_name_of_metric1"}},
@@ -194,7 +200,7 @@ def get_short_display_names(
         >>> result["metric3"]["value"] is None
         True
 
-    Lets try another MTSF format
+    Lets try another MTSF format:
 
     .. doctest:: metadata.get_short_display_names
 
@@ -229,6 +235,8 @@ def get_measurements(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict
     Raises:
         TypeError: If `multitsframe` is not a DataFrame.
 
+    Code example:
+
     .. doctest:: metadata.get_measurements
 
         >>> attr = { "dataset_metadata": {"metric_key": "external_id"},
@@ -245,17 +253,19 @@ def get_measurements(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict
 
 
 def get_metric_info(multitsframe: pd.DataFrame, metric_info: str | Spec) -> defaultdict[str, Any]:
-    """Get a dictionary of metadata associated to metrics
+    """Gets a dictionary of metadata associated to metrics.
 
     In contrast to metadata associated to concrete value dimensions, this
     function abstracts access to metadata associated to the underlying metric.
 
     Args:
         multitsframe (pd.DataFrame): MTSF with metadata following the convention.
-        metric_info (str | Spec): Name of information to retrieve. Note that metric_info is interpreted as a glom Spec.
+        metric_info (str | Spec): Name of information to retrieve. Note that `metric_info` is interpreted as a glom Spec.
 
     Returns:
-        defaultdict[str, Any]: dictionary, where keys are the entries of the metrics metadata specified via "metric_key" in "dataset_metadata" and values are the entries specified via "metric_info" in the metrics metadata
+        defaultdict[str, Any]: Dictionary, where keys are the entries of the metrics metadata specified via "metric_key" in "dataset_metadata" and values are the entries specified via "metric_info" in the metrics metadata
+
+    Code example:
 
     .. doctest:: metadata.get_metric_info
 
@@ -305,7 +315,7 @@ def get_metric_info(multitsframe: pd.DataFrame, metric_info: str | Spec) -> defa
 
 
 def get_series_info(series: pd.Series, value_dim_info: str | Spec) -> Any:
-    """Get an arbitrary series info
+    """Gets an arbitrary series info
 
     Since a series has only one value dimension named "value", this information is
     equivalent to information on the metric.
@@ -317,6 +327,7 @@ def get_series_info(series: pd.Series, value_dim_info: str | Spec) -> Any:
     Returns:
         Any: Retrieved information defined by `value_dim_info`
 
+    Code example:
 
     .. doctest:: metadata.get_series_info
 
@@ -375,7 +386,7 @@ def get_series_unit(series: pd.Series) -> str | None:
     Raises:
         TypeError: If `series` is not a Series.
 
-    Let's test what happens if series has no attr.
+    Let's test what happens if series has no attr:
 
     .. doctest:: metadata.get_series_unit
 
@@ -383,7 +394,7 @@ def get_series_unit(series: pd.Series) -> str | None:
         >>> get_series_unit(series) is None
         True
 
-    Let's test what happens if series has attr but no entry for unit.
+    Let's test what happens if series has attr but no entry for unit:
 
     .. doctest:: metadata.get_series_unit
 
@@ -392,7 +403,7 @@ def get_series_unit(series: pd.Series) -> str | None:
         >>> get_series_unit(series) is None
         True
 
-    Let's test what happens if series has unit in attr.
+    Let's test what happens if series has unit in attr:
 
     .. doctest:: metadata.get_series_unit
 
@@ -421,7 +432,7 @@ def get_series_name(series: pd.Series) -> str | None:
     Raises:
         TypeError: If `series` is not a Series.
 
-    Let's test what happens if series has name in value_dimensions.
+    Let's test what happens if series has name in value_dimensions:
 
     .. doctest:: metadata.get_series_name
 
@@ -430,7 +441,7 @@ def get_series_name(series: pd.Series) -> str | None:
         >>> get_series_name(series)
         'value_name_of_series'
 
-    Let's test what happens if series has name in metric.
+    Let's test what happens if series has name in metric:
 
     .. doctest:: metadata.get_series_name
 
@@ -439,7 +450,7 @@ def get_series_name(series: pd.Series) -> str | None:
         >>> get_series_name(series)
         'name_of_series_1'
 
-    Let's test what happens if series has name in metric and value_dimensions.
+    Let's test what happens if series has name in metric and value_dimensions:
 
     .. doctest:: metadata.get_series_name
 
@@ -467,6 +478,8 @@ def get_series_display_name(series: pd.Series) -> str | None:
 
     Raises:
         TypeError: If `series` is not a Series.
+
+    Code example:
 
     .. doctest:: metadata.get_series_display_name
 
@@ -504,6 +517,8 @@ def get_series_short_display_name(series: pd.Series) -> str | None:
     Raises:
         TypeError: If `series` is not a Series.
 
+    Code example:
+
     .. doctest:: metadata.get_series_short_display_name
 
         >>> attr = { "by_metric": { "series": { "metric": {"short_display_name": "short_display_name_of_series"}}}}
@@ -539,6 +554,8 @@ def get_series_measurement(series: pd.Series) -> str | None:
     Raises:
         TypeError: If `series` is not a Series.
 
+    Code example:
+
     .. doctest:: metadata.get_series_measurement
 
         >>> attr = { "by_metric": { "series": { "metric": {"measurement": "temperature"}}}}
@@ -564,6 +581,8 @@ def get_queried_interval(
     Raises:
         ValueError: If metadata of `data` is not None and not convertible to a datetime-object (ISO-format is expected).
         TypeError: If `data` is not a Series or Dataframe.
+
+    Code example:
 
     .. doctest:: metadata.get_queried_interval
 

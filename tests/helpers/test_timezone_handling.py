@@ -136,7 +136,7 @@ def test_modify_timezone_multicolumn_dataframe(multicolumn_frame):
         multicolumn_frame.copy(),
         to_timezone="Europe/Berlin",
         column_names=["timestamp", "more_timestamps"],
-        convert_index=True
+        convert_index=True,
     )
 
     timestamp_id = local_summertime.columns.get_loc("timestamp")
@@ -152,7 +152,7 @@ def test_modify_timezone_multicolumn_dataframe_without_index(multicolumn_frame):
         multicolumn_frame.copy(),
         to_timezone="Europe/Berlin",
         column_names=["timestamp", "more_timestamps"],
-        convert_index=False
+        convert_index=False,
     )
 
     # German summer time starts in last Sunday in March at 2 am. --> UTC 1am
@@ -160,7 +160,9 @@ def test_modify_timezone_multicolumn_dataframe_without_index(multicolumn_frame):
     timestamp_id_2 = local_summertime.columns.get_loc("more_timestamps")
     assert local_summertime.iloc[1, timestamp_id].utcoffset() == datetime.timedelta(seconds=7200)
     assert local_summertime.iloc[1, timestamp_id_2].utcoffset() == datetime.timedelta(seconds=7200)
-    assert local_summertime.index[1].utcoffset() == multicolumn_frame.index[0].utcoffset() # index of dataframe is not modified
+    assert (
+        local_summertime.index[1].utcoffset() == multicolumn_frame.index[0].utcoffset()
+    )  # index of dataframe is not modified
     assert "foo" in local_summertime.attrs
 
 
