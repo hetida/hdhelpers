@@ -1,0 +1,16 @@
+{
+    "dataset_metadata": {
+        "metric_key": "id",
+        "single_metric": "series",
+        "ref_interval_start_timestamp": "2023-01-01T00:00:00+00:00",
+        "ref_interval_end_timestamp": "2023-01-02T00:00:00Z"
+    },
+    "metrics": [
+        {
+            "id": "series",
+            "external_id": "external_first",
+            "unit": "m",
+            "name": "first name"
+        }
+    ]
+}

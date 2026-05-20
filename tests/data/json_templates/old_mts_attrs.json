@@ -1,0 +1,27 @@
+{
+    "metrics": {
+        "test_channel": {
+            "tenantId": "tenant_a",
+            "id": "0eeccba1-b38d-48ac-bad7-630a743e241b",
+            "name": "Some name",
+            "icon": null,
+            "type": "FLOAT",
+            "unit": "l/min",
+            "externalTimeSeriesId": "some_external_id",
+            "description": null,
+            "measurement": null,
+            "visualization": null,
+            "virtualChannel": true,
+            "aggregationType": "ORIGINAL",
+            "aggregationInterval": null,
+            "schedulerJob": {
+                "id": "some_id"
+            },
+            "singleTimeseries": true
+        },
+        "some_other_metric": {
+            "unit": "l",
+            "measurement": "volume"
+        }
+    }
+}

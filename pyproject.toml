@@ -1,0 +1,109 @@
+[build-system]
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+exclude = [
+  "/docs",
+  "/.github",
+  "src/hdhelpers/plotting",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hdhelpers"]
+exclude = [
+  "/docs",
+  "/.github",
+  "src/hdhelpers/plotting",
+]
+
+
+[project]
+name = "hdhelpers"
+version = "0.0.2"
+description = "Streamlines metadata & timezone handling, and plotting in hetida designer components"
+readme = "README.md"
+maintainers = [
+    {name = "hetida", email = "hetida@fuseki.com"},
+    {name = "Steffen Wittkamp", email = "swittkamp@fuseki.com"},
+    {name = "Jenny Kupzig", email = "jkupzig@fuseki.com"},
+    {name = "Christoph Dingel", email = "cdingel@fuseki.com"}
+]
+
+requires-python = ">=3.12"
+dependencies = [
+    "pandas>=2,<3",
+    "plotly>=6,<7",
+    "pydantic>=2,<3",
+    "glom>25,<26",
+    "numpy>=2.3.3",
+]
+license = "MIT"
+license-files = ["LICENSE"]
+
+classifiers = [
+    'Development Status :: 2 - Pre-Alpha',
+    'Environment :: Console',
+    'Intended Audience :: Science/Research',
+    "Intended Audience :: Developers",
+    'License :: OSI Approved :: MIT License',
+    'Operating System :: Unix',
+    'Topic :: Scientific/Engineering',
+    "Topic :: Software Development",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "License :: OSI Approved :: MIT License",
+]
+
+[project.urls]
+homepage = "https://fuseki.com/data-science/hetida-designer/"
+documentation = "https://hetida.github.io/hdhelpers/"
+repository = "https://github.com/hetida/hetida-designer"
+hetidadesigner = "https://github.com/hetida/hetida-designer/tree/release/docs"
+
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true
+
+
+
+[tool.ruff]
+# allow longer lines than the default (88, same as black)
+line-length = 100
+
+
+
+[pycodestyle]
+# Ensures E501 (line-too-long) uses the same limit
+max-line-length = 100
+
+# Assume python313
+target-version = "py313"
+
+lint.select = ["E", "F", "B", "W", "PL", "ERA", "G", "I", "UP", "YTT", "S", "BLE", "A", "COM", "C4", "DTZ", "T10", "ISC", "ICN", "INP", "PIE", "T20", "PT", "Q", "RET", "SIM", "ARG", "PD"]
+
+lint.ignore = ["E713", "E714", "B008", "PLR2004", "COM812", "RET504", "PLR0913", "UP017", "ISC001"]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.19.1",
+    "pandas-stubs>=3.0.0.260204",
+    "pip>=26.0.1",
+    "pytest>=9.0.2",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.15.7",
+    "sphinx>=9.1.0",
+    "types-pytz>=2026.1.1.20260304",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"/**/tests/**/*.py" = ["S101", "PT023", "T201", "INP001", "PT001", "ARG001", "S113", "S603", "PLR0912"]
+"tests/conftest.py" = ["F401"]
+
+[[tool.mypy.overrides]]
+module = ["glom"]
+ignore_missing_imports = true

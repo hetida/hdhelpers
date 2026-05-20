@@ -1,0 +1,49 @@
+{
+    "dataset_metadata": {
+      "ref_interval_start_timestamp": "2025-11-05T13:28:00Z",
+      "ref_interval_end_timestamp": "2025-11-06T13:28:00Z",
+      "ref_interval_type": "closed",
+      "ref_metric": "Wasserstand",
+      "ref_data_frequency": null,
+      "ref_data_frequency_offset": null,
+      "invalidation_interval_start": null,
+      "invalidation_interval_end": null,
+      "invalidation_interval_type": null,
+      "invalidate_dataset": null,
+      "delete_invalidated": null,
+      "only_invalidate": null,
+      "ref_dataset_discrete": null,
+      "invalidation_timestamp": null,
+      "new_data_invalidation_date": null
+    },
+    "single_metric_metadata": {
+      "structured_metadata": {
+        "metric": {
+          "name": "Wasserstand",
+          "display_name": null,
+          "short_display_name": "W",
+          "description": "neu berechneter Wasserstand",
+          "unit": "m³/s",
+          "value_data_type": null,
+          "external_id": "virtual-channel.b4a6c64d-5e72-44a4-a551-e3f51f8e19b0",
+          "channel_id": "09922b06-2c62-4e18-9c1e-857949674ebb"
+        },
+        "inherited": {
+          "Stationsname": "Mühlenstrang - Brücke Ruhr",
+          "Latitude": 51.436477,
+          "Longitude": 7.583455,
+          "Referenzniveau": 3000
+        },
+        "value_dimensions": {
+          "value": {
+            "name": "Wasserstand value",
+            "display_name": null,
+            "short_display_name": "W value",
+            "description": null,
+            "unit": "m³/s value",
+            "value_data_type": "float"
+          }
+        }
+      }
+    }
+}

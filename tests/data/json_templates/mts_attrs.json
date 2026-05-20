@@ -1,0 +1,78 @@
+{
+    "dataset_metadata": {
+        "metric_key": "id",
+        "ref_interval_start_timestamp": "2023-01-01T00:00:00+00:00",
+        "ref_interval_end_timestamp": "2023-01-02T00:00:00Z"
+    },
+    "value_dimensions_shared": [
+        {
+            "column": "pressure",
+            "unit": "bar",
+            "name": "shared value_dimension pressure name",
+            "measurement": "pressure"
+        },
+        {
+            "column": "temp",
+            "measurement": "temperature"
+        }
+    ],
+    "metrics": [
+        {
+            "id": "first",
+            "external_id": "external_first",
+            "unit": "m",
+            "display_name": "first display name",
+            "value_dimensions": [
+                {
+                    "column": "temp",
+                    "unit": "C",
+                    "measurement": "temperature"
+                }
+            ]
+        },
+        {
+            "id": "second",
+            "name": "second name",
+            "external_id": "external_second",
+            "value_dimensions": [
+                {
+                    "column": "temp",
+                    "unit": "C"
+                }
+            ]
+        },
+        {
+            "id": "third",
+            "external_id": "external_third",
+            "measurement": "height",
+            "value_dimensions": [
+                {
+                    "column": "pressure",
+                    "display_name": "thirds's pressure"
+                }
+            ]
+        },
+        {
+            "id": "fourth",
+            "external_id": "external_fourth",
+            "unit": "l",
+            "value_dimensions": [
+                {
+                    "column": "pressure",
+                    "unit" : "Pa"
+                }
+            ]
+        },
+        {
+            "id": "fifth",
+            "external_id": "external_fifth",
+            "unit": "l",
+            "value_dimensions": [
+                {
+                    "column": "value",
+                    "unit" : "m^3"
+                }
+            ]
+        }
+    ]
+}

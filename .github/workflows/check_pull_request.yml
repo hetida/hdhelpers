@@ -1,0 +1,67 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Check pull requests
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "develop" branch
+  pull_request:
+    branches: [ "develop", "main" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+
+jobs:
+  build:
+    name: test_pypy_version
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - "3.12"
+          - "3.13"
+          - "3.14"
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv and set the Python version
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+
+      - name: Sync dependencies and run checks
+        run: |
+          set -e
+          echo "Installing hdhelpers"
+          uv sync --locked --all-extras --dev
+          echo "Running tests..."
+          ./run test
+
+
+  check_lint_format_mypy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Info
+        run: echo "Applying checks"
+
+      - name: Sync dependencies and run checks
+        run: |
+          set -e
+          echo "Installing hdhelpers"
+          uv sync --locked --all-extras --dev
+          echo "Running checks..."
+          ./run check --no-tests

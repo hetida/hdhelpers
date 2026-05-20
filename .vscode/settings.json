@@ -1,0 +1,33 @@
+{
+    "search.exclude": {
+        "**/__pycache__": true,
+        "**/.git": true,
+        "**/.venv": true,
+        ".tmp": true,
+        "**/.mypy_cache": true,
+        "**/.pytest_cache": true,
+        "**/.coverage": true,
+        "**/.ruff_cache": true
+    },
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/.venv": true,
+        ".tmp": true,
+        "**/.mypy_cache": true,
+        "**/.pytest_cache": true,
+        "**/.coverage": true,
+        "**/.ruff_cache": true
+    },
+    "editor.formatOnSave": true,
+    "editor.indentSize": "tabSize",
+    "editor.detectIndentation": false,
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports.ruff": "explicit"
+        },
+    },
+    "python.defaultInterpreterPath": ".venv/bin/python",
+    "python.languageServer": "Default",
+
+}
