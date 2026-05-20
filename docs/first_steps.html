@@ -44,8 +44,8 @@
 <h1>First steps<a class="headerlink" href="#first-steps" title="Link to this heading">¶</a></h1>
 <section id="how-to-get-metadata-with-hdhelpers">
 <h2>How to get metadata with hdhelpers?<a class="headerlink" href="#how-to-get-metadata-with-hdhelpers" title="Link to this heading">¶</a></h2>
-<p>Let’s say we want to plot a timeseries with data points.
-In hetida designer this series can be represented as json for <em>direct provisioning</em> :</p>
+<p>Let’s say we want to retrieve the metadata of a timeseries.
+In hetida designer this series can be represented as json for <em>direct provisioning</em></p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">    </span><span class="nt">&quot;__hd_wrapped_data_object__&quot;</span><span class="p">:</span><span class="s2">&quot;SERIES&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;__metadata__&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
@@ -71,13 +71,13 @@ In hetida designer this series can be represented as json for <em>direct provisi
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>We can retrieve the name and unit for example with the following code</p>
+<p>We can retrieve the name and unit of the series with the following code</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hdhelpers.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_series_name</span><span class="p">,</span> <span class="n">get_series_unit</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">series</span><span class="p">):</span>
     <span class="c1"># entrypoint function for this component</span>
     <span class="c1"># ***** DO NOT EDIT LINES ABOVE *****</span>
-    <span class="c1"># write your function code here.</span>
+
     <span class="n">name</span> <span class="o">=</span> <span class="n">get_series_name</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
     <span class="n">unit</span> <span class="o">=</span> <span class="n">get_series_unit</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
 
@@ -87,34 +87,13 @@ In hetida designer this series can be represented as json for <em>direct provisi
 </section>
 <section id="how-to-use-hdhelpers-for-plotting-tbd">
 <h2>How to use hdhelpers for plotting? (tbd)<a class="headerlink" href="#how-to-use-hdhelpers-for-plotting-tbd" title="Link to this heading">¶</a></h2>
-<p>Let’s say we want to plot a timeseries with data points.
-In hetida designer this series can be represented as json for <em>direct provisioning</em> :</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;__hd_wrapped_data_object__&quot;</span><span class="p">:</span><span class="s2">&quot;SERIES&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;__metadata__&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;single_metric_dataset_metadata&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="nt">&quot;ref_interval_end_timestamp&quot;</span><span class="p">:</span><span class="s2">&quot;2020-01-01T08:20:00.000Z&quot;</span><span class="p">,</span>
-<span class="w">            </span><span class="nt">&quot;ref_interval_start_timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2020-01-01T08:10:00.000Z&quot;</span>
-<span class="w">        </span><span class="p">},</span>
-<span class="w">        </span><span class="nt">&quot;single_metric_metadata&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="nt">&quot;structured_metadata&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                </span><span class="nt">&quot;metric&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                    </span><span class="nt">&quot;short_display_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Water Level&quot;</span><span class="p">,</span>
-<span class="w">                    </span><span class="nt">&quot;unit&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cm&quot;</span>
-<span class="w">                </span><span class="p">}</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="nt">&quot;__data__&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;2020-01-01T08:10:00+00:00&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;2020-01-01T08:15:00+00:00&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;2020-01-01T08:16:00+00:00&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;2020-01-01T08:17:00+00:00&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>Our component code might look like this to plot this series:</p>
+<p>Let’s say we want to plot the same timeseries above using hdhelpers functionalities.
+For example, we want to:
+- plot the timeseries in a corresponding timezone,
+- set the limits of the x-axis corresponding to the metadata,
+- define the label of the y-axis corresponding to the metadata,
+- and use standard colors for plotting.</p>
+<p>Our component code might look like this to plot the timeseries accordingly:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hdhelpers.plotting</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_and_pad_start_and_end_timestamp</span><span class="p">,</span> <span class="n">get_y_axis_label</span><span class="p">,</span> <span class="n">plotly_fig_to_json_dict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">hdhelpers.helpers</span><span class="w"> </span><span class="kn">import</span> <span class="n">modify_timezone</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">go</span>
@@ -122,7 +101,7 @@ In hetida designer this series can be represented as json for <em>direct provisi
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">series</span><span class="p">):</span>
     <span class="c1"># entrypoint function for this component</span>
     <span class="c1"># ***** DO NOT EDIT LINES ABOVE *****</span>
-    <span class="c1"># write your function code here.</span>
+
     <span class="n">series</span> <span class="o">=</span> <span class="n">modify_timezone</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
 
     <span class="n">colors</span> <span class="o">=</span> <span class="n">get_colors_from_plot_target_settings</span><span class="p">()</span>
@@ -137,76 +116,39 @@ In hetida designer this series can be represented as json for <em>direct provisi
     <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;plot&quot;</span><span class="p">:</span> <span class="n">plotly_fig_to_json_dict</span><span class="p">(</span><span class="n">fig</span><span class="o">=</span><span class="n">fig</span><span class="p">)}</span>
 </pre></div>
 </div>
-<p>First, we use <em>modify_timezone</em> to set the timezone. Since our goal is just to make sure that the timestamps are
+<p># Explanation
+- <em>modify_timezone</em>: We use <cite>modify_timezone</cite> function to set the timezone. Since our goal is just to make sure that the timestamps are
 timezone aware, not to convert it to a specific timezone, we do not pass a value for the <cite>timezone</cite> parameter. That way,
 if there is a <cite>plot_target_timezone</cite> set in the hetida designer’s <cite>plot_target_settings</cite> context variable, that timezone
 will be used. Otherwise, the timestamps keep their current timezone or are converted to UTC if they are timezone naive.</p>
-<p>With the timezone-corrected data in place, we turn it into a plotly Scatter Figure object called <cite>fig</cite>, that we can then
-style to our liking. We want to customize said scatter plot by coloring the markers. To find a fitting color, we use
-<cite>get_colors_from_plot_target_settings</cite>, which returns the <cite>plot_target_style</cite> property of the <cite>plot_target_settings</cite>
+<ul class="simple">
+<li><p><em>get_colors_from_plot_target_settings</em>: To use a (global) standard color, we use <cite>get_colors_from_plot_target_settings</cite>,</p></li>
+</ul>
+<p>which returns the <cite>plot_target_style</cite> property of the <cite>plot_target_settings</cite>
 context variable. It contains a set of colors with specific purposes, such as <cite>background_color</cite>, and the
 <cite>status_colors</cite> object, which in turn contains the four status colors: <cite>success_color</cite>, <cite>error_color</cite>, <cite>warn_color</cite>, and
 <cite>info_color</cite>. The status colors have no hardwired use in a plot, but are intended to convey a message. In our example,
 we want to communicate that the order of magnitude of our data is potentially dangerous, so we use the <cite>warn_color</cite> for
 <cite>fig</cite>’s <cite>marker[“color”]</cite> property, which determines the plot’s marker and line color.</p>
-<p>Now, we use <cite>get_and_pad_start_and_end_timestamp</cite> for precise control over the x-axis range. We do not set <cite>start</cite> and
-<cite>end</cite> explicitly because we want to parse them from the series metadata, which reflects the chosen interval for which
-plotting data was requested. This way, we can see that there is missing data from 8:18 to 8:20, where normally Plotly
-would not have included that time range in the plot. We do not pass a <cite>timezone</cite> for the same reasons as with
-<cite>modify_timezone</cite>. We also set a <cite>start_padding</cite>, so the markers of the first data point is not cut in half by the edge
-of the plot. With start and end parsed, we can update <cite>fig</cite>’s x-axis range.</p>
-<p>Next, we use <cite>get_y_axis_label</cite> so our y-axis can be labeled with the series metadata. With the above input series,
-title and unit will be parsed from the series metadata, but in case the component is ever run without series metadata,
-we provide a <cite>default_title</cite>, but we leave the <cite>default_unit</cite> at its empty default value. Then, we update <cite>fig</cite> with our
-title.</p>
-<p>Lastly, we use <cite>plotly_fig_to_json_dict</cite> to apply standardized stylings and serialize the plotly figure into a json
-dict. All the standardized styling options are active by default, as detailed in [Styling Flags](#flags), so we do not
+<ul class="simple">
+<li><p><em>get_and_pad_start_and_end_timestamp</em>: We use <cite>get_and_pad_start_and_end_timestamp</cite> for precise control over the x-axis range. We do not set <cite>start</cite> and</p></li>
+</ul>
+<p><cite>end</cite> explicitly because we want to parse them from the metadata, which reflects the chosen interval for which
+the data was requested. This way, we can see that there is missing data from 8:18 to 8:20. In the default behaviour of plotly
+this time range would not have been included possibly hiding missing data.
+Note: (1) We do not pass a <cite>timezone</cite> for the same reasons as with <cite>modify_timezone</cite>.
+(2) We also set a <cite>start_padding</cite>, so the markers of the first data point is not cut in half by the edge
+of the plot.</p>
+<ul class="simple">
+<li><p><em>get_y_axis_label</em>: We use <cite>get_y_axis_label</cite> so our y-axis can be labeled by using information from the metadata. With the above input series,</p></li>
+</ul>
+<p>title and unit will be parsed from the metadata. In case the metadata does not contain the mentioned information,
+we provide a <cite>default_title</cite>, and <cite>default_unit</cite> to configure the axis label in such cases.</p>
+<ul class="simple">
+<li><p><em>plotly_fig_to_json_dict</em>: Wwe use <cite>plotly_fig_to_json_dict</cite> to apply standardized stylings and serialize the plotly figure into a json</p></li>
+</ul>
+<p>dict. All the standardized styling options are active by default, as detailed in [Styling Flags](#flags), so we do not
 have to set any for this example.</p>
-<p>As a result we get the following plot:</p>
-</section>
-<section id="further-explanation">
-<h2>Further Explanation<a class="headerlink" href="#further-explanation" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><cite>use_platform_defaults=True</cite> sets the following flags to <cite>True</cite>, which are by default <cite>False</cite>:</p></li>
-<li><p><cite>hide_legend</cite> sets the plotly layout parameter <cite>showlegend=False</cite> to hide the plot’s legend</p></li>
-<li><p><cite>hide_x_title</cite> sets the plotly xaxes parameter <cite>title_text=’’</cite> to hide the x-axis title</p></li>
-<li><p><cite>remove_plotly_bar</cite> sets the plotly figure’s <cite>displayModeBar</cite> setting to <cite>False</cite> to remove the plotly bar from the plot</p></li>
-<li><p><cite>update_x_axes_tickformat</cite> sets the plotly xaxes parameter <cite>tickformat</cite> to the <cite>datetime_tick_format</cite> property the hetida platform writes into the hetida designer’s <cite>plot_target_settings</cite> context variable (unless the property is <cite>None</cite>)</p></li>
-<li><p><cite>use_default_standoff</cite> sets the plotly yaxes parameter <cite>title_standoff=5</cite></p></li>
-<li><p><cite>use_muplot_axes_color</cite> sets the plotly xaxes and yaxes parameter <cite>color</cite> to the <cite>axes_label_color</cite> property the hetida platform writes into the hetida designer’s <cite>plot_target_settings</cite> context variable (unless the property is <cite>None</cite>)</p></li>
-<li><p><cite>use_muplot_grid</cite> makes the plotly grid visible and colors it in according to the <cite>grid_color</cite> property the hetida platform writes into the hetida designer’s <cite>plot_target_settings</cite> context variable (unless the property is <cite>None</cite>)</p></li>
-<li><p><cite>use_muplot_line_and_markers</cite> sets the plotly traces to the following style, which matches the hetida platform’s µplots:</p></li>
-</ul>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;marker&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;size&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span>
-<span class="w">    </span><span class="nt">&quot;line&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;width&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span>
-<span class="w">    </span><span class="nt">&quot;mode&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;lines+markers&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;marker_symbol&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;circle&quot;</span><span class="p">,</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<ul class="simple">
-<li><p><cite>use_platform_background</cite> sets the plotly layout parameter <cite>paper_bgcolor</cite> to the <cite>background_color</cite> property the
-hetida platform writes into the hetida designer’s <cite>plot_target_settings</cite> context variable (unless the property is
-<cite>None</cite>) and it sets <cite>plot_bgcolor=rgba(0,0,0,0)</cite> so the “paper background” is visible through the “plot background”</p></li>
-<li><dl class="simple">
-<dt><cite>plotly_fig_to_json_dict</cite> has four more boolean parameters:</dt><dd><ul>
-<li><p><cite>add_config_settings</cite> sets the plotly figure’s locale to
-the <cite>plot_target_locale</cite> property the hetida platform writes into the hetida designer’s <cite>plot_target_settings</cite> context
-variable (unless the property is <cite>None</cite>)</p></li>
-<li><p><cite>remove_plotly_icon</cite> sets the plotly figure’s <cite>displaylogo</cite> setting to
-<cite>False</cite> to remove the plotly logo from the plot</p></li>
-<li><p><cite>use_minimum_margin</cite> sets the plotly layout parameter
-<cite>margin={“autoexpand”: True, “l”: 0, “r”: 0, “b”: 0, “t”: 0, “pad”: 0}</cite> to minimize the plot’s margins</p></li>
-<li><p><cite>use_platform_colorway</cite> sets the plotly layout parameter <cite>colorway</cite> to the <cite>line_colors</cite> property the hetida platform
-writes into the hetida designer’s <cite>plot_target_settings</cite> context variable (unless the property is <cite>None</cite>). Note that in
-Plotly, explicitly set line colors have higher priority than those in the colorway, so setting this parameter to <cite>False</cite>
-is rarely necessary. * <cite>use_simple_white_template</cite> sets the plotly layout parameter <cite>template=simple_white</cite></p></li>
-</ul>
-</dd>
-</dl>
-</li>
-</ul>
 </section>
 </section>
 
@@ -223,7 +165,6 @@ is rarely necessary. * <cite>use_simple_white_template</cite> sets the plotly la
 <li><a class="reference internal" href="#">First steps</a><ul>
 <li><a class="reference internal" href="#how-to-get-metadata-with-hdhelpers">How to get metadata with hdhelpers?</a></li>
 <li><a class="reference internal" href="#how-to-use-hdhelpers-for-plotting-tbd">How to use hdhelpers for plotting? (tbd)</a></li>
-<li><a class="reference internal" href="#further-explanation">Further Explanation</a></li>
 </ul>
 </li>
 </ul>
