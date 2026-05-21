@@ -70,7 +70,7 @@ writing component code.
 Once you are done writing your code, including unit tests, use `./run check` to see if your code quality is sufficient.
 
 ### Documentation
-Fr documentation we use the tool sphinx. Please apply `./run build_docs` to create the current state of documentation. It will be stored in **docs**. You can open the documentation by opening `docs/index.html`, e.g. with your browser.
+For documentation we use the tool sphinx. Please apply `./run build_docs` to create the current state of documentation. It will be stored in **docs**. You can open the documentation by opening `docs/index.html`, e.g. with your browser.
 
 ### Build, Release and Publish
 The first step for publishing a new package version is creating and merging a pull request from develop to main.
@@ -96,7 +96,19 @@ To **publish** the build from the `dist` subdirectory to PyPI,
 
 1) tag your main branch with the specified package version
 
-2) use `uv publish --index testpypi --token <API-token>`. You need a (Test-)PyPI account with a token and you need maintainer/owner access to the [hdhelpers (Test-)PyPI project](https://pypi.org/project/hdhelpers/).
+2) use `uv publish --index testpypi --token <API-token>`. You need a Test-PyPI account with a token and you need maintainer/owner access to the [hdhelpers Test-PyPI project](https://test.pypi.org/project/hdhelpers/).
+
+3) verifiy that package can be installed by using:
+```bash
+uv run --with 'hdhelpers==<version>'
+     --refresh-package hdhelpers
+     --default-index https://test.pypi.org/simple/
+     --index https://test.pypi.org/simple/
+     --no-project
+     -- python -c "import hdhelpers; print(hdhelpers.__version__)"
+```
+
+4) use `uv publish dist/*` to upload the package on [hdhelpers PyPI project](https://pypi.org/project/hdhelpers/).
 
 3) After publishing please communicate to the hetida designer team so upgrade there dependencies.
 The hetida designer docker compose setup installs hdhelpers from [PyPI](https://pypi.org) as it does with any dependency listed in `runtime/requirements.in`.
