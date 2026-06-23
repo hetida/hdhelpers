@@ -110,7 +110,7 @@ uv run --with 'hdhelpers==<version>'
 
 4) use `uv publish dist/*` to upload the package on [hdhelpers PyPI project](https://pypi.org/project/hdhelpers/).
 
-3) After publishing please communicate to the hetida designer team so upgrade there dependencies.
+5) After publishing please communicate to the hetida designer team so upgrade there dependencies.
 The hetida designer docker compose setup installs hdhelpers from [PyPI](https://pypi.org) as it does with any dependency listed in `runtime/requirements.in`.
 
 ### Notes
