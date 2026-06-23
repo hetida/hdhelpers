@@ -1,4 +1,9 @@
-## [0.0.2] - 2026-XX-XX
+## [0.0.3] - 2026-06-23
+- Fixes in modifiy_timezone
+- Disarm dependencies to ease compatibility to designer development
+- Enhance documentation
+
+## [0.0.2] - 2026-05-21
 - Include helpers for metadata
 - Include helper function for modify timezone
 - Publish sphinx documentation on GitHub Pages

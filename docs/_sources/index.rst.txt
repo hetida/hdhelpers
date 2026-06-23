@@ -14,10 +14,10 @@ hdhelpers is a package designed for and included in the standard installation of
 
 It contains functions that streamline plotting components, especially those that are used in the `hetida platform`_, by
 
-* accessing series metadata that complies with the hetida platform metadata scheme
-* aditional helper functions like adjusting the timezone of timestamps, series, and dataframes
-* accessing metadata that the hetida platform writes into the hetida designer's *plot_target_settings* context variable (tbd)
-* providing toggleable standardized styling options and json serialization for plotly plots (tbd)
+* accessing series metadata that complies with the hetida platform metadata scheme,
+* aditional helper functions like adjusting the timezone of timestamps, series, and dataframes,
+* accessing metadata that the hetida platform writes into the hetida designer's *plot_target_settings* context variable (tbd),
+* providing toggleable standardized styling options and json serialization for plotly plots (tbd).
 
 .. _hetida designer: https://github.com/hetida/hetida-designer
 .. _hetida platform: https://hetida.io/
