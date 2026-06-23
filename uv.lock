@@ -288,10 +288,10 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "glom", specifier = ">25,<26" },
-    { name = "numpy", specifier = ">=2.3.3" },
-    { name = "pandas", specifier = ">=2,<3" },
-    { name = "plotly", specifier = ">=6,<7" },
-    { name = "pydantic", specifier = ">=2,<3" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "plotly" },
+    { name = "pydantic" },
 ]
 
 [package.metadata.requires-dev]
