@@ -1,7 +1,7 @@
+import datetime
 import logging
 from functools import singledispatch
 
-import datetime
 import pandas as pd
 import pytz
 
@@ -20,7 +20,7 @@ def _convert_to_optional_timezone(object_to_convert, to_timezone: str | None):
     )
 
 
-@_convert_to_optional_timezone.register(pd.Timestamp | pd.DatetimeIndex| datetime.datetime )
+@_convert_to_optional_timezone.register(pd.Timestamp | pd.DatetimeIndex | datetime.datetime)
 def _[T: (pd.Timestamp, pd.DatetimeIndex)](object_to_convert: T, to_timezone: str | None) -> T:
     object_to_convert = pd.to_datetime(object_to_convert)
     if to_timezone is None:
@@ -75,7 +75,9 @@ def modify_timezone[T: (pd.Timestamp, datetime.datetime, pd.Series, pd.DataFrame
         3600
     """
 
-    if not isinstance(object_to_convert, pd.Timestamp | pd.Series | pd.DataFrame | datetime.datetime):
+    if not isinstance(
+        object_to_convert, pd.Timestamp | pd.Series | pd.DataFrame | datetime.datetime
+    ):
         raise TypeError(
             f"object_to_convert is {type(object_to_convert)} not pd.Timestamp | pd.Series | pd.DataFrame | datetime.datetime"
         )
