@@ -1,6 +1,7 @@
 import logging
 from functools import singledispatch
 
+import datetime
 import pandas as pd
 import pytz
 
@@ -19,8 +20,9 @@ def _convert_to_optional_timezone(object_to_convert, to_timezone: str | None):
     )
 
 
-@_convert_to_optional_timezone.register(pd.Timestamp | pd.DatetimeIndex)
+@_convert_to_optional_timezone.register(pd.Timestamp | pd.DatetimeIndex| datetime.datetime )
 def _[T: (pd.Timestamp, pd.DatetimeIndex)](object_to_convert: T, to_timezone: str | None) -> T:
+    object_to_convert = pd.to_datetime(object_to_convert)
     if to_timezone is None:
         if object_to_convert.tz is None:
             return object_to_convert.tz_localize("UTC")
@@ -41,7 +43,7 @@ def _(object_to_convert: pd.Series, to_timezone: str | None) -> pd.Series:
     return object_to_convert.dt.tz_convert(to_timezone)
 
 
-def modify_timezone[T: (pd.Timestamp, pd.Series, pd.DataFrame)](  # noqa: PLR0912
+def modify_timezone[T: (pd.Timestamp, datetime.datetime, pd.Series, pd.DataFrame)](  # noqa: PLR0912
     object_to_convert: T,
     to_timezone: str | None = None,
     column_names: list[str] | None = None,
@@ -73,9 +75,9 @@ def modify_timezone[T: (pd.Timestamp, pd.Series, pd.DataFrame)](  # noqa: PLR091
         3600
     """
 
-    if not isinstance(object_to_convert, pd.Timestamp | pd.Series | pd.DataFrame):
+    if not isinstance(object_to_convert, pd.Timestamp | pd.Series | pd.DataFrame | datetime.datetime):
         raise TypeError(
-            f"object_to_convert is {type(object_to_convert)} not pd.Series | pd.DataFrame"
+            f"object_to_convert is {type(object_to_convert)} not pd.Timestamp | pd.Series | pd.DataFrame | datetime.datetime"
         )
     if column_names is None:
         column_names = []
@@ -86,8 +88,11 @@ def modify_timezone[T: (pd.Timestamp, pd.Series, pd.DataFrame)](  # noqa: PLR091
             if plot_target_settings.plot_target_timezone is not None:
                 to_timezone = plot_target_settings.plot_target_timezone
 
-        if isinstance(object_to_convert, pd.Timestamp):
+        if isinstance(object_to_convert, pd.Timestamp | datetime.datetime):
             return _convert_to_optional_timezone(object_to_convert, to_timezone)
+
+        if object_to_convert.empty:
+            return object_to_convert
 
         if isinstance(object_to_convert, pd.Series):
             new_object = object_to_convert.to_frame(name=object_to_convert.name)
@@ -99,7 +104,7 @@ def modify_timezone[T: (pd.Timestamp, pd.Series, pd.DataFrame)](  # noqa: PLR091
                 new_object.index = _convert_to_optional_timezone(
                     pd.to_datetime(new_object.index), to_timezone
                 )
-                msg = f"Converted index to datetime starting with {object_to_convert.index[0]}"
+                msg = f"Converted index to datetime starting with {object_to_convert.index.min()}"
                 logger.debug(msg=msg)
             elif isinstance(new_object, pd.DataFrame) and "timestamp" in new_object.columns:
                 new_object["timestamp"] = _convert_to_optional_timezone(
