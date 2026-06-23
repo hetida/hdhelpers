@@ -20,7 +20,7 @@ exclude = [
 
 [project]
 name = "hdhelpers"
-version = "0.0.2"
+version = "0.0.3"
 description = "Streamlines metadata & timezone handling, and plotting in hetida designer components"
 readme = "README.md"
 maintainers = [
@@ -32,11 +32,11 @@ maintainers = [
 
 requires-python = ">=3.12"
 dependencies = [
-    "pandas>=2,<3",
-    "plotly>=6,<7",
-    "pydantic>=2,<3",
+    "pandas",
+    "plotly",
+    "pydantic",
     "glom>25,<26",
-    "numpy>=2.3.3",
+    "numpy",
 ]
 license = "MIT"
 license-files = ["LICENSE"]

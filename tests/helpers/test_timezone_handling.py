@@ -97,6 +97,18 @@ def test_modify_timezone_wrong_tzname(series_summer):
         _ = modify_timezone(series_summer, to_timezone="Europe/Berlin2")
 
 
+def test_empty_series():
+    data = pd.Series()
+    modified_data = modify_timezone(data, to_timezone="Europe/Berlin")
+    assert modified_data.empty
+
+
+def test_empty_dataframe():
+    data = pd.DataFrame()
+    modified_data = modify_timezone(data, to_timezone="Europe/Berlin", column_names=["timestamp"])
+    assert modified_data.empty
+
+
 def test_named_series(series_summer):
     data = pd.Series(series_summer.index)
     data.name = "timestamp"
@@ -181,4 +193,10 @@ def test_modify_timestamp():
     modified_timestamp = modify_timezone(
         pd.to_datetime("2023-03-25 23:00", utc=True), to_timezone="Europe/Berlin"
     )
+    assert modified_timestamp.utcoffset() == datetime.timedelta(seconds=3600)
+
+
+def test_modify_timestamp_datetime():
+    example_date = pd.to_datetime("2023-03-25 23:00", utc=True)
+    modified_timestamp = modify_timezone(example_date.to_pydatetime(), to_timezone="Europe/Berlin")
     assert modified_timestamp.utcoffset() == datetime.timedelta(seconds=3600)
