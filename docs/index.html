@@ -600,7 +600,10 @@ If the short display name of the value_dimension is not present it returns the r
 <dt class="sig sig-object py" id="hdhelpers.helpers.modify_timezone">
 <span class="sig-prename descclassname"><span class="pre">hdhelpers.helpers.</span></span><span class="sig-name descname"><span class="pre">modify_timezone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object_to_convert</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_timezone</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convert_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.helpers.modify_timezone" title="Link to this definition">¶</a></dt>
 <dd><p>Converts time information of pandas objects to a certain timezone</p>
-<p>This function is applicable to index and/or columns of pd.Series or pd.DataFrame as well as for single pd.Timestamp objects.</p>
+<p>This function is applicable to index and/or columns of pd.Series or pd.DataFrame as well as for single pd.Timestamp objects.
+If time zone information is not defined in object to convert it is assumed that it is in UTC.
+Please note that column_names and convert_index are not exclusive to enable modifying both at the same time.
+To enable modifying the value of a series (not the index), please name the series and define the series’ name in column_names.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
