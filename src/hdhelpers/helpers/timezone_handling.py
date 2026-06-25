@@ -15,8 +15,8 @@ def _convert_to_optional_timezone(object_to_convert, to_timezone: str | None):
     """Convert object_to_convert to to_timezone if not None,
     or to its own timezone if aware
     or to UTC otherwise"""
-    raise NotImplementedError(
-        f"Not implemented for object_to_convert of type {type(object_to_convert).__name__}"
+    raise TypeError(
+        f"Entries to convert do not contain valid timestamps ({type(object_to_convert).__name__})"
     )
 
 
@@ -52,6 +52,9 @@ def modify_timezone[T: (pd.Timestamp, datetime.datetime, pd.Series, pd.DataFrame
     """Converts time information of pandas objects to a certain timezone
 
     This function is applicable to index and/or columns of pd.Series or pd.DataFrame as well as for single pd.Timestamp objects.
+    If time zone information is not defined in object to convert it is assumed that it is in UTC.
+    Please note that column_names and convert_index are not exclusive to enable modifying both at the same time.
+    To enable modifying the value of a series (not the index), please name the series and define the series' name in column_names.
 
     Args:
         object_to_convert (pd.Timestamp | pd.Series | pd.DataFrame): Timestamp, Series or DataFrame where timezone is modified
@@ -103,9 +106,7 @@ def modify_timezone[T: (pd.Timestamp, datetime.datetime, pd.Series, pd.DataFrame
 
         if len(column_names) == 0:
             if isinstance(object_to_convert, pd.Series):
-                new_object.index = _convert_to_optional_timezone(
-                    pd.to_datetime(new_object.index), to_timezone
-                )
+                new_object.index = _convert_to_optional_timezone(new_object.index, to_timezone)
                 msg = f"Converted index to datetime starting with {object_to_convert.index.min()}"
                 logger.debug(msg=msg)
             elif isinstance(new_object, pd.DataFrame) and "timestamp" in new_object.columns:
@@ -123,9 +124,7 @@ def modify_timezone[T: (pd.Timestamp, datetime.datetime, pd.Series, pd.DataFrame
                 )
 
         if convert_index:
-            new_object.index = _convert_to_optional_timezone(
-                pd.to_datetime(new_object.index), to_timezone
-            )
+            new_object.index = _convert_to_optional_timezone(new_object.index, to_timezone)
 
         if not isinstance(object_to_convert, pd.Series):
             new_object.attrs = object_to_convert.attrs

@@ -51,7 +51,7 @@ def test_modify_timezone_timestamp_offset(timestamp, timezone, result):
 
 def test_modify_timezone_good_dataframe(dataframe):
     local_summertime = modify_timezone(
-        dataframe, to_timezone="Europe/Berlin", column_names=["timestamp"]
+        dataframe, to_timezone="Europe/Berlin", column_names=["timestamp"], convert_index=False
     )
 
     # German summer time starts in last Sunday in March at 2 am. --> UTC 1am
@@ -109,17 +109,19 @@ def test_empty_dataframe():
     assert modified_data.empty
 
 
-def test_named_series(series_summer):
+def test_named_series_using_column_name(series_summer):
     data = pd.Series(series_summer.index)
     data.name = "timestamp"
     data.attrs = series_summer.attrs
-    modified_data = modify_timezone(data, to_timezone="Europe/Berlin", column_names=["timestamp"])
+    modified_data = modify_timezone(
+        data, to_timezone="Europe/Berlin", column_names=["timestamp"], convert_index=False
+    )
     assert modified_data[1].utcoffset() == datetime.timedelta(seconds=3600)
     assert "foo" in modified_data.attrs
 
 
 def test_named_series_using_index(series_summer):
-    data = series_summer
+    data = series_summer.copy()
     data.name = "timestamp"
     modified_data = modify_timezone(data, to_timezone="Europe/Berlin")
     assert modified_data.index[0].utcoffset() == datetime.timedelta(seconds=3600)
@@ -135,12 +137,6 @@ def test_column_not_known(series_summer, dataframe):
 
     with pytest.raises(KeyError, match="At least one column name*"):
         _ = modify_timezone(dataframe, to_timezone="Europe/Berlin", column_names=["timestamp2"])
-
-
-def test_modify_timezone_no_tz_known(series_summer):
-    series_summer.index = series_summer.index.tz_localize(None)
-    with pytest.raises(TypeError, match="Entries to convert do not contain valid timestamps*"):
-        _ = modify_timezone(series_summer, to_timezone="Europe/Berlin")
 
 
 def test_modify_timezone_multicolumn_dataframe(multicolumn_frame):
@@ -200,3 +196,21 @@ def test_modify_timestamp_datetime():
     example_date = pd.to_datetime("2023-03-25 23:00", utc=True)
     modified_timestamp = modify_timezone(example_date.to_pydatetime(), to_timezone="Europe/Berlin")
     assert modified_timestamp.utcoffset() == datetime.timedelta(seconds=3600)
+
+
+def test_native_timestamp_handled_as_UTC(series_summer):
+    series_summer.index = series_summer.index.tz_localize(None)
+    modified_data = modify_timezone(series_summer.head(2), to_timezone="Europe/Berlin")
+    assert modified_data.index[0].utcoffset() == datetime.timedelta(seconds=3600)
+
+
+def test_modify_timezone_no_timestamp_as_index(series_summer):
+    with pytest.raises(TypeError, match="Entries to convert do not contain valid timestamps"):
+        _ = modify_timezone(
+            series_summer.head(2).reset_index(), to_timezone="Europe/Berlin", convert_index=True
+        )
+
+
+def test_modify_timezone_wrong_type(series_summer):
+    with pytest.raises(TypeError, match="object_to_convert is*"):
+        _ = modify_timezone(1, to_timezone="Europe/Berlin", convert_index=True)
