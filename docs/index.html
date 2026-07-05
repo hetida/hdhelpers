@@ -597,6 +597,25 @@ If the short display name of the value_dimension is not present it returns the r
 <span id="helpers"></span><h3>helpers<a class="headerlink" href="#module-hdhelpers.helpers" title="Link to this heading">¶</a></h3>
 <p>Collection of useful functions to ease some operations in hetida designer code.</p>
 <dl class="py function">
+<dt class="sig sig-object py" id="hdhelpers.helpers.get_locale">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.helpers.</span></span><span class="sig-name descname"><span class="pre">get_locale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">explicit_locale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.helpers.get_locale" title="Link to this definition">¶</a></dt>
+<dd><p>Extract (Plotly) locale</p>
+<p>Infers Plotly locale from plot target settings or returns explicit provided
+locale.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>explicit_locale</strong> (<em>str</em><em> | </em><em>None</em>) – Defaults to None. Locale string like “de”, “en-US” or similar. Will be returned instead of what is inferred from plot_target_settings if provided</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Extracted locale (like “de_DE”)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.helpers.modify_timezone">
 <span class="sig-prename descclassname"><span class="pre">hdhelpers.helpers.</span></span><span class="sig-name descname"><span class="pre">modify_timezone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object_to_convert</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_timezone</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convert_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.helpers.modify_timezone" title="Link to this definition">¶</a></dt>
 <dd><p>Converts time information of pandas objects to a certain timezone</p>
@@ -630,6 +649,65 @@ To enable modifying the value of a series (not the index), please name the serie
 <span class="go">3600</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hdhelpers.helpers.resolve_color">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.helpers.</span></span><span class="sig-name descname"><span class="pre">resolve_color</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">color_str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.helpers.resolve_color" title="Link to this definition">¶</a></dt>
+<dd><p>Resolves Fuseki Colors and returns resulting color string</p>
+<p>Non-fuseki (color) strings are returned just as they are.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>color_str</strong> (<em>str</em>) – Color string like “#ea1255”, “orange” or “ki.shade” (Fuseki color)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns the resolved color string.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+<p>Code example:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hdhelpers.helpers.set_agnostic_theme">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.helpers.</span></span><span class="sig-name descname"><span class="pre">set_agnostic_theme</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fig</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.helpers.set_agnostic_theme" title="Link to this definition">¶</a></dt>
+<dd><p>Set Plotly template of figure to the theme_agnostic_template</p>
+<p>This Plotly template should yield good results for both light and dark themed
+backgrounds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fig</strong> (<em>plotly Figure object</em>) – Plotly figure object whose template will be set.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns None, since the figure object is modified in place</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hdhelpers.helpers.set_dt_ticks">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.helpers.</span></span><span class="sig-name descname"><span class="pre">set_dt_ticks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fig</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.helpers.set_dt_ticks" title="Link to this definition">¶</a></dt>
+<dd><p>Set x datetime tick labels to language agnostic format</p>
+<p>Sets the x axes tick format of the Plotly Figure to some isoformat inspired
+timestamp format, adequately for multiple zoom levels.</p>
+<p>Infers Plotly locale from plot target settings or returns explicit provided
+locale.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fig</strong> (<em>plotly Figure object</em>) – Plotly figure object whose x axes will be modified.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns None, since the figure object is modified in place</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -715,7 +793,11 @@ empty plot and showing an adequate message instead.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-hdhelpers.helpers">helpers</a><ul>
+<li><a class="reference internal" href="#hdhelpers.helpers.get_locale"><code class="docutils literal notranslate"><span class="pre">get_locale()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.helpers.modify_timezone"><code class="docutils literal notranslate"><span class="pre">modify_timezone()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.helpers.resolve_color"><code class="docutils literal notranslate"><span class="pre">resolve_color()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.helpers.set_agnostic_theme"><code class="docutils literal notranslate"><span class="pre">set_agnostic_theme()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.helpers.set_dt_ticks"><code class="docutils literal notranslate"><span class="pre">set_dt_ticks()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-hdhelpers.exceptions">exceptions</a><ul>
@@ -773,7 +855,7 @@ empty plot and showing an adequate message instead.</p>
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-    &#169; Copyright 2026, Steffen Wittkamp, Jenny Kupzig, Christoph Dingel.
+    &#169; Copyright 2026, Steffen Wittkamp, Jenny Kupzig.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
     </div>
   </body>
