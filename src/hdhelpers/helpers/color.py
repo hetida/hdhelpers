@@ -25,6 +25,19 @@ FUSEKI_COLORS = {
     "ki.purple": "#bd7abb",  # purple
 }
 
+FUSEKI_COLOR_CYCLE = [
+    FUSEKI_COLORS["ki.green"],
+    FUSEKI_COLORS["ki.orange"],
+    FUSEKI_COLORS["ki.blue"],
+    FUSEKI_COLORS["ki.red"],
+    FUSEKI_COLORS["ki.purple"],
+    FUSEKI_COLORS["ki.yellow"],
+    FUSEKI_COLORS["ki.gray"],
+    FUSEKI_COLORS["ki.lightgreen"],
+    FUSEKI_COLORS["ki.lightorange"],
+    FUSEKI_COLORS["ki.lightyellow"],
+]
+
 
 def resolve_color(color_str: str) -> str:
     """Resolves Fuseki Colors and returns resulting color string

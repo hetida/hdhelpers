@@ -1,6 +1,6 @@
 """Collection of useful functions to ease some operations in hetida designer code."""
 
-from .color import resolve_color
+from .color import FUSEKI_COLOR_CYCLE, resolve_color
 from .locale import get_locale
 from .plotly_theme import set_agnostic_theme, theme_agnostic_template
 from .timestamp_ticks import TICKFORMATSTOPS, set_dt_ticks
@@ -14,4 +14,5 @@ __all__ = [
     "set_dt_ticks",
     "theme_agnostic_template",
     "set_agnostic_theme",
+    "FUSEKI_COLOR_CYCLE",
 ]
