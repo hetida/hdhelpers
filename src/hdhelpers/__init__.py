@@ -25,5 +25,5 @@ __all__ = [
     "set_agnostic_theme",
     "set_dt_ticks",
     "FUSEKI_COLOR_CYCLE",
-    "TICKFORMATSTOPS"
+    "TICKFORMATSTOPS",
 ]
