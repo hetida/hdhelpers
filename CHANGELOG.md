@@ -1,3 +1,6 @@
+## [0.0.5] - 2026-07-06
+- add color, locale, Plotly theme, timestamp ticks
+
 ## [0.0.4] - 2026-06-25
 - Avoid RangeIndex beeing modified in modifiy_timezone
 - Enhance documentation of modify_timezone
