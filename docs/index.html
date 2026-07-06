@@ -613,6 +613,14 @@ locale.</p>
 <dd class="field-odd"><p>str | None</p>
 </dd>
 </dl>
+<p>Code example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_locale</span><span class="p">(</span><span class="s2">&quot;de_DE&quot;</span><span class="p">)</span>         <span class="c1"># returns &quot;de-DE&quot;</span>
+<span class="go">&#39;de-DE&#39;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">get_locale</span><span class="p">())</span>         <span class="c1"># returns locale from plot target settings of execution or None</span>
+<span class="go">None</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -668,12 +676,18 @@ To enable modifying the value of a series (not the index), please name the serie
 </dd>
 </dl>
 <p>Code example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">resolve_color</span><span class="p">(</span><span class="s2">&quot;red&quot;</span><span class="p">)</span>
+<span class="go">&#39;red&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resolve_color</span><span class="p">(</span><span class="s2">&quot;ki.energy&quot;</span><span class="p">)</span>
+<span class="go">&#39;#eb6962&#39;</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.helpers.set_agnostic_theme">
 <span class="sig-prename descclassname"><span class="pre">hdhelpers.helpers.</span></span><span class="sig-name descname"><span class="pre">set_agnostic_theme</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fig</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.helpers.set_agnostic_theme" title="Link to this definition">¶</a></dt>
-<dd><p>Set Plotly template of figure to the theme_agnostic_template</p>
+<dd><p>Set Plotly template of figure to a theme agnostic template</p>
 <p>This Plotly template should yield good results for both light and dark themed
 backgrounds.</p>
 <dl class="field-list simple">
@@ -687,6 +701,12 @@ backgrounds.</p>
 <dd class="field-odd"><p>None</p>
 </dd>
 </dl>
+<p>Code example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">go</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">9</span><span class="p">]))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">set_agnostic_theme</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -708,6 +728,12 @@ locale.</p>
 <dd class="field-odd"><p>None</p>
 </dd>
 </dl>
+<p>Code example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">go</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;2024-01-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2024-01-02&quot;</span><span class="p">],</span> <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">]))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">set_dt_ticks</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </section>

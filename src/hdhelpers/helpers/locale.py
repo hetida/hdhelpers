@@ -14,6 +14,16 @@ def get_locale(explicit_locale: str | None = None) -> str | None:
         str | None:
             Extracted locale (like "de_DE")
 
+    Code example:
+
+    .. doctest::
+
+        >>> get_locale("de_DE")         # returns "de-DE"
+        'de-DE'
+
+        >>> print(get_locale())         # returns locale from plot target settings of execution or None
+        None
+
     """
     if explicit_locale:
         return explicit_locale.replace("_", "-")

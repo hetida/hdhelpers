@@ -40,5 +40,13 @@ def set_dt_ticks(fig: go.Figure) -> None:
         None:
             Returns None, since the figure object is modified in place
 
+    Code example:
+
+    .. doctest::
+
+        >>> import plotly.graph_objects as go
+        >>> fig = go.Figure(data=go.Scatter(x=["2024-01-01", "2024-01-02"], y=[1, 4]))
+        >>> set_dt_ticks(fig)
+
     """
     fig.update_xaxes(tickformatstops=TICKFORMATSTOPS)

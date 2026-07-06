@@ -46,7 +46,7 @@ pio.templates.default = "theme_agnostic"
 
 
 def set_agnostic_theme(fig: go.Figure) -> None:
-    """Set Plotly template of figure to the theme_agnostic_template
+    """Set Plotly template of figure to a theme agnostic template
 
     This Plotly template should yield good results for both light and dark themed
     backgrounds.
@@ -57,6 +57,14 @@ def set_agnostic_theme(fig: go.Figure) -> None:
     Returns:
         None:
             Returns None, since the figure object is modified in place
+
+    Code example:
+
+    .. doctest::
+
+        >>> import plotly.graph_objects as go
+        >>> fig = go.Figure(data=go.Scatter(x=[1, 2, 3], y=[1, 4, 9]))
+        >>> set_agnostic_theme(fig)
 
     """
     fig.update_layout(template=theme_agnostic_template)
