@@ -659,9 +659,13 @@ To enable modifying the value of a series (not the index), please name the serie
 </div>
 </dd></dl>
 
+</section>
+<section id="module-hdhelpers.plotting">
+<span id="plotting"></span><h3>plotting<a class="headerlink" href="#module-hdhelpers.plotting" title="Link to this heading">¶</a></h3>
+<p>Collection of useful functions to ease plotting.</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="hdhelpers.helpers.resolve_color">
-<span class="sig-prename descclassname"><span class="pre">hdhelpers.helpers.</span></span><span class="sig-name descname"><span class="pre">resolve_color</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">color_str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.helpers.resolve_color" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="hdhelpers.plotting.resolve_color">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.plotting.</span></span><span class="sig-name descname"><span class="pre">resolve_color</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">color_str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.plotting.resolve_color" title="Link to this definition">¶</a></dt>
 <dd><p>Resolves Fuseki Colors and returns resulting color string</p>
 <p>Non-fuseki (color) strings are returned just as they are.</p>
 <dl class="field-list simple">
@@ -685,8 +689,8 @@ To enable modifying the value of a series (not the index), please name the serie
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="hdhelpers.helpers.set_agnostic_theme">
-<span class="sig-prename descclassname"><span class="pre">hdhelpers.helpers.</span></span><span class="sig-name descname"><span class="pre">set_agnostic_theme</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fig</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.helpers.set_agnostic_theme" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="hdhelpers.plotting.set_agnostic_theme">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.plotting.</span></span><span class="sig-name descname"><span class="pre">set_agnostic_theme</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fig</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.plotting.set_agnostic_theme" title="Link to this definition">¶</a></dt>
 <dd><p>Set Plotly template of figure to a theme agnostic template</p>
 <p>This Plotly template should yield good results for both light and dark themed
 backgrounds.</p>
@@ -710,8 +714,8 @@ backgrounds.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="hdhelpers.helpers.set_dt_ticks">
-<span class="sig-prename descclassname"><span class="pre">hdhelpers.helpers.</span></span><span class="sig-name descname"><span class="pre">set_dt_ticks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fig</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.helpers.set_dt_ticks" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="hdhelpers.plotting.set_dt_ticks">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.plotting.</span></span><span class="sig-name descname"><span class="pre">set_dt_ticks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fig</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.plotting.set_dt_ticks" title="Link to this definition">¶</a></dt>
 <dd><p>Set x datetime tick labels to language agnostic format</p>
 <p>Sets the x axes tick format of the Plotly Figure to some isoformat inspired
 timestamp format, adequately for multiple zoom levels.</p>
@@ -821,9 +825,12 @@ empty plot and showing an adequate message instead.</p>
 <li><a class="reference internal" href="#module-hdhelpers.helpers">helpers</a><ul>
 <li><a class="reference internal" href="#hdhelpers.helpers.get_locale"><code class="docutils literal notranslate"><span class="pre">get_locale()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.helpers.modify_timezone"><code class="docutils literal notranslate"><span class="pre">modify_timezone()</span></code></a></li>
-<li><a class="reference internal" href="#hdhelpers.helpers.resolve_color"><code class="docutils literal notranslate"><span class="pre">resolve_color()</span></code></a></li>
-<li><a class="reference internal" href="#hdhelpers.helpers.set_agnostic_theme"><code class="docutils literal notranslate"><span class="pre">set_agnostic_theme()</span></code></a></li>
-<li><a class="reference internal" href="#hdhelpers.helpers.set_dt_ticks"><code class="docutils literal notranslate"><span class="pre">set_dt_ticks()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-hdhelpers.plotting">plotting</a><ul>
+<li><a class="reference internal" href="#hdhelpers.plotting.resolve_color"><code class="docutils literal notranslate"><span class="pre">resolve_color()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.plotting.set_agnostic_theme"><code class="docutils literal notranslate"><span class="pre">set_agnostic_theme()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.plotting.set_dt_ticks"><code class="docutils literal notranslate"><span class="pre">set_dt_ticks()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-hdhelpers.exceptions">exceptions</a><ul>

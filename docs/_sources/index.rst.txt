@@ -48,6 +48,17 @@ helpers
    :members:
    :show-inheritance:
 
+
+
+plotting
+------------------
+
+.. automodule:: hdhelpers.plotting
+   :members:
+   :show-inheritance:
+
+
+
 exceptions
 -------------------
 

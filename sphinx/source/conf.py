@@ -53,6 +53,7 @@ try:
     from hdhelpers import *
     from hdhelpers.metadata import *
     from hdhelpers.helpers import *
+    from hdhelpers.plotting import *
 
     series = pd.Series()
     dataframe = pd.DataFrame()

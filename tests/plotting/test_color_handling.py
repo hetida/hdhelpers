@@ -1,4 +1,4 @@
-from hdhelpers.helpers import resolve_color
+from hdhelpers.plotting import resolve_color
 
 
 def test_resolve_color():
