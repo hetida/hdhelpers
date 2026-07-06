@@ -20,14 +20,13 @@ exclude = [
 
 [project]
 name = "hdhelpers"
-version = "0.0.4"
+version = "0.0.5"
 description = "Streamlines metadata & timezone handling, and plotting in hetida designer components"
 readme = "README.md"
 maintainers = [
     {name = "hetida", email = "hetida@fuseki.com"},
     {name = "Steffen Wittkamp", email = "swittkamp@fuseki.com"},
     {name = "Jenny Kupzig", email = "jkupzig@fuseki.com"},
-    {name = "Christoph Dingel", email = "cdingel@fuseki.com"}
 ]
 
 requires-python = ">=3.12"
@@ -106,4 +105,8 @@ dev = [
 
 [[tool.mypy.overrides]]
 module = ["glom"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["plotly", "plotly.*"]
 ignore_missing_imports = true
