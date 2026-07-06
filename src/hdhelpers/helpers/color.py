@@ -41,11 +41,11 @@ def resolve_color(color_str: str) -> str:
 
     Code example:
 
-    .. doctest:
+    .. doctest::
 
         >>> resolve_color("red")
-        red
-        >>> resulve_color("ki.energy")
-        #eb6962
+        'red'
+        >>> resolve_color("ki.energy")
+        '#eb6962'
     """
     return FUSEKI_COLORS.get(color_str, color_str)
