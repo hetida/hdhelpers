@@ -10,11 +10,11 @@
 - Nothing changed
 
 ## [0.0.4] - 2026-06-25
-- Avoid RangeIndex beeing modified in modifiy_timezone
+- Avoid RangeIndex being modified in modify_timezone
 - Enhance documentation of modify_timezone
 
 ## [0.0.3] - 2026-06-23
-- Fixes in modifiy_timezone
+- Fixes in modify_timezone
 - Disarm dependencies to ease compatibility to designer development
 - Enhance documentation
 
