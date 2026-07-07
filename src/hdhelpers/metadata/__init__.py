@@ -2,7 +2,7 @@
 Metadata information can follow varying conventions as the package glom is used to
 extract the requested information."""
 
-from .helpers import (
+from hdhelpers.metadata.helpers import (
     get_display_names,
     get_measurements,
     get_metric_info,
