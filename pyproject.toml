@@ -31,11 +31,12 @@ maintainers = [
 
 requires-python = ">=3.12"
 dependencies = [
-    "pandas",
+    "pandas>=3",
     "plotly",
     "pydantic",
     "glom>25,<26",
     "numpy",
+    "pytz",
 ]
 license = "MIT"
 license-files = ["LICENSE"]
@@ -80,8 +81,8 @@ line-length = 100
 # Ensures E501 (line-too-long) uses the same limit
 max-line-length = 100
 
-# Assume python313
-target-version = "py313"
+# Assume python314
+target-version = "py314"
 
 lint.select = ["E", "F", "B", "W", "PL", "ERA", "G", "I", "UP", "YTT", "S", "BLE", "A", "COM", "C4", "DTZ", "T10", "ISC", "ICN", "INP", "PIE", "T20", "PT", "Q", "RET", "SIM", "ARG", "PD"]
 

@@ -93,7 +93,7 @@ def test_modify_timezone_good_series(series_summer, series_winter):
 
 
 def test_modify_timezone_wrong_tzname(series_summer):
-    with pytest.raises(ValueError, match="Timezone not known*"):
+    with pytest.raises(ValueError, match="Timezone not known|No time zone found"):
         _ = modify_timezone(series_summer, to_timezone="Europe/Berlin2")
 
 

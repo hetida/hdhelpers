@@ -1,5 +1,6 @@
 import datetime
 import logging
+import zoneinfo
 from functools import singledispatch
 
 import pandas as pd
@@ -142,6 +143,8 @@ def modify_timezone[T: (pd.Timestamp, datetime.datetime, pd.Series, pd.DataFrame
     except pytz.exceptions.UnknownTimeZoneError as exc:
         possible_timezone = pytz.all_timezones
         raise ValueError(f"""Timezone not known, please choose from {possible_timezone}""") from exc
+    except zoneinfo.ZoneInfoNotFoundError as exc:
+        raise ValueError(f"No time zone found with key {to_timezone}") from exc
     except (AttributeError, pytz.exceptions.NonExistentTimeError) as exc:
         raise TypeError("Entries to convert do not contain valid timestamps") from exc
     except KeyError as exc:
