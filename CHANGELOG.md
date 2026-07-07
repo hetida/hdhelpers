@@ -1,3 +1,8 @@
+## [0.0.7] - 2026-07-07
+- fix circular import
+- set pandas dependency >= 3
+- minor improvement in tick formats
+
 ## [0.0.6] - 2026-07-06
 - add color, locale, Plotly theme, timestamp ticks
 
