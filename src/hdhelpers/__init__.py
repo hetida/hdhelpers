@@ -10,7 +10,7 @@ from hdhelpers.plotting.plotly_theme import set_agnostic_theme
 from hdhelpers.plotting.timestamp_ticks import TICKFORMATSTOPS, set_dt_ticks
 
 # do not edit line of __version__ as it is automatically modified by running ./run build_package
-__version__ = "0.0.7"
+__version__ = "0.0.8"
 
 # import can be done by using `from hdhelpers import *``
 __all__ = [
