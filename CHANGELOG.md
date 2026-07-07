@@ -1,3 +1,6 @@
+## [0.0.8] - 2026-07-07
+- add new plotting-module to wheel
+
 ## [0.0.7] - 2026-07-07
 - fix circular import
 - set pandas dependency >= 3

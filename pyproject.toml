@@ -14,13 +14,12 @@ packages = ["src/hdhelpers"]
 exclude = [
   "/docs",
   "/.github",
-  "src/hdhelpers/plotting",
 ]
 
 
 [project]
 name = "hdhelpers"
-version = "0.0.7"
+version = "0.0.8"
 description = "Streamlines metadata & timezone handling, and plotting in hetida designer components"
 readme = "README.md"
 maintainers = [
