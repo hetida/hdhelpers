@@ -1,0 +1,29 @@
+{
+    "dataset_metadata": {
+        "single_metric": "abc.temp",
+        "metric_key": "external_id"
+    },
+    "metrics": [
+        {
+            "external_id": "abc.temp",
+            "name": "ABC temperature",
+            "value_dimensions": [
+                {
+                    "column": "value",
+                    "name": "temperature",
+                    "unit": "°C"
+                },
+                {
+                    "column": "state",
+                    "name": "measurement state"
+                }
+            ]
+        }
+    ],
+    "value_dimensions_shared": [
+        {
+            "column": "state",
+            "unit": "UNKNOWN"
+        }
+    ]
+}

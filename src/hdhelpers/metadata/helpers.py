@@ -22,8 +22,11 @@ from hdhelpers.metadata._helpers import (
     check_series_or_dataframe,
     extract_from_metadata,
     get_value_dimension_info,
+    singlets_metric_info,
+    singlets_value_dimension_info,
     spec_not_none,
 )
+import hdhelpers.metadata._specs as _specs
 from hdhelpers.metadata._specs import spec_by_metric_key
 
 
@@ -75,7 +78,7 @@ def get_units(
     """
 
     check_dataframe(multitsframe)
-    return get_value_dimension_info(multitsframe, "unit")
+    return get_value_dimension_info(multitsframe, _specs.UNIT)
 
 
 def get_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, str | None]]:
@@ -120,7 +123,7 @@ def get_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, s
     """
 
     check_dataframe(multitsframe)
-    return get_value_dimension_info(multitsframe, Coalesce("name", default=None))
+    return get_value_dimension_info(multitsframe, _specs.NAME)
 
 
 def get_display_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, str | None]]:
@@ -166,7 +169,7 @@ def get_display_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdic
     """
 
     check_dataframe(multitsframe)
-    return get_value_dimension_info(multitsframe, Coalesce("display_name", "name", default=None))
+    return get_value_dimension_info(multitsframe, _specs.DISPLAY_NAME)
 
 
 def get_short_display_names(
@@ -217,9 +220,7 @@ def get_short_display_names(
     """
 
     check_dataframe(multitsframe)
-    return get_value_dimension_info(
-        multitsframe, Coalesce("short_display_name", "display_name", "name", default=None)
-    )
+    return get_value_dimension_info(multitsframe, _specs.SHORT_DISPLAY_NAME)
 
 
 def get_measurements(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, str | None]]:
@@ -249,7 +250,7 @@ def get_measurements(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict
 
     """
     check_dataframe(multitsframe)
-    return get_value_dimension_info(multitsframe, "measurement")
+    return get_value_dimension_info(multitsframe, _specs.MEASUREMENT)
 
 
 def get_metric_info(multitsframe: pd.DataFrame, metric_info: str | Spec) -> defaultdict[str, Any]:
@@ -565,6 +566,309 @@ def get_series_measurement(series: pd.Series) -> str | None:
     """
     check_series(series)
     return cast(str | None, get_series_info(series, "measurement"))
+
+
+def get_singlets_info(singletsframe: pd.DataFrame, value_dim_info: str | Spec) -> Any:
+    """Gets an arbitrary info of the value dimensions of a SingleTSFrame
+
+    A SingleTSFrame (STSF) holds exactly one metric - like a Series - but arbitrarily many
+    value dimensions - like a MultiTSFrame. Therefore, in contrast to the MTSF functions,
+    the result is keyed by value dimension only and not by metric first.
+
+    The single metric is identified via "single_metric" in "dataset_metadata". If that is
+    missing but the metadata contains exactly one metric, that metric is used, since a STSF
+    cannot be ambiguous in this respect.
+
+    Args:
+        singletsframe (pd.DataFrame): STSF with metadata following the convention.
+        value_dim_info (str | Spec): Name of information to retrieve. Note that `value_dim_info` is interpreted as a glom Spec.
+
+    Returns:
+        defaultdict[str, Any]: Dictionary of value dimensions containing the retrieved information. If the information is not present for a value dimension the corresponding value is None.
+
+    Raises:
+        TypeError: If `singletsframe` is not a DataFrame.
+
+    Code example:
+
+    .. doctest:: metadata.get_singlets_info
+
+        >>> dataframe.attrs = {
+        ...     "dataset_metadata": {"single_metric": "abc.temp", "metric_key": "external_id"},
+        ...     "metrics": [
+        ...         {
+        ...             "external_id": "abc.temp",
+        ...             "value_dimensions": [
+        ...                 {"column": "value", "unit": "°C"},
+        ...                 {"column": "state"},
+        ...             ],
+        ...         }
+        ...     ],
+        ... }
+        >>> result = get_singlets_info(dataframe, "unit")
+        >>> result["value"]
+        '°C'
+        >>> result["state"] is None
+        True
+    """
+
+    check_dataframe(singletsframe)
+    return singlets_value_dimension_info(singletsframe, value_dim_info)
+
+
+def get_singlets_units(singletsframe: pd.DataFrame) -> defaultdict[str, str | None]:
+    """Gets units of the value dimensions of a SingleTSFrame from metadata
+
+    Args:
+        singletsframe (pd.DataFrame): STSF with metadata following the convention.
+
+    Returns:
+        defaultdict[str, str | None]: Dictionary of value dimensions containing the units. If the unit is not present for a value dimension the corresponding value is None.
+
+    Raises:
+        TypeError: If `singletsframe` is not a DataFrame.
+
+    Note that a value dimension falls back to "value_dimensions_shared" if it carries no unit
+    of its own:
+
+    .. doctest:: metadata.get_singlets_units
+
+        >>> dataframe.attrs = {
+        ...     "dataset_metadata": {"single_metric": "abc.temp", "metric_key": "external_id"},
+        ...     "metrics": [
+        ...         {
+        ...             "external_id": "abc.temp",
+        ...             "value_dimensions": [
+        ...                 {"column": "value", "unit": "°C"},
+        ...                 {"column": "state"},
+        ...             ],
+        ...         }
+        ...     ],
+        ...     "value_dimensions_shared": [{"column": "state", "unit": "UNKNOWN"}],
+        ... }
+        >>> result = get_singlets_units(dataframe)
+        >>> result["value"]
+        '°C'
+        >>> result["state"]
+        'UNKNOWN'
+        >>> result["not-given"] is None
+        True
+
+    The "metric_key" is optional and defaults to "id":
+
+    .. doctest:: metadata.get_singlets_units
+
+        >>> dataframe.attrs = {
+        ...     "dataset_metadata": {"single_metric": "abc.temp"},
+        ...     "metrics": [
+        ...         {"id": "abc.temp", "value_dimensions": [{"column": "value", "unit": "m"}]}
+        ...     ],
+        ... }
+        >>> get_singlets_units(dataframe)["value"]
+        'm'
+    """
+
+    check_dataframe(singletsframe)
+    return singlets_value_dimension_info(singletsframe, _specs.UNIT)
+
+
+def get_singlets_names(singletsframe: pd.DataFrame) -> defaultdict[str, str | None]:
+    """Gets names of the value dimensions of a SingleTSFrame from metadata
+
+    Args:
+        singletsframe (pd.DataFrame): STSF with metadata following the convention.
+
+    Returns:
+        defaultdict[str, str | None]: Dictionary of value dimensions containing the names. If the name is not present for a value dimension the corresponding value is None.
+
+    Raises:
+        TypeError: If `singletsframe` is not a DataFrame.
+
+    Code example:
+
+    .. doctest:: metadata.get_singlets_names
+
+        >>> dataframe.attrs = {
+        ...     "dataset_metadata": {"single_metric": "abc.temp", "metric_key": "external_id"},
+        ...     "metrics": [
+        ...         {
+        ...             "external_id": "abc.temp",
+        ...             "value_dimensions": [
+        ...                 {"column": "value", "name": "temperature"},
+        ...                 {"column": "state"},
+        ...             ],
+        ...         }
+        ...     ],
+        ... }
+        >>> result = get_singlets_names(dataframe)
+        >>> result["value"]
+        'temperature'
+        >>> result["state"] is None
+        True
+    """
+
+    check_dataframe(singletsframe)
+    return singlets_value_dimension_info(singletsframe, _specs.NAME)
+
+
+def get_singlets_display_names(singletsframe: pd.DataFrame) -> defaultdict[str, str | None]:
+    """Gets display names of the value dimensions of a SingleTSFrame from metadata
+
+    Falls back to the name of the value dimension if no display name is given.
+
+    Args:
+        singletsframe (pd.DataFrame): STSF with metadata following the convention.
+
+    Returns:
+        defaultdict[str, str | None]: Dictionary of value dimensions containing the display names. If neither display name nor name is present for a value dimension the corresponding value is None.
+
+    Raises:
+        TypeError: If `singletsframe` is not a DataFrame.
+
+    Code example:
+
+    .. doctest:: metadata.get_singlets_display_names
+
+        >>> dataframe.attrs = {
+        ...     "dataset_metadata": {"single_metric": "abc.temp", "metric_key": "external_id"},
+        ...     "metrics": [
+        ...         {
+        ...             "external_id": "abc.temp",
+        ...             "value_dimensions": [
+        ...                 {"column": "value", "name": "temperature", "display_name": "temp"},
+        ...                 {"column": "state", "name": "measurement state"},
+        ...             ],
+        ...         }
+        ...     ],
+        ... }
+        >>> result = get_singlets_display_names(dataframe)
+        >>> result["value"]
+        'temp'
+        >>> result["state"]
+        'measurement state'
+    """
+
+    check_dataframe(singletsframe)
+    return singlets_value_dimension_info(singletsframe, _specs.DISPLAY_NAME)
+
+
+def get_singlets_short_display_names(singletsframe: pd.DataFrame) -> defaultdict[str, str | None]:
+    """Gets short display names of the value dimensions of a SingleTSFrame from metadata
+
+    Falls back to the display name and then to the name of the value dimension if no short
+    display name is given.
+
+    Args:
+        singletsframe (pd.DataFrame): STSF with metadata following the convention.
+
+    Returns:
+        defaultdict[str, str | None]: Dictionary of value dimensions containing the short display names. If none of short display name, display name and name is present for a value dimension the corresponding value is None.
+
+    Raises:
+        TypeError: If `singletsframe` is not a DataFrame.
+
+    Code example:
+
+    .. doctest:: metadata.get_singlets_short_display_names
+
+        >>> dataframe.attrs = {
+        ...     "dataset_metadata": {"single_metric": "abc.temp", "metric_key": "external_id"},
+        ...     "metrics": [
+        ...         {
+        ...             "external_id": "abc.temp",
+        ...             "value_dimensions": [
+        ...                 {"column": "value", "name": "temperature", "short_display_name": "T"},
+        ...                 {"column": "state", "display_name": "state"},
+        ...             ],
+        ...         }
+        ...     ],
+        ... }
+        >>> result = get_singlets_short_display_names(dataframe)
+        >>> result["value"]
+        'T'
+        >>> result["state"]
+        'state'
+    """
+
+    check_dataframe(singletsframe)
+    return singlets_value_dimension_info(singletsframe, _specs.SHORT_DISPLAY_NAME)
+
+
+def get_singlets_measurements(singletsframe: pd.DataFrame) -> defaultdict[str, str | None]:
+    """Gets measurements (types) of the value dimensions of a SingleTSFrame from metadata
+
+    Args:
+        singletsframe (pd.DataFrame): STSF with metadata following the convention.
+
+    Returns:
+        defaultdict[str, str | None]: Dictionary of value dimensions containing the measurements. If "measurement" is not given for a value dimension the corresponding value is None.
+
+    Raises:
+        TypeError: If `singletsframe` is not a DataFrame.
+
+    Code example:
+
+    .. doctest:: metadata.get_singlets_measurements
+
+        >>> dataframe.attrs = {
+        ...     "dataset_metadata": {"single_metric": "abc.temp", "metric_key": "external_id"},
+        ...     "metrics": [
+        ...         {
+        ...             "external_id": "abc.temp",
+        ...             "value_dimensions": [
+        ...                 {"column": "value", "measurement": "temperature"},
+        ...             ],
+        ...         }
+        ...     ],
+        ... }
+        >>> get_singlets_measurements(dataframe)["value"]
+        'temperature'
+    """
+
+    check_dataframe(singletsframe)
+    return singlets_value_dimension_info(singletsframe, _specs.MEASUREMENT)
+
+
+def get_singlets_metric_info(singletsframe: pd.DataFrame, metric_info: str | Spec) -> Any:
+    """Gets metadata associated to the single metric of a SingleTSFrame
+
+    Counterpart of :func:`get_metric_info` for SingleTSFrames: instead of a dictionary keyed
+    by metric this directly returns the requested information for the one metric.
+
+    Args:
+        singletsframe (pd.DataFrame): STSF with metadata following the convention.
+        metric_info (str | Spec): Name of information to retrieve. Note that `metric_info` is interpreted as a glom Spec.
+
+    Returns:
+        Any: Retrieved information defined by `metric_info`, or None if it cannot be determined - which includes the case of absent metric metadata.
+
+    Raises:
+        TypeError: If `singletsframe` is not a DataFrame.
+
+    Code example:
+
+    .. doctest:: metadata.get_singlets_metric_info
+
+        >>> dataframe.attrs = {
+        ...     "dataset_metadata": {"single_metric": "abc.temp", "metric_key": "external_id"},
+        ...     "metrics": [{"external_id": "abc.temp", "name": "ABC temperature"}],
+        ... }
+        >>> get_singlets_metric_info(dataframe, "name")
+        'ABC temperature'
+        >>> get_singlets_metric_info(dataframe, "not-given") is None
+        True
+
+    Without any metadata None is returned:
+
+    .. doctest:: metadata.get_singlets_metric_info
+
+        >>> dataframe.attrs = {}
+        >>> get_singlets_metric_info(dataframe, "name") is None
+        True
+    """
+
+    check_dataframe(singletsframe)
+    return singlets_metric_info(singletsframe, metric_info)
 
 
 def get_queried_interval(
