@@ -63,14 +63,17 @@ def get_value_dimension_info(
     )
 
 
+_SINGLE_METRIC_KEY = "single_metric"
+
+
 def _select_single_metric(info_by_metric: dict, attrs: Any, empty: Any) -> Any:
     """Pick the entry of the one metric of a SingleTSFrame out of a by-metric mapping
 
-    The single metric is identified via "single_metric" in "dataset_metadata". If that is
+    The single metric is identified via _SINGLE_METRIC_KEY in "dataset_metadata". If that is
     missing but exactly one metric is present, that one is used, since a SingleTSFrame cannot
     be ambiguous in this respect. Otherwise `empty` is returned.
     """
-    metric = extract_from_metadata(attrs, key="single_metric")
+    metric = extract_from_metadata(attrs, key=_SINGLE_METRIC_KEY)
     if metric is not None and metric in info_by_metric:
         return info_by_metric[metric]
 
