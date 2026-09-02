@@ -15,6 +15,13 @@ from hdhelpers.metadata.helpers import (
     get_series_short_display_name,
     get_series_unit,
     get_short_display_names,
+    get_singlets_display_names,
+    get_singlets_info,
+    get_singlets_measurements,
+    get_singlets_metric_info,
+    get_singlets_names,
+    get_singlets_short_display_names,
+    get_singlets_units,
     get_units,
 )
 
@@ -32,4 +39,11 @@ __all__ = [
     "get_measurements",
     "get_metric_info",
     "get_units",
+    "get_singlets_info",
+    "get_singlets_names",
+    "get_singlets_short_display_names",
+    "get_singlets_display_names",
+    "get_singlets_measurements",
+    "get_singlets_metric_info",
+    "get_singlets_units",
 ]

@@ -1,3 +1,5 @@
+import pandas as pd
+
 from hdhelpers.metadata import (
     get_display_names,
     get_measurements,
@@ -139,3 +141,55 @@ def test_series_unit_old(empty_series_with_old_attr):
     assert get_series_short_display_name(empty_series_with_old_attr) == "muster"
 
     assert get_series_measurement(empty_series_with_old_attr) is None
+
+
+def test_metric_key_defaults_to_id():
+    """ "metric_key" is optional per the conventions and defaults to "id"
+
+    It therefore must not act as the discriminator between the metadata conventions -
+    see test_by_metric_convention_stays_reachable_without_metric_key.
+    """
+    mts = pd.DataFrame()
+    mts.attrs = {
+        "dataset_metadata": {},
+        "metrics": [{"id": "metric1", "value_dimensions": [{"column": "value", "unit": "m³/s"}]}],
+    }
+
+    assert get_units(mts)["metric1"]["value"] == "m³/s"
+    assert get_metric_info(mts, "id")["metric1"] == "metric1"
+
+    # ... also with no "dataset_metadata" at all
+    mts.attrs = {
+        "metrics": [{"id": "metric1", "value_dimensions": [{"column": "value", "unit": "m³/s"}]}]
+    }
+
+    assert get_units(mts)["metric1"]["value"] == "m³/s"
+
+
+def test_by_metric_convention_stays_reachable_without_metric_key():
+    """The older "by_metric" convention must stay reachable
+
+    "metrics" being a list is what discriminates the current convention from the older ones,
+    so metadata without a "metrics" list still resolves via "by_metric".
+    """
+    mts = pd.DataFrame()
+    mts.attrs = {
+        "dataset_metadata": {},
+        "by_metric": {"metric1": {"value_dimensions": {"value": {"unit": "m³/s"}}}},
+    }
+
+    assert get_units(mts)["metric1"]["value"] == "m³/s"
+
+
+def test_metrics_list_takes_precedence_over_by_metric():
+    """If both are present the current convention wins"""
+    mts = pd.DataFrame()
+    mts.attrs = {
+        "dataset_metadata": {},
+        "metrics": [
+            {"id": "metric1", "value_dimensions": [{"column": "value", "unit": "FROM_NEW"}]}
+        ],
+        "by_metric": {"metric1": {"value_dimensions": {"value": {"unit": "FROM_OLD"}}}},
+    }
+
+    assert get_units(mts)["metric1"]["value"] == "FROM_NEW"
