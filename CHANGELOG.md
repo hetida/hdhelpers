@@ -1,3 +1,6 @@
+## [0.0.9] - 2026-09-10
+- singletsframe support
+
 ## [0.0.8] - 2026-07-07
 - add new plotting-module to wheel
 

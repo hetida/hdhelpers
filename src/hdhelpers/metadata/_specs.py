@@ -3,6 +3,15 @@ from collections.abc import Callable
 
 from glom import A, Check, Coalesce, Iter, Merge, S, Spec, T
 
+# The metadatum specs of the individual accessors, including their fallback chains.
+# Defined once here and shared by the MultiTSFrame and the SingleTSFrame accessors, which
+# only differ in whether the result is keyed by metric first - not in what they extract.
+UNIT: Spec = "unit"
+MEASUREMENT: Spec = "measurement"
+NAME: Spec = Coalesce("name", default=None)
+DISPLAY_NAME: Spec = Coalesce("display_name", "name", default=None)
+SHORT_DISPLAY_NAME: Spec = Coalesce("short_display_name", "display_name", "name", default=None)
+
 
 def by_metric_key_by_val_dimension(metadatum_key: str | Spec) -> Spec:
     """Providesglom spec that extracts a metadatum by metric by value dimension
@@ -33,7 +42,14 @@ def by_metric_key_by_val_dimension(metadatum_key: str | Spec) -> Spec:
 
 
 def _spec_metric_key() -> Spec:
-    return ("dataset_metadata.metric_key", A.globals.metric_key)
+    """Which key of the metric objects identifies a metric
+
+    Per the metadata conventions "metric_key" is optional and defaults to "id". Note that
+    it therefore cannot act as the discriminator between the current and the older metadata
+    conventions - that role belongs to "metrics" being a list, see
+    _spec_actual_per_metric_per_value_dimensions.
+    """
+    return (Coalesce("dataset_metadata.metric_key", default="id"), A.globals.metric_key)
 
 
 def _spec_defaults_by_value_dimension(metadatum_key: str | Spec) -> Spec:
@@ -65,24 +81,27 @@ def _spec_defaults_by_metric(metadatum_key: str | Spec) -> Spec:
 
 
 def _spec_actual_per_metric_per_value_dimensions(metadatum_key: str | Spec) -> Spec:
-    return Coalesce(
-        (
-            "metrics",
-            Check(instance_of=list),
-            _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
-                S.globals.metric_key,
-                (
-                    Coalesce("value_dimensions", default={}),
-                    _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
-                        "column",
-                        Coalesce(metadatum_key, default=None),
-                        add_keys_with_none_values=["value"],
-                    ),
+    """Deliberately without a default: this is what discriminates the metadata conventions
+
+    If "metrics" is absent or is not a list, this spec fails, which makes the enclosing
+    _spec_new_convention fail, so that by_metric_key_by_val_dimension falls through to the
+    older conventions.
+    """
+    return (
+        "metrics",
+        Check(instance_of=list),
+        _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
+            S.globals.metric_key,
+            (
+                Coalesce("value_dimensions", default={}),
+                _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
+                    "column",
+                    Coalesce(metadatum_key, default=None),
+                    add_keys_with_none_values=["value"],
                 ),
-                key_as_value=True,
             ),
+            key_as_value=True,
         ),
-        default={},
     )
 
 
@@ -199,7 +218,7 @@ def spec_by_metric_key(metadatum_key: str | Spec) -> Spec:
     return Coalesce(
         (  # current metdadata convention
             {
-                "metric_key": ("dataset_metadata.metric_key", A.globals.metric_key),
+                "metric_key": _spec_metric_key(),
                 "by_metric": (
                     "metrics",
                     Check(instance_of=list),

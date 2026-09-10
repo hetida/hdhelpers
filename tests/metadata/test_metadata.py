@@ -14,6 +14,13 @@ from hdhelpers.metadata import (
     get_series_short_display_name,
     get_series_unit,
     # get_units,
+    get_singlets_display_names,
+    get_singlets_info,
+    get_singlets_measurements,
+    get_singlets_metric_info,
+    get_singlets_names,
+    get_singlets_short_display_names,
+    get_singlets_units,
 )
 
 
@@ -381,3 +388,116 @@ def test_get_names_for_mts_with_metric_info_fallback_option():
     result_short_display_name = get_short_display_names(dataframe)
 
     assert result_name == result_display_name == result_short_display_name
+
+
+def test_get_singlets_info_is_keyed_by_value_dimension_only(empty_singletsframe_with_attr):
+    """A SingleTSFrame has one metric, so no metric level in the result"""
+    units = get_singlets_units(empty_singletsframe_with_attr)
+
+    assert units["value"] == "°C"
+    assert units["state"] == "UNKNOWN"  # falls back to value_dimensions_shared
+    assert units["not-given"] is None
+
+
+def test_get_singlets_names(empty_singletsframe_with_attr):
+    names = get_singlets_names(empty_singletsframe_with_attr)
+
+    assert names["value"] == "temperature"
+    assert names["state"] == "measurement state"
+    assert names["not-given"] is None
+
+
+def test_get_singlets_display_names_fall_back_to_name(empty_singletsframe_with_attr):
+    empty_singletsframe_with_attr.attrs["metrics"][0]["value_dimensions"][0]["display_name"] = (
+        "temp"
+    )
+
+    display_names = get_singlets_display_names(empty_singletsframe_with_attr)
+
+    assert display_names["value"] == "temp"
+    assert display_names["state"] == "measurement state"
+
+
+def test_get_singlets_short_display_names_fall_back(empty_singletsframe_with_attr):
+    empty_singletsframe_with_attr.attrs["metrics"][0]["value_dimensions"][0][
+        "short_display_name"
+    ] = "T"
+    empty_singletsframe_with_attr.attrs["metrics"][0]["value_dimensions"][1]["display_name"] = (
+        "state"
+    )
+
+    short_display_names = get_singlets_short_display_names(empty_singletsframe_with_attr)
+
+    assert short_display_names["value"] == "T"
+    assert short_display_names["state"] == "state"
+
+
+def test_get_singlets_measurements(empty_singletsframe_with_attr):
+    empty_singletsframe_with_attr.attrs["metrics"][0]["value_dimensions"][0]["measurement"] = (
+        "temperature"
+    )
+
+    measurements = get_singlets_measurements(empty_singletsframe_with_attr)
+
+    assert measurements["value"] == "temperature"
+    assert measurements["state"] is None
+
+
+def test_get_singlets_info_with_arbitrary_spec(empty_singletsframe_with_attr):
+    assert get_singlets_info(empty_singletsframe_with_attr, "unit")["value"] == "°C"
+    assert get_singlets_info(empty_singletsframe_with_attr, "not-given")["value"] is None
+
+
+def test_get_singlets_metric_info(empty_singletsframe_with_attr):
+    assert get_singlets_metric_info(empty_singletsframe_with_attr, "name") == "ABC temperature"
+    assert get_singlets_metric_info(empty_singletsframe_with_attr, "external_id") == "abc.temp"
+    assert get_singlets_metric_info(empty_singletsframe_with_attr, "not-given") is None
+
+
+def test_get_singlets_metric_key_defaults_to_id():
+    """metric_key is optional per convention and defaults to "id" """
+    empty_singletsframe_with_attr = pd.DataFrame()
+    empty_singletsframe_with_attr.attrs = {
+        "dataset_metadata": {"single_metric": "abc.temp"},
+        "metrics": [{"id": "abc.temp", "value_dimensions": [{"column": "value", "unit": "m"}]}],
+    }
+
+    assert get_singlets_units(empty_singletsframe_with_attr)["value"] == "m"
+    assert get_singlets_metric_info(empty_singletsframe_with_attr, "id") == "abc.temp"
+
+
+def test_get_singlets_falls_back_to_only_metric_without_single_metric(
+    empty_singletsframe_with_attr,
+):
+    """If single_metric is missing but there is exactly one metric, use that one"""
+    del empty_singletsframe_with_attr.attrs["dataset_metadata"]["single_metric"]
+
+    assert get_singlets_units(empty_singletsframe_with_attr)["value"] == "°C"
+    assert get_singlets_metric_info(empty_singletsframe_with_attr, "name") == "ABC temperature"
+
+
+def test_get_singlets_without_metadata():
+    """Components should not require metadata, so no metadata must not raise"""
+    empty_singletsframe_with_attr = pd.DataFrame()
+
+    assert get_singlets_units(empty_singletsframe_with_attr)["value"] is None
+    assert get_singlets_names(empty_singletsframe_with_attr)["value"] is None
+    assert get_singlets_display_names(empty_singletsframe_with_attr)["value"] is None
+    assert get_singlets_short_display_names(empty_singletsframe_with_attr)["value"] is None
+    assert get_singlets_measurements(empty_singletsframe_with_attr)["value"] is None
+    assert get_singlets_metric_info(empty_singletsframe_with_attr, "name") is None
+
+
+@pytest.mark.parametrize(
+    "func",
+    [
+        get_singlets_units,
+        get_singlets_names,
+        get_singlets_display_names,
+        get_singlets_short_display_names,
+        get_singlets_measurements,
+    ],
+)
+def test_get_singlets_requires_a_dataframe(func):
+    with pytest.raises(TypeError):
+        func(pd.Series())

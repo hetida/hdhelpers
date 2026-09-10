@@ -35,6 +35,16 @@ def empty_mts_with_old_attr_real() -> pd.DataFrame:
 
 
 @pytest.fixture(scope="function")
+def empty_singletsframe_with_attr() -> pd.DataFrame:
+    with open("tests/data/json_templates/singletsframe_attrs.json", "r") as file:
+        metadata_for_sts = json.load(file)
+
+    empty_sts = pd.DataFrame()
+    empty_sts.attrs = metadata_for_sts
+    return empty_sts
+
+
+@pytest.fixture(scope="function")
 def empty_series_with_old_attr_real() -> pd.Series:
     with open("tests/data/json_templates/series_attrs_old_real.json", "r") as file:
         metadata_for_series = json.load(file)
