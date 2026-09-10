@@ -11,4 +11,5 @@ from .data.fixtures.metadata import (
     empty_series_with_attr,
     empty_series_with_old_attr,
     empty_series_with_old_attr_real,
+    empty_singletsframe_with_attr,
 )
