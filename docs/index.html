@@ -543,6 +543,311 @@ If the short display name of the metrics is not present it returns the result of
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="hdhelpers.metadata.get_singlets_display_names">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_display_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_display_names" title="Link to this definition">¶</a></dt>
+<dd><p>Gets display names of the value dimensions of a SingleTSFrame from metadata</p>
+<p>Falls back to the name of the value dimension if no display name is given.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary of value dimensions containing the display names. If neither display name nor name is present for a value dimension the corresponding value is None.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>defaultdict[str, str | None]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>TypeError</strong> – If <cite>singletsframe</cite> is not a DataFrame.</p>
+</dd>
+</dl>
+<p>Code example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataframe</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;single_metric&quot;</span><span class="p">:</span> <span class="s2">&quot;abc.temp&quot;</span><span class="p">,</span> <span class="s2">&quot;metric_key&quot;</span><span class="p">:</span> <span class="s2">&quot;external_id&quot;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="gp">... </span>        <span class="p">{</span>
+<span class="gp">... </span>            <span class="s2">&quot;external_id&quot;</span><span class="p">:</span> <span class="s2">&quot;abc.temp&quot;</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s2">&quot;value_dimensions&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="gp">... </span>                <span class="p">{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;temperature&quot;</span><span class="p">,</span> <span class="s2">&quot;display_name&quot;</span><span class="p">:</span> <span class="s2">&quot;temp&quot;</span><span class="p">},</span>
+<span class="gp">... </span>                <span class="p">{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;state&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;measurement state&quot;</span><span class="p">},</span>
+<span class="gp">... </span>            <span class="p">],</span>
+<span class="gp">... </span>        <span class="p">}</span>
+<span class="gp">... </span>    <span class="p">],</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">get_singlets_display_names</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+<span class="go">&#39;temp&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;state&quot;</span><span class="p">]</span>
+<span class="go">&#39;measurement state&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hdhelpers.metadata.get_singlets_info">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_dim_info</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_info" title="Link to this definition">¶</a></dt>
+<dd><p>Gets an arbitrary info of the value dimensions of a SingleTSFrame</p>
+<p>A SingleTSFrame (STSF) holds exactly one metric - like a Series - but arbitrarily many
+value dimensions - like a MultiTSFrame. Therefore, in contrast to the MTSF functions,
+the result is keyed by value dimension only and not by metric first.</p>
+<p>The single metric is identified via “single_metric” in “dataset_metadata”. If that is
+missing but the metadata contains exactly one metric, that metric is used, since a STSF
+cannot be ambiguous in this respect.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p></li>
+<li><p><strong>value_dim_info</strong> (<em>str</em><em> | </em><em>Spec</em>) – Name of information to retrieve. Note that <cite>value_dim_info</cite> is interpreted as a glom Spec.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary of value dimensions containing the retrieved information. If the information is not present for a value dimension the corresponding value is None.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>defaultdict[str, Any]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>TypeError</strong> – If <cite>singletsframe</cite> is not a DataFrame.</p>
+</dd>
+</dl>
+<p>Code example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataframe</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;single_metric&quot;</span><span class="p">:</span> <span class="s2">&quot;abc.temp&quot;</span><span class="p">,</span> <span class="s2">&quot;metric_key&quot;</span><span class="p">:</span> <span class="s2">&quot;external_id&quot;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="gp">... </span>        <span class="p">{</span>
+<span class="gp">... </span>            <span class="s2">&quot;external_id&quot;</span><span class="p">:</span> <span class="s2">&quot;abc.temp&quot;</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s2">&quot;value_dimensions&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="gp">... </span>                <span class="p">{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;°C&quot;</span><span class="p">},</span>
+<span class="gp">... </span>                <span class="p">{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;state&quot;</span><span class="p">},</span>
+<span class="gp">... </span>            <span class="p">],</span>
+<span class="gp">... </span>        <span class="p">}</span>
+<span class="gp">... </span>    <span class="p">],</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">get_singlets_info</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+<span class="go">&#39;°C&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;state&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hdhelpers.metadata.get_singlets_measurements">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_measurements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_measurements" title="Link to this definition">¶</a></dt>
+<dd><p>Gets measurements (types) of the value dimensions of a SingleTSFrame from metadata</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary of value dimensions containing the measurements. If “measurement” is not given for a value dimension the corresponding value is None.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>defaultdict[str, str | None]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>TypeError</strong> – If <cite>singletsframe</cite> is not a DataFrame.</p>
+</dd>
+</dl>
+<p>Code example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataframe</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;single_metric&quot;</span><span class="p">:</span> <span class="s2">&quot;abc.temp&quot;</span><span class="p">,</span> <span class="s2">&quot;metric_key&quot;</span><span class="p">:</span> <span class="s2">&quot;external_id&quot;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="gp">... </span>        <span class="p">{</span>
+<span class="gp">... </span>            <span class="s2">&quot;external_id&quot;</span><span class="p">:</span> <span class="s2">&quot;abc.temp&quot;</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s2">&quot;value_dimensions&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="gp">... </span>                <span class="p">{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;measurement&quot;</span><span class="p">:</span> <span class="s2">&quot;temperature&quot;</span><span class="p">},</span>
+<span class="gp">... </span>            <span class="p">],</span>
+<span class="gp">... </span>        <span class="p">}</span>
+<span class="gp">... </span>    <span class="p">],</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_singlets_measurements</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+<span class="go">&#39;temperature&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hdhelpers.metadata.get_singlets_metric_info">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_metric_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_info</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_metric_info" title="Link to this definition">¶</a></dt>
+<dd><p>Gets metadata associated to the single metric of a SingleTSFrame</p>
+<p>Counterpart of <a class="reference internal" href="#hdhelpers.metadata.get_metric_info" title="hdhelpers.metadata.get_metric_info"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_metric_info()</span></code></a> for SingleTSFrames: instead of a dictionary keyed
+by metric this directly returns the requested information for the one metric.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p></li>
+<li><p><strong>metric_info</strong> (<em>str</em><em> | </em><em>Spec</em>) – Name of information to retrieve. Note that <cite>metric_info</cite> is interpreted as a glom Spec.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Retrieved information defined by <cite>metric_info</cite>, or None if it cannot be determined - which includes the case of absent metric metadata.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>TypeError</strong> – If <cite>singletsframe</cite> is not a DataFrame.</p>
+</dd>
+</dl>
+<p>Code example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataframe</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;single_metric&quot;</span><span class="p">:</span> <span class="s2">&quot;abc.temp&quot;</span><span class="p">,</span> <span class="s2">&quot;metric_key&quot;</span><span class="p">:</span> <span class="s2">&quot;external_id&quot;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;external_id&quot;</span><span class="p">:</span> <span class="s2">&quot;abc.temp&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;ABC temperature&quot;</span><span class="p">}],</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_singlets_metric_info</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span>
+<span class="go">&#39;ABC temperature&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_singlets_metric_info</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> <span class="s2">&quot;not-given&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Without any metadata None is returned:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataframe</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_singlets_metric_info</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hdhelpers.metadata.get_singlets_names">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_names" title="Link to this definition">¶</a></dt>
+<dd><p>Gets names of the value dimensions of a SingleTSFrame from metadata</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary of value dimensions containing the names. If the name is not present for a value dimension the corresponding value is None.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>defaultdict[str, str | None]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>TypeError</strong> – If <cite>singletsframe</cite> is not a DataFrame.</p>
+</dd>
+</dl>
+<p>Code example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataframe</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;single_metric&quot;</span><span class="p">:</span> <span class="s2">&quot;abc.temp&quot;</span><span class="p">,</span> <span class="s2">&quot;metric_key&quot;</span><span class="p">:</span> <span class="s2">&quot;external_id&quot;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="gp">... </span>        <span class="p">{</span>
+<span class="gp">... </span>            <span class="s2">&quot;external_id&quot;</span><span class="p">:</span> <span class="s2">&quot;abc.temp&quot;</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s2">&quot;value_dimensions&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="gp">... </span>                <span class="p">{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;temperature&quot;</span><span class="p">},</span>
+<span class="gp">... </span>                <span class="p">{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;state&quot;</span><span class="p">},</span>
+<span class="gp">... </span>            <span class="p">],</span>
+<span class="gp">... </span>        <span class="p">}</span>
+<span class="gp">... </span>    <span class="p">],</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">get_singlets_names</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+<span class="go">&#39;temperature&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;state&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hdhelpers.metadata.get_singlets_short_display_names">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_short_display_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_short_display_names" title="Link to this definition">¶</a></dt>
+<dd><p>Gets short display names of the value dimensions of a SingleTSFrame from metadata</p>
+<p>Falls back to the display name and then to the name of the value dimension if no short
+display name is given.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary of value dimensions containing the short display names. If none of short display name, display name and name is present for a value dimension the corresponding value is None.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>defaultdict[str, str | None]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>TypeError</strong> – If <cite>singletsframe</cite> is not a DataFrame.</p>
+</dd>
+</dl>
+<p>Code example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataframe</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;single_metric&quot;</span><span class="p">:</span> <span class="s2">&quot;abc.temp&quot;</span><span class="p">,</span> <span class="s2">&quot;metric_key&quot;</span><span class="p">:</span> <span class="s2">&quot;external_id&quot;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="gp">... </span>        <span class="p">{</span>
+<span class="gp">... </span>            <span class="s2">&quot;external_id&quot;</span><span class="p">:</span> <span class="s2">&quot;abc.temp&quot;</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s2">&quot;value_dimensions&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="gp">... </span>                <span class="p">{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;temperature&quot;</span><span class="p">,</span> <span class="s2">&quot;short_display_name&quot;</span><span class="p">:</span> <span class="s2">&quot;T&quot;</span><span class="p">},</span>
+<span class="gp">... </span>                <span class="p">{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;state&quot;</span><span class="p">,</span> <span class="s2">&quot;display_name&quot;</span><span class="p">:</span> <span class="s2">&quot;state&quot;</span><span class="p">},</span>
+<span class="gp">... </span>            <span class="p">],</span>
+<span class="gp">... </span>        <span class="p">}</span>
+<span class="gp">... </span>    <span class="p">],</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">get_singlets_short_display_names</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+<span class="go">&#39;T&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;state&quot;</span><span class="p">]</span>
+<span class="go">&#39;state&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hdhelpers.metadata.get_singlets_units">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_units</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_units" title="Link to this definition">¶</a></dt>
+<dd><p>Gets units of the value dimensions of a SingleTSFrame from metadata</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary of value dimensions containing the units. If the unit is not present for a value dimension the corresponding value is None.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>defaultdict[str, str | None]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>TypeError</strong> – If <cite>singletsframe</cite> is not a DataFrame.</p>
+</dd>
+</dl>
+<p>Note that a value dimension falls back to “value_dimensions_shared” if it carries no unit
+of its own:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataframe</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;single_metric&quot;</span><span class="p">:</span> <span class="s2">&quot;abc.temp&quot;</span><span class="p">,</span> <span class="s2">&quot;metric_key&quot;</span><span class="p">:</span> <span class="s2">&quot;external_id&quot;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="gp">... </span>        <span class="p">{</span>
+<span class="gp">... </span>            <span class="s2">&quot;external_id&quot;</span><span class="p">:</span> <span class="s2">&quot;abc.temp&quot;</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s2">&quot;value_dimensions&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="gp">... </span>                <span class="p">{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;°C&quot;</span><span class="p">},</span>
+<span class="gp">... </span>                <span class="p">{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;state&quot;</span><span class="p">},</span>
+<span class="gp">... </span>            <span class="p">],</span>
+<span class="gp">... </span>        <span class="p">}</span>
+<span class="gp">... </span>    <span class="p">],</span>
+<span class="gp">... </span>    <span class="s2">&quot;value_dimensions_shared&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;state&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;UNKNOWN&quot;</span><span class="p">}],</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">get_singlets_units</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+<span class="go">&#39;°C&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;state&quot;</span><span class="p">]</span>
+<span class="go">&#39;UNKNOWN&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;not-given&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>The “metric_key” is optional and defaults to “id”:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataframe</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;single_metric&quot;</span><span class="p">:</span> <span class="s2">&quot;abc.temp&quot;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="gp">... </span>        <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;abc.temp&quot;</span><span class="p">,</span> <span class="s2">&quot;value_dimensions&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;m&quot;</span><span class="p">}]}</span>
+<span class="gp">... </span>    <span class="p">],</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_singlets_units</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+<span class="go">&#39;m&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_units">
 <span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_units</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_units" title="Link to this definition">¶</a></dt>
 <dd><p>Gets unit of value dimensions in MTSF metrics from Metadata</p>
@@ -819,6 +1124,13 @@ empty plot and showing an adequate message instead.</p>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_series_short_display_name"><code class="docutils literal notranslate"><span class="pre">get_series_short_display_name()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_series_unit"><code class="docutils literal notranslate"><span class="pre">get_series_unit()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_short_display_names"><code class="docutils literal notranslate"><span class="pre">get_short_display_names()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.get_singlets_display_names"><code class="docutils literal notranslate"><span class="pre">get_singlets_display_names()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.get_singlets_info"><code class="docutils literal notranslate"><span class="pre">get_singlets_info()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.get_singlets_measurements"><code class="docutils literal notranslate"><span class="pre">get_singlets_measurements()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.get_singlets_metric_info"><code class="docutils literal notranslate"><span class="pre">get_singlets_metric_info()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.get_singlets_names"><code class="docutils literal notranslate"><span class="pre">get_singlets_names()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.get_singlets_short_display_names"><code class="docutils literal notranslate"><span class="pre">get_singlets_short_display_names()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.get_singlets_units"><code class="docutils literal notranslate"><span class="pre">get_singlets_units()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_units"><code class="docutils literal notranslate"><span class="pre">get_units()</span></code></a></li>
 </ul>
 </li>
