@@ -74,11 +74,14 @@ Metadata information can follow varying conventions as the package glom is used 
 extract the requested information.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_display_names">
-<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_display_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_display_names" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_display_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_display_names" title="Link to this definition">¶</a></dt>
 <dd><p>Gets display names of the MTSF metrics from the metadata</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p></li>
+<li><p><strong>include_inherited</strong> (<em>bool</em>) – Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under “inherited” in the metric metadata), if the metric itself does not provide the information. Defaults to True.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Dictionary of metrics containing the display names.
@@ -119,11 +122,14 @@ If the display name of the metrics is not present it returns the result of <a cl
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_measurements">
-<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_measurements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_measurements" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_measurements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_measurements" title="Link to this definition">¶</a></dt>
 <dd><p>Gets measurement (type) of the MTSF metrics from the metadata</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p></li>
+<li><p><strong>include_inherited</strong> (<em>bool</em>) – Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under “inherited” in the metric metadata), if the metric itself does not provide the information. Defaults to True.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Dictionary of metrics containing the measurement (type) of the MTSF metrics.
@@ -149,7 +155,7 @@ If the short measurement (type) of the MTSF metrics is not present it returns No
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_metric_info">
-<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_metric_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_info</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_metric_info" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_metric_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_info</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_metric_info" title="Link to this definition">¶</a></dt>
 <dd><p>Gets a dictionary of metadata associated to metrics.</p>
 <p>In contrast to metadata associated to concrete value dimensions, this
 function abstracts access to metadata associated to the underlying metric.</p>
@@ -158,6 +164,7 @@ function abstracts access to metadata associated to the underlying metric.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p></li>
 <li><p><strong>metric_info</strong> (<em>str</em><em> | </em><em>Spec</em>) – Name of information to retrieve. Note that <cite>metric_info</cite> is interpreted as a glom Spec.</p></li>
+<li><p><strong>include_inherited</strong> (<em>bool</em>) – Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under “inherited” in the metric metadata), if the metric itself does not provide the information. Defaults to True.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -212,11 +219,14 @@ function abstracts access to metadata associated to the underlying metric.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_names">
-<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_names" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_names" title="Link to this definition">¶</a></dt>
 <dd><p>Gets names of the MTSF metrics from the metadata</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p></li>
+<li><p><strong>include_inherited</strong> (<em>bool</em>) – Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under “inherited” in the metric metadata), if the metric itself does not provide the information. Defaults to True.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Dictionary of metrics containing the names. If the name is not present for a metric the corresponding value is None.</p>
@@ -294,11 +304,14 @@ function abstracts access to metadata associated to the underlying metric.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_series_display_name">
-<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_series_display_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_series_display_name" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_series_display_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_series_display_name" title="Link to this definition">¶</a></dt>
 <dd><p>Gets display name of the series from metadata</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>series</strong> (<em>pd.Series</em>) – Series with metadata following the convention.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>series</strong> (<em>pd.Series</em>) – Series with metadata following the convention.</p></li>
+<li><p><strong>include_inherited</strong> (<em>bool</em>) – Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under “inherited” in the metric metadata), if the metric itself does not provide the information. Defaults to True.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Returns the display name of the value.
@@ -323,7 +336,7 @@ If the metric display name is not present it returns the result of <a class="ref
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_series_info">
-<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_series_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_dim_info</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_series_info" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_series_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_dim_info</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_series_info" title="Link to this definition">¶</a></dt>
 <dd><p>Gets an arbitrary series info</p>
 <p>Since a series has only one value dimension named “value”, this information is
 equivalent to information on the metric.</p>
@@ -332,6 +345,7 @@ equivalent to information on the metric.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>series</strong> (<em>pd.Series</em>) – Series with metadata following the convention.</p></li>
 <li><p><strong>value_dim_info</strong> (<em>str</em><em> | </em><em>Spec</em>) – Name of information to retrieve. Note that <cite>value_dim_info</cite> is interpreted as a glom Spec.</p></li>
+<li><p><strong>include_inherited</strong> (<em>bool</em>) – Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under “inherited” in the metric metadata), if the metric itself does not provide the information. Defaults to True.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -354,11 +368,14 @@ equivalent to information on the metric.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_series_measurement">
-<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_series_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_series_measurement" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_series_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_series_measurement" title="Link to this definition">¶</a></dt>
 <dd><p>Gets measurement (type) of the Series from metadata</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>series</strong> (<em>pd.Series</em>) – Series with metadata following the convention.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>series</strong> (<em>pd.Series</em>) – Series with metadata following the convention.</p></li>
+<li><p><strong>include_inherited</strong> (<em>bool</em>) – Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under “inherited” in the metric metadata), if the metric itself does not provide the information. Defaults to True.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Returns the  measurement (type) of the value.
@@ -382,11 +399,14 @@ If “measurement” is not given in the metadata, None is returned.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_series_name">
-<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_series_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_series_name" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_series_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_series_name" title="Link to this definition">¶</a></dt>
 <dd><p>Gets name of the series from metadata</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>series</strong> (<em>pd.Series</em>) – Series with metadata following the convention.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>series</strong> (<em>pd.Series</em>) – Series with metadata following the convention.</p></li>
+<li><p><strong>include_inherited</strong> (<em>bool</em>) – Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under “inherited” in the metric metadata), if the metric itself does not provide the information. Defaults to True.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Returns the name of the value.
@@ -426,11 +446,14 @@ If the value name is not present it returns None.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_series_short_display_name">
-<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_series_short_display_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_series_short_display_name" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_series_short_display_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_series_short_display_name" title="Link to this definition">¶</a></dt>
 <dd><p>Gets short display name of the Series from metadata</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>series</strong> (<em>pd.Series</em>) – Series with metadata following the convention.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>series</strong> (<em>pd.Series</em>) – Series with metadata following the convention.</p></li>
+<li><p><strong>include_inherited</strong> (<em>bool</em>) – Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under “inherited” in the metric metadata), if the metric itself does not provide the information. Defaults to True.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Returns the short display name of the value.
@@ -455,11 +478,14 @@ If the metric short display name is not present it returns the result of <a clas
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_series_unit">
-<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_series_unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_series_unit" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_series_unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_series_unit" title="Link to this definition">¶</a></dt>
 <dd><p>Gets name of the series from metadata</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>series</strong> (<em>pd.Series</em>) – Series with metadata following the convention.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>series</strong> (<em>pd.Series</em>) – Series with metadata following the convention.</p></li>
+<li><p><strong>include_inherited</strong> (<em>bool</em>) – Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under “inherited” in the metric metadata), if the metric itself does not provide the information. Defaults to True.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Returns the unit of series.
@@ -496,11 +522,14 @@ If the unit of the series is not present it returns None.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_short_display_names">
-<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_short_display_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_short_display_names" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_short_display_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_short_display_names" title="Link to this definition">¶</a></dt>
 <dd><p>Gets short display names of the MTSF metrics from the metadata</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p></li>
+<li><p><strong>include_inherited</strong> (<em>bool</em>) – Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under “inherited” in the metric metadata), if the metric itself does not provide the information. Defaults to True.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Dictionary of metrics containing the short display names.
@@ -544,12 +573,15 @@ If the short display name of the metrics is not present it returns the result of
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_singlets_display_names">
-<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_display_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_display_names" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_display_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_display_names" title="Link to this definition">¶</a></dt>
 <dd><p>Gets display names of the value dimensions of a SingleTSFrame from metadata</p>
 <p>Falls back to the name of the value dimension if no display name is given.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p></li>
+<li><p><strong>include_inherited</strong> (<em>bool</em>) – Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under “inherited” in the metric metadata), if the metric itself does not provide the information. Defaults to True.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Dictionary of value dimensions containing the display names. If neither display name nor name is present for a value dimension the corresponding value is None.</p>
@@ -585,7 +617,7 @@ If the short display name of the metrics is not present it returns the result of
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_singlets_info">
-<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_dim_info</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_info" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_dim_info</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_info" title="Link to this definition">¶</a></dt>
 <dd><p>Gets an arbitrary info of the value dimensions of a SingleTSFrame</p>
 <p>A SingleTSFrame (STSF) holds exactly one metric - like a Series - but arbitrarily many
 value dimensions - like a MultiTSFrame. Therefore, in contrast to the MTSF functions,
@@ -598,6 +630,7 @@ cannot be ambiguous in this respect.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p></li>
 <li><p><strong>value_dim_info</strong> (<em>str</em><em> | </em><em>Spec</em>) – Name of information to retrieve. Note that <cite>value_dim_info</cite> is interpreted as a glom Spec.</p></li>
+<li><p><strong>include_inherited</strong> (<em>bool</em>) – Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under “inherited” in the metric metadata), if the metric itself does not provide the information. Defaults to True.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -634,11 +667,14 @@ cannot be ambiguous in this respect.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_singlets_measurements">
-<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_measurements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_measurements" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_measurements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_measurements" title="Link to this definition">¶</a></dt>
 <dd><p>Gets measurements (types) of the value dimensions of a SingleTSFrame from metadata</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p></li>
+<li><p><strong>include_inherited</strong> (<em>bool</em>) – Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under “inherited” in the metric metadata), if the metric itself does not provide the information. Defaults to True.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Dictionary of value dimensions containing the measurements. If “measurement” is not given for a value dimension the corresponding value is None.</p>
@@ -670,7 +706,7 @@ cannot be ambiguous in this respect.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_singlets_metric_info">
-<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_metric_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_info</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_metric_info" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_metric_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_info</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_metric_info" title="Link to this definition">¶</a></dt>
 <dd><p>Gets metadata associated to the single metric of a SingleTSFrame</p>
 <p>Counterpart of <a class="reference internal" href="#hdhelpers.metadata.get_metric_info" title="hdhelpers.metadata.get_metric_info"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_metric_info()</span></code></a> for SingleTSFrames: instead of a dictionary keyed
 by metric this directly returns the requested information for the one metric.</p>
@@ -679,6 +715,7 @@ by metric this directly returns the requested information for the one metric.</p
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p></li>
 <li><p><strong>metric_info</strong> (<em>str</em><em> | </em><em>Spec</em>) – Name of information to retrieve. Note that <cite>metric_info</cite> is interpreted as a glom Spec.</p></li>
+<li><p><strong>include_inherited</strong> (<em>bool</em>) – Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under “inherited” in the metric metadata), if the metric itself does not provide the information. Defaults to True.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -712,11 +749,14 @@ by metric this directly returns the requested information for the one metric.</p
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_singlets_names">
-<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_names" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_names" title="Link to this definition">¶</a></dt>
 <dd><p>Gets names of the value dimensions of a SingleTSFrame from metadata</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p></li>
+<li><p><strong>include_inherited</strong> (<em>bool</em>) – Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under “inherited” in the metric metadata), if the metric itself does not provide the information. Defaults to True.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Dictionary of value dimensions containing the names. If the name is not present for a value dimension the corresponding value is None.</p>
@@ -752,13 +792,16 @@ by metric this directly returns the requested information for the one metric.</p
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_singlets_short_display_names">
-<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_short_display_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_short_display_names" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_short_display_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_short_display_names" title="Link to this definition">¶</a></dt>
 <dd><p>Gets short display names of the value dimensions of a SingleTSFrame from metadata</p>
 <p>Falls back to the display name and then to the name of the value dimension if no short
 display name is given.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p></li>
+<li><p><strong>include_inherited</strong> (<em>bool</em>) – Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under “inherited” in the metric metadata), if the metric itself does not provide the information. Defaults to True.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Dictionary of value dimensions containing the short display names. If none of short display name, display name and name is present for a value dimension the corresponding value is None.</p>
@@ -794,11 +837,14 @@ display name is given.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_singlets_units">
-<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_units</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_units" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_units</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_units" title="Link to this definition">¶</a></dt>
 <dd><p>Gets units of the value dimensions of a SingleTSFrame from metadata</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p></li>
+<li><p><strong>include_inherited</strong> (<em>bool</em>) – Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under “inherited” in the metric metadata), if the metric itself does not provide the information. Defaults to True.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Dictionary of value dimensions containing the units. If the unit is not present for a value dimension the corresponding value is None.</p>
@@ -849,11 +895,14 @@ of its own:</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_units">
-<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_units</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_units" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_units</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_units" title="Link to this definition">¶</a></dt>
 <dd><p>Gets unit of value dimensions in MTSF metrics from Metadata</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p></li>
+<li><p><strong>include_inherited</strong> (<em>bool</em>) – Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under “inherited” in the metric metadata), if the metric itself does not provide the information. Defaults to True.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Dictionary of metrics containing the names of the value dimensions.

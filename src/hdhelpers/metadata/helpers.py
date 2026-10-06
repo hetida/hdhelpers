@@ -31,12 +31,13 @@ from hdhelpers.metadata._specs import spec_by_metric_key
 
 
 def get_units(
-    multitsframe: pd.DataFrame,
+    multitsframe: pd.DataFrame, *, include_inherited: bool = True
 ) -> defaultdict[str, defaultdict[str, str | None]]:
     """Gets unit of value dimensions in MTSF metrics from Metadata
 
     Args:
         multitsframe (pd.DataFrame): MTSF with metadata following the convention.
+        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata), if the metric itself does not provide the information. Defaults to True.
 
     Returns:
         dict[str, dict[str | None] | None]: Dictionary of metrics containing the names of the value dimensions.
@@ -78,14 +79,17 @@ def get_units(
     """
 
     check_dataframe(multitsframe)
-    return get_value_dimension_info(multitsframe, _specs.UNIT)
+    return get_value_dimension_info(multitsframe, _specs.UNIT, include_inherited)
 
 
-def get_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, str | None]]:
+def get_names(
+    multitsframe: pd.DataFrame, *, include_inherited: bool = True
+) -> defaultdict[str, defaultdict[str, str | None]]:
     """Gets names of the MTSF metrics from the metadata
 
     Args:
         multitsframe (pd.DataFrame): MTSF with metadata following the convention.
+        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata), if the metric itself does not provide the information. Defaults to True.
 
     Returns:
         dict[str, str | None]: Dictionary of metrics containing the names. If the name is not present for a metric the corresponding value is None.
@@ -123,14 +127,17 @@ def get_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, s
     """
 
     check_dataframe(multitsframe)
-    return get_value_dimension_info(multitsframe, _specs.NAME)
+    return get_value_dimension_info(multitsframe, _specs.NAME, include_inherited)
 
 
-def get_display_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, str | None]]:
+def get_display_names(
+    multitsframe: pd.DataFrame, *, include_inherited: bool = True
+) -> defaultdict[str, defaultdict[str, str | None]]:
     """Gets display names of the MTSF metrics from the metadata
 
     Args:
         multitsframe (pd.DataFrame): MTSF with metadata following the convention.
+        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata), if the metric itself does not provide the information. Defaults to True.
 
     Returns:
         defaultdict[str, defaultdict[str, str | None]]: Dictionary of metrics containing the display names.
@@ -169,16 +176,17 @@ def get_display_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdic
     """
 
     check_dataframe(multitsframe)
-    return get_value_dimension_info(multitsframe, _specs.DISPLAY_NAME)
+    return get_value_dimension_info(multitsframe, _specs.DISPLAY_NAME, include_inherited)
 
 
 def get_short_display_names(
-    multitsframe: pd.DataFrame,
+    multitsframe: pd.DataFrame, *, include_inherited: bool = True
 ) -> defaultdict[str, defaultdict[str, str | None]]:
     """Gets short display names of the MTSF metrics from the metadata
 
     Args:
         multitsframe (pd.DataFrame): MTSF with metadata following the convention.
+        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata), if the metric itself does not provide the information. Defaults to True.
 
     Returns:
         defaultdict[str, defaultdict[str, str | None]]: Dictionary of metrics containing the short display names.
@@ -220,14 +228,17 @@ def get_short_display_names(
     """
 
     check_dataframe(multitsframe)
-    return get_value_dimension_info(multitsframe, _specs.SHORT_DISPLAY_NAME)
+    return get_value_dimension_info(multitsframe, _specs.SHORT_DISPLAY_NAME, include_inherited)
 
 
-def get_measurements(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, str | None]]:
+def get_measurements(
+    multitsframe: pd.DataFrame, *, include_inherited: bool = True
+) -> defaultdict[str, defaultdict[str, str | None]]:
     """Gets measurement (type) of the MTSF metrics from the metadata
 
     Args:
         multitsframe (pd.DataFrame): MTSF with metadata following the convention.
+        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata), if the metric itself does not provide the information. Defaults to True.
 
     Returns:
         defaultdict[str, defaultdict[str, str | None]]: Dictionary of metrics containing the measurement (type) of the MTSF metrics.
@@ -250,10 +261,12 @@ def get_measurements(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict
 
     """
     check_dataframe(multitsframe)
-    return get_value_dimension_info(multitsframe, _specs.MEASUREMENT)
+    return get_value_dimension_info(multitsframe, _specs.MEASUREMENT, include_inherited)
 
 
-def get_metric_info(multitsframe: pd.DataFrame, metric_info: str | Spec) -> defaultdict[str, Any]:
+def get_metric_info(
+    multitsframe: pd.DataFrame, metric_info: str | Spec, *, include_inherited: bool = True
+) -> defaultdict[str, Any]:
     """Gets a dictionary of metadata associated to metrics.
 
     In contrast to metadata associated to concrete value dimensions, this
@@ -262,6 +275,7 @@ def get_metric_info(multitsframe: pd.DataFrame, metric_info: str | Spec) -> defa
     Args:
         multitsframe (pd.DataFrame): MTSF with metadata following the convention.
         metric_info (str | Spec): Name of information to retrieve. Note that `metric_info` is interpreted as a glom Spec.
+        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata), if the metric itself does not provide the information. Defaults to True.
 
     Returns:
         defaultdict[str, Any]: Dictionary, where keys are the entries of the metrics metadata specified via "metric_key" in "dataset_metadata" and values are the entries specified via "metric_info" in the metrics metadata
@@ -310,12 +324,14 @@ def get_metric_info(multitsframe: pd.DataFrame, metric_info: str | Spec) -> defa
         True
     """
     check_dataframe(multitsframe)
-    spec = spec_by_metric_key(metric_info)
+    spec = spec_by_metric_key(metric_info, include_inherited)
     metric_info = glom(multitsframe.attrs, spec)
     return defaultdict(lambda: None, metric_info)
 
 
-def get_series_info(series: pd.Series, value_dim_info: str | Spec) -> Any:
+def get_series_info(
+    series: pd.Series, value_dim_info: str | Spec, *, include_inherited: bool = True
+) -> Any:
     """Gets an arbitrary series info
 
     Since a series has only one value dimension named "value", this information is
@@ -324,6 +340,7 @@ def get_series_info(series: pd.Series, value_dim_info: str | Spec) -> Any:
     Args:
         series (pd.Series): Series with metadata following the convention.
         value_dim_info (str | Spec): Name of information to retrieve. Note that `value_dim_info` is interpreted as a glom Spec.
+        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata), if the metric itself does not provide the information. Defaults to True.
 
     Returns:
         Any: Retrieved information defined by `value_dim_info`
@@ -345,9 +362,9 @@ def get_series_info(series: pd.Series, value_dim_info: str | Spec) -> Any:
     # this value dimension.
     check_series(series)
     series_metric_key = extract_from_metadata(series.attrs, key="single_metric", default="series")
-    from_new_convention = get_value_dimension_info(series, value_dim_info)[series_metric_key].get(
-        "value"
-    )
+    from_new_convention = get_value_dimension_info(series, value_dim_info, include_inherited)[
+        series_metric_key
+    ].get("value")
 
     if from_new_convention is not None:
         return from_new_convention
@@ -373,11 +390,12 @@ def get_series_info(series: pd.Series, value_dim_info: str | Spec) -> Any:
     )
 
 
-def get_series_unit(series: pd.Series) -> str | None:
+def get_series_unit(series: pd.Series, *, include_inherited: bool = True) -> str | None:
     """Gets name of the series from metadata
 
     Args:
         series (pd.Series): Series with metadata following the convention.
+        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata), if the metric itself does not provide the information. Defaults to True.
 
     Returns:
         str | None:
@@ -415,14 +433,18 @@ def get_series_unit(series: pd.Series) -> str | None:
     """
 
     check_series(series)
-    return cast(str | None, get_series_info(series, spec_not_none("unit")))
+    return cast(
+        str | None,
+        get_series_info(series, spec_not_none("unit"), include_inherited=include_inherited),
+    )
 
 
-def get_series_name(series: pd.Series) -> str | None:
+def get_series_name(series: pd.Series, *, include_inherited: bool = True) -> str | None:
     """Gets name of the series from metadata
 
     Args:
         series (pd.Series): Series with metadata following the convention.
+        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata), if the metric itself does not provide the information. Defaults to True.
 
     Returns:
         str | None:
@@ -462,14 +484,18 @@ def get_series_name(series: pd.Series) -> str | None:
         'name_of_series_2'
     """
     check_series(series)
-    return cast(str | None, get_series_info(series, spec_not_none("name")))
+    return cast(
+        str | None,
+        get_series_info(series, spec_not_none("name"), include_inherited=include_inherited),
+    )
 
 
-def get_series_display_name(series: pd.Series) -> str | None:
+def get_series_display_name(series: pd.Series, *, include_inherited: bool = True) -> str | None:
     """Gets display name of the series from metadata
 
     Args:
         series (pd.Series): Series with metadata following the convention.
+        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata), if the metric itself does not provide the information. Defaults to True.
 
     Returns:
         str | None:
@@ -499,15 +525,19 @@ def get_series_display_name(series: pd.Series) -> str | None:
                 spec_not_none("name"),
                 spec_not_none("short_display_name"),
             ),
+            include_inherited=include_inherited,
         ),
     )
 
 
-def get_series_short_display_name(series: pd.Series) -> str | None:
+def get_series_short_display_name(
+    series: pd.Series, *, include_inherited: bool = True
+) -> str | None:
     """Gets short display name of the Series from metadata
 
     Args:
         series (pd.Series): Series with metadata following the convention.
+        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata), if the metric itself does not provide the information. Defaults to True.
 
     Returns:
         str | None:
@@ -537,15 +567,17 @@ def get_series_short_display_name(series: pd.Series) -> str | None:
                 spec_not_none("display_name"),
                 spec_not_none("name"),
             ),
+            include_inherited=include_inherited,
         ),
     )
 
 
-def get_series_measurement(series: pd.Series) -> str | None:
+def get_series_measurement(series: pd.Series, *, include_inherited: bool = True) -> str | None:
     """Gets measurement (type) of the Series from metadata
 
     Args:
         series (pd.Series): Series with metadata following the convention.
+        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata), if the metric itself does not provide the information. Defaults to True.
 
     Returns:
         str | None:
@@ -565,10 +597,14 @@ def get_series_measurement(series: pd.Series) -> str | None:
         'temperature'
     """
     check_series(series)
-    return cast(str | None, get_series_info(series, "measurement"))
+    return cast(
+        str | None, get_series_info(series, "measurement", include_inherited=include_inherited)
+    )
 
 
-def get_singlets_info(singletsframe: pd.DataFrame, value_dim_info: str | Spec) -> Any:
+def get_singlets_info(
+    singletsframe: pd.DataFrame, value_dim_info: str | Spec, *, include_inherited: bool = True
+) -> Any:
     """Gets an arbitrary info of the value dimensions of a SingleTSFrame
 
     A SingleTSFrame (STSF) holds exactly one metric - like a Series - but arbitrarily many
@@ -582,6 +618,7 @@ def get_singlets_info(singletsframe: pd.DataFrame, value_dim_info: str | Spec) -
     Args:
         singletsframe (pd.DataFrame): STSF with metadata following the convention.
         value_dim_info (str | Spec): Name of information to retrieve. Note that `value_dim_info` is interpreted as a glom Spec.
+        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata), if the metric itself does not provide the information. Defaults to True.
 
     Returns:
         defaultdict[str, Any]: Dictionary of value dimensions containing the retrieved information. If the information is not present for a value dimension the corresponding value is None.
@@ -613,14 +650,17 @@ def get_singlets_info(singletsframe: pd.DataFrame, value_dim_info: str | Spec) -
     """
 
     check_dataframe(singletsframe)
-    return singlets_value_dimension_info(singletsframe, value_dim_info)
+    return singlets_value_dimension_info(singletsframe, value_dim_info, include_inherited)
 
 
-def get_singlets_units(singletsframe: pd.DataFrame) -> defaultdict[str, str | None]:
+def get_singlets_units(
+    singletsframe: pd.DataFrame, *, include_inherited: bool = True
+) -> defaultdict[str, str | None]:
     """Gets units of the value dimensions of a SingleTSFrame from metadata
 
     Args:
         singletsframe (pd.DataFrame): STSF with metadata following the convention.
+        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata), if the metric itself does not provide the information. Defaults to True.
 
     Returns:
         defaultdict[str, str | None]: Dictionary of value dimensions containing the units. If the unit is not present for a value dimension the corresponding value is None.
@@ -669,14 +709,17 @@ def get_singlets_units(singletsframe: pd.DataFrame) -> defaultdict[str, str | No
     """
 
     check_dataframe(singletsframe)
-    return singlets_value_dimension_info(singletsframe, _specs.UNIT)
+    return singlets_value_dimension_info(singletsframe, _specs.UNIT, include_inherited)
 
 
-def get_singlets_names(singletsframe: pd.DataFrame) -> defaultdict[str, str | None]:
+def get_singlets_names(
+    singletsframe: pd.DataFrame, *, include_inherited: bool = True
+) -> defaultdict[str, str | None]:
     """Gets names of the value dimensions of a SingleTSFrame from metadata
 
     Args:
         singletsframe (pd.DataFrame): STSF with metadata following the convention.
+        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata), if the metric itself does not provide the information. Defaults to True.
 
     Returns:
         defaultdict[str, str | None]: Dictionary of value dimensions containing the names. If the name is not present for a value dimension the corresponding value is None.
@@ -708,16 +751,19 @@ def get_singlets_names(singletsframe: pd.DataFrame) -> defaultdict[str, str | No
     """
 
     check_dataframe(singletsframe)
-    return singlets_value_dimension_info(singletsframe, _specs.NAME)
+    return singlets_value_dimension_info(singletsframe, _specs.NAME, include_inherited)
 
 
-def get_singlets_display_names(singletsframe: pd.DataFrame) -> defaultdict[str, str | None]:
+def get_singlets_display_names(
+    singletsframe: pd.DataFrame, *, include_inherited: bool = True
+) -> defaultdict[str, str | None]:
     """Gets display names of the value dimensions of a SingleTSFrame from metadata
 
     Falls back to the name of the value dimension if no display name is given.
 
     Args:
         singletsframe (pd.DataFrame): STSF with metadata following the convention.
+        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata), if the metric itself does not provide the information. Defaults to True.
 
     Returns:
         defaultdict[str, str | None]: Dictionary of value dimensions containing the display names. If neither display name nor name is present for a value dimension the corresponding value is None.
@@ -749,10 +795,12 @@ def get_singlets_display_names(singletsframe: pd.DataFrame) -> defaultdict[str, 
     """
 
     check_dataframe(singletsframe)
-    return singlets_value_dimension_info(singletsframe, _specs.DISPLAY_NAME)
+    return singlets_value_dimension_info(singletsframe, _specs.DISPLAY_NAME, include_inherited)
 
 
-def get_singlets_short_display_names(singletsframe: pd.DataFrame) -> defaultdict[str, str | None]:
+def get_singlets_short_display_names(
+    singletsframe: pd.DataFrame, *, include_inherited: bool = True
+) -> defaultdict[str, str | None]:
     """Gets short display names of the value dimensions of a SingleTSFrame from metadata
 
     Falls back to the display name and then to the name of the value dimension if no short
@@ -760,6 +808,7 @@ def get_singlets_short_display_names(singletsframe: pd.DataFrame) -> defaultdict
 
     Args:
         singletsframe (pd.DataFrame): STSF with metadata following the convention.
+        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata), if the metric itself does not provide the information. Defaults to True.
 
     Returns:
         defaultdict[str, str | None]: Dictionary of value dimensions containing the short display names. If none of short display name, display name and name is present for a value dimension the corresponding value is None.
@@ -791,14 +840,19 @@ def get_singlets_short_display_names(singletsframe: pd.DataFrame) -> defaultdict
     """
 
     check_dataframe(singletsframe)
-    return singlets_value_dimension_info(singletsframe, _specs.SHORT_DISPLAY_NAME)
+    return singlets_value_dimension_info(
+        singletsframe, _specs.SHORT_DISPLAY_NAME, include_inherited
+    )
 
 
-def get_singlets_measurements(singletsframe: pd.DataFrame) -> defaultdict[str, str | None]:
+def get_singlets_measurements(
+    singletsframe: pd.DataFrame, *, include_inherited: bool = True
+) -> defaultdict[str, str | None]:
     """Gets measurements (types) of the value dimensions of a SingleTSFrame from metadata
 
     Args:
         singletsframe (pd.DataFrame): STSF with metadata following the convention.
+        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata), if the metric itself does not provide the information. Defaults to True.
 
     Returns:
         defaultdict[str, str | None]: Dictionary of value dimensions containing the measurements. If "measurement" is not given for a value dimension the corresponding value is None.
@@ -826,10 +880,12 @@ def get_singlets_measurements(singletsframe: pd.DataFrame) -> defaultdict[str, s
     """
 
     check_dataframe(singletsframe)
-    return singlets_value_dimension_info(singletsframe, _specs.MEASUREMENT)
+    return singlets_value_dimension_info(singletsframe, _specs.MEASUREMENT, include_inherited)
 
 
-def get_singlets_metric_info(singletsframe: pd.DataFrame, metric_info: str | Spec) -> Any:
+def get_singlets_metric_info(
+    singletsframe: pd.DataFrame, metric_info: str | Spec, *, include_inherited: bool = True
+) -> Any:
     """Gets metadata associated to the single metric of a SingleTSFrame
 
     Counterpart of :func:`get_metric_info` for SingleTSFrames: instead of a dictionary keyed
@@ -838,6 +894,7 @@ def get_singlets_metric_info(singletsframe: pd.DataFrame, metric_info: str | Spe
     Args:
         singletsframe (pd.DataFrame): STSF with metadata following the convention.
         metric_info (str | Spec): Name of information to retrieve. Note that `metric_info` is interpreted as a glom Spec.
+        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata), if the metric itself does not provide the information. Defaults to True.
 
     Returns:
         Any: Retrieved information defined by `metric_info`, or None if it cannot be determined - which includes the case of absent metric metadata.
@@ -868,7 +925,7 @@ def get_singlets_metric_info(singletsframe: pd.DataFrame, metric_info: str | Spe
     """
 
     check_dataframe(singletsframe)
-    return singlets_metric_info(singletsframe, metric_info)
+    return singlets_metric_info(singletsframe, metric_info, include_inherited)
 
 
 def get_queried_interval(

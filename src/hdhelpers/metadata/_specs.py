@@ -12,8 +12,29 @@ NAME: Spec = Coalesce("name", default=None)
 DISPLAY_NAME: Spec = Coalesce("display_name", "name", default=None)
 SHORT_DISPLAY_NAME: Spec = Coalesce("short_display_name", "display_name", "name", default=None)
 
+# Key of the dict in a metric object holding the properties the metric inherits from objects
+# higher up in an asset hierarchy, e.g. the latitude of the plant a sensor belongs to.
+INHERITED = "inherited"
 
-def by_metric_key_by_val_dimension(metadatum_key: str | Spec) -> Spec:
+
+def of_metric(metadatum_key: str | Spec, include_inherited: bool = True) -> Spec:
+    """Provides glom spec that extracts a metadatum from a metric object
+
+    If include_inherited, the metric's inherited properties are used as fallback: the whole
+    metadatum_key spec is first applied to the metric itself and only if that yields None
+    or fails, it is applied to the INHERITED dict of the metric. So in a fallback chain
+    like DISPLAY_NAME an own "name" beats an inherited "display_name".
+
+    metadatum_key can also be any glom spec.
+    """
+    if not include_inherited:
+        return metadatum_key
+    return Coalesce(metadatum_key, (INHERITED, metadatum_key), skip=lambda x: x is None)
+
+
+def by_metric_key_by_val_dimension(
+    metadatum_key: str | Spec, include_inherited: bool = True
+) -> Spec:
     """Providesglom spec that extracts a metadatum by metric by value dimension
 
     The generated glom spec returns a defaultdict of defaultdicts:
@@ -27,10 +48,13 @@ def by_metric_key_by_val_dimension(metadatum_key: str | Spec) -> Spec:
     Properly falls back to "value_dimensions_shared" metadata if a value_dimension
     is not given for a metric if its available there.
 
+    For the current metadata convention, properties the metric inherits are used as part of
+    the metric metadatum if include_inherited, see of_metric.
+
     metadatum_key can also be any glom spec.
     """
     return Coalesce(
-        _spec_new_convention(metadatum_key),
+        _spec_new_convention(metadatum_key, include_inherited),
         _spec_platform_convention_series_metric(metadatum_key),
         _spec_platform_convention_series_value_dim(metadatum_key),
         _spec_older_convention1_metric(metadatum_key),
@@ -65,14 +89,14 @@ def _spec_defaults_by_value_dimension(metadatum_key: str | Spec) -> Spec:
     )
 
 
-def _spec_defaults_by_metric(metadatum_key: str | Spec) -> Spec:
+def _spec_defaults_by_metric(metadatum_key: str | Spec, include_inherited: bool) -> Spec:
     return Coalesce(
         (
             "metrics",
             Check(instance_of=list),
             _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
                 S.globals.metric_key,
-                Coalesce(metadatum_key, default=None),
+                Coalesce(of_metric(metadatum_key, include_inherited), default=None),
                 key_as_value=True,
             ),
         ),
@@ -105,12 +129,12 @@ def _spec_actual_per_metric_per_value_dimensions(metadatum_key: str | Spec) -> S
     )
 
 
-def _spec_new_convention(metadatum_key: str | Spec) -> Spec:
+def _spec_new_convention(metadatum_key: str | Spec, include_inherited: bool) -> Spec:
     return (
         {  # first gather information at different locations in metadata in a dict
             "metric_key": _spec_metric_key(),
             "defaults_by_value_dimension": _spec_defaults_by_value_dimension(metadatum_key),
-            "defaults_by_metric": _spec_defaults_by_metric(metadatum_key),
+            "defaults_by_metric": _spec_defaults_by_metric(metadatum_key, include_inherited),
             "actual_per_metric_per_value_dimensions": _spec_actual_per_metric_per_value_dimensions(
                 metadatum_key
             ),
@@ -214,7 +238,7 @@ def _spec_older_convention4(metadatum_key: str | Spec) -> Spec:
     )
 
 
-def spec_by_metric_key(metadatum_key: str | Spec) -> Spec:
+def spec_by_metric_key(metadatum_key: str | Spec, include_inherited: bool = True) -> Spec:
     return Coalesce(
         (  # current metdadata convention
             {
@@ -224,7 +248,7 @@ def spec_by_metric_key(metadatum_key: str | Spec) -> Spec:
                     Check(instance_of=list),
                     _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
                         S.globals.metric_key,
-                        Coalesce(metadatum_key, default=None),
+                        Coalesce(of_metric(metadatum_key, include_inherited), default=None),
                         key_as_value=True,
                     ),
                 ),

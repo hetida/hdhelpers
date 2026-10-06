@@ -1,3 +1,6 @@
+## [Unreleased]
+- metric metadata accessors fall back to the properties a metric inherits (under "inherited" in the metric metadata of the current convention), can be deactivated via keyword argument include_inherited=False
+
 ## [0.0.9] - 2026-09-10
 - singletsframe support
 

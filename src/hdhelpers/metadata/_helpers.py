@@ -33,7 +33,9 @@ def extract_from_metadata(metadata: Any, key: str, default: str | None = None) -
 
 
 def get_value_dimension_info(
-    multitsframe: pd.DataFrame | pd.Series, value_dim_info: str | Spec
+    multitsframe: pd.DataFrame | pd.Series,
+    value_dim_info: str | Spec,
+    include_inherited: bool = True,
 ) -> defaultdict[str, defaultdict[str, Any]]:
     """Obtain metadata info associated to the value dimensions of the metrics
 
@@ -51,12 +53,15 @@ def get_value_dimension_info(
     dimension in the value_dimensions list under the metric, the global "value_dimensions_shared"
     field of the attrs object is searched for corresponding information.
 
+    If include_inherited, the properties a metric inherits are used as part of its metric
+    metadata, i.e. after the metric's own information but before "value_dimensions_shared".
+
     If no information is found, None is set as value and is the default value of the
     inner default dict.
 
     For examples we refer to the corresponding unit tests (/tests/helpers/test_metadata.py).
     """
-    spec = _specs.by_metric_key_by_val_dimension(value_dim_info)
+    spec = _specs.by_metric_key_by_val_dimension(value_dim_info, include_inherited)
     value_dimension_info_by_metric_by_value_dimension = glom(multitsframe.attrs, spec)
     return defaultdict(
         lambda: defaultdict(lambda: None), value_dimension_info_by_metric_by_value_dimension
@@ -84,7 +89,7 @@ def _select_single_metric(info_by_metric: dict, attrs: Any, empty: Any) -> Any:
 
 
 def singlets_value_dimension_info(
-    singletsframe: pd.DataFrame, value_dim_info: str | Spec
+    singletsframe: pd.DataFrame, value_dim_info: str | Spec, include_inherited: bool = True
 ) -> defaultdict[str, Any]:
     """Metadata info of the value dimensions of the single metric of a SingleTSFrame
 
@@ -100,13 +105,15 @@ def singlets_value_dimension_info(
     only the metric level is collapsed away.
     """
     return _select_single_metric(
-        get_value_dimension_info(singletsframe, value_dim_info),
+        get_value_dimension_info(singletsframe, value_dim_info, include_inherited),
         singletsframe.attrs,
         empty=defaultdict(lambda: None),
     )
 
 
-def singlets_metric_info(singletsframe: pd.DataFrame, metric_info: str | Spec) -> Any:
+def singlets_metric_info(
+    singletsframe: pd.DataFrame, metric_info: str | Spec, include_inherited: bool = True
+) -> Any:
     """Metadata of the single metric of a SingleTSFrame
 
     Counterpart of get_metric_info for SingleTSFrames: instead of a mapping keyed by metric
@@ -115,7 +122,9 @@ def singlets_metric_info(singletsframe: pd.DataFrame, metric_info: str | Spec) -
     not require metadata (see the metadata conventions documentation).
     """
     try:
-        info_by_metric = glom(singletsframe.attrs, _specs.spec_by_metric_key(metric_info))
+        info_by_metric = glom(
+            singletsframe.attrs, _specs.spec_by_metric_key(metric_info, include_inherited)
+        )
     except GlomError:  # no metric metadata present at all
         return None
 

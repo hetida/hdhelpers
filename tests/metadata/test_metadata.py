@@ -501,3 +501,89 @@ def test_get_singlets_without_metadata():
 def test_get_singlets_requires_a_dataframe(func):
     with pytest.raises(TypeError):
         func(pd.Series())
+
+
+@pytest.fixture
+def attrs_with_inherited() -> dict:
+    return {
+        "dataset_metadata": {"metric_key": "id", "single_metric": "sensor"},
+        "value_dimensions_shared": [{"column": "value", "unit": "shared unit"}],
+        "metrics": [
+            {
+                "id": "sensor",
+                "name": "sensor name",
+                "Latitude": None,
+                "Longitude": 7.58,
+                "inherited": {
+                    "Latitude": 51.43,
+                    "Longitude": 8.28,
+                    "display_name": "plant display name",
+                    "unit": "inherited unit",
+                },
+                "value_dimensions": [{"column": "value"}, {"column": "state"}],
+            },
+            {"id": "other", "value_dimensions": [{"column": "value"}]},
+        ],
+    }
+
+
+def test_get_metric_info_falls_back_to_inherited(attrs_with_inherited):
+    from hdhelpers.metadata import get_metric_info
+
+    dataframe = pd.DataFrame()
+    dataframe.attrs = attrs_with_inherited
+
+    assert get_metric_info(dataframe, "Latitude")["sensor"] == 51.43  # own None -> inherited
+    assert get_metric_info(dataframe, "Longitude")["sensor"] == 7.58  # own beats inherited
+    assert get_metric_info(dataframe, "Latitude")["other"] is None
+    assert get_metric_info(dataframe, "Latitude", include_inherited=False)["sensor"] is None
+    assert get_singlets_metric_info(dataframe, "Latitude") == 51.43
+    assert get_singlets_metric_info(dataframe, "Latitude", include_inherited=False) is None
+
+
+def test_get_value_dimension_info_falls_back_to_inherited_for_value_only(
+    attrs_with_inherited,
+):
+    from hdhelpers.metadata import get_units
+
+    dataframe = pd.DataFrame()
+    dataframe.attrs = attrs_with_inherited
+
+    # like the metric metadata itself, inherited metadata only applies to the "value" column
+    assert get_singlets_info(dataframe, "Latitude")["value"] == 51.43
+    assert get_singlets_info(dataframe, "Latitude")["state"] is None
+    assert get_singlets_info(dataframe, "Latitude", include_inherited=False)["value"] is None
+
+    # inherited metadata of the metric beats the dataset wide value_dimensions_shared
+    assert get_units(dataframe)["sensor"]["value"] == "inherited unit"
+    assert get_units(dataframe)["other"]["value"] == "shared unit"
+    assert get_units(dataframe, include_inherited=False)["sensor"]["value"] == "shared unit"
+    assert get_singlets_units(dataframe)["value"] == "inherited unit"
+    assert get_singlets_units(dataframe, include_inherited=False)["value"] == "shared unit"
+
+
+def test_get_series_info_falls_back_to_inherited(attrs_with_inherited):
+    from hdhelpers.metadata import get_series_info
+
+    series = pd.Series()
+    series.attrs = attrs_with_inherited
+
+    assert get_series_info(series, "Latitude") == 51.43
+    assert get_series_info(series, "Longitude") == 7.58
+    assert get_series_info(series, "Latitude", include_inherited=False) is None
+    assert get_series_unit(series) == "inherited unit"
+    assert get_series_unit(series, include_inherited=False) == "shared unit"
+
+
+def test_own_metadata_beats_inherited_metadata_in_fallback_chains(attrs_with_inherited):
+    """The whole spec is applied to the metric itself before trying its inherited metadata"""
+    series = pd.Series()
+    series.attrs = attrs_with_inherited
+
+    # own "name" beats inherited "display_name"
+    assert get_series_display_name(series) == "sensor name"
+    assert get_series_short_display_name(series) == "sensor name"
+
+    del series.attrs["metrics"][0]["name"]
+    assert get_series_display_name(series) == "plant display name"
+    assert get_series_display_name(series, include_inherited=False) is None
