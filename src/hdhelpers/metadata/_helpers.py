@@ -63,15 +63,46 @@ def get_value_dimension_info(
     )
 
 
+def follows_current_convention(attrs: Any) -> bool:
+    """Whether metadata follows the current metadata convention, i.e. has a list of metrics"""
+    return isinstance(attrs, dict) and isinstance(attrs.get("metrics"), list)
+
+
+def value_dimension_info_with_fallbacks(
+    data: pd.DataFrame | pd.Series, fields: tuple[str, ...], legacy_spec: Spec
+) -> defaultdict[str, defaultdict[str, Any]]:
+    """Obtain a field of the value dimensions, falling back to further fields
+
+    For metadata following the current metadata convention, each field is looked up on all
+    levels described in get_value_dimension_info (the value dimension, the metric for the
+    value dimension "value" and "value_dimensions_shared") before the next field is tried.
+    So e.g. a display name of the metric wins over the name of its value dimension. Fields
+    provided as null are treated as missing.
+
+    Older metadata structures are handled via legacy_spec, keeping their established behaviour.
+    """
+    if not follows_current_convention(data.attrs):
+        return get_value_dimension_info(data, legacy_spec)
+
+    result: defaultdict[str, defaultdict[str, Any]] = defaultdict(lambda: defaultdict(lambda: None))
+    for field in fields:
+        info_by_metric = get_value_dimension_info(data, Coalesce(field, default=None))
+        for metric, info_by_value_dimension in info_by_metric.items():
+            for value_dimension, info in info_by_value_dimension.items():
+                if result[metric][value_dimension] is None:
+                    result[metric][value_dimension] = info
+    return result
+
+
 _SINGLE_METRIC_KEY = "single_metric"
 
 
 def _select_single_metric(info_by_metric: dict, attrs: Any, empty: Any) -> Any:
-    """Pick the entry of the one metric of a SingleTSFrame out of a by-metric mapping
+    """Pick the entry of the one metric of a SingleTSFrame or Series out of a by-metric mapping
 
     The single metric is identified via _SINGLE_METRIC_KEY in "dataset_metadata". If that is
-    missing but exactly one metric is present, that one is used, since a SingleTSFrame cannot
-    be ambiguous in this respect. Otherwise `empty` is returned.
+    missing but exactly one metric is present, that one is used, since a SingleTSFrame or
+    Series cannot be ambiguous in this respect. Otherwise `empty` is returned.
     """
     metric = extract_from_metadata(attrs, key=_SINGLE_METRIC_KEY)
     if metric is not None and metric in info_by_metric:
@@ -101,6 +132,20 @@ def singlets_value_dimension_info(
     """
     return _select_single_metric(
         get_value_dimension_info(singletsframe, value_dim_info),
+        singletsframe.attrs,
+        empty=defaultdict(lambda: None),
+    )
+
+
+def singlets_value_dimension_info_with_fallbacks(
+    singletsframe: pd.DataFrame, fields: tuple[str, ...], legacy_spec: Spec
+) -> defaultdict[str, Any]:
+    """Counterpart of value_dimension_info_with_fallbacks for SingleTSFrames
+
+    Like singlets_value_dimension_info, the result is keyed by value dimension only.
+    """
+    return _select_single_metric(
+        value_dimension_info_with_fallbacks(singletsframe, fields, legacy_spec),
         singletsframe.attrs,
         empty=defaultdict(lambda: None),
     )

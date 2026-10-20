@@ -12,6 +12,12 @@ NAME: Spec = Coalesce("name", default=None)
 DISPLAY_NAME: Spec = Coalesce("display_name", "name", default=None)
 SHORT_DISPLAY_NAME: Spec = Coalesce("short_display_name", "display_name", "name", default=None)
 
+# The fallback chains of the display names for metadata following the current metadata
+# convention: Each field is looked up on all levels (value dimension, metric, shared value
+# dimensions) before the next field is tried, see value_dimension_info_with_fallbacks.
+DISPLAY_NAME_FIELDS = ("display_name", "name")
+SHORT_DISPLAY_NAME_FIELDS = ("short_display_name", "display_name", "name")
+
 
 def by_metric_key_by_val_dimension(metadatum_key: str | Spec) -> Spec:
     """Providesglom spec that extracts a metadatum by metric by value dimension

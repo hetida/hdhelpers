@@ -14,19 +14,22 @@ from collections import defaultdict
 from typing import Any, cast
 
 import pandas as pd
-from glom import Coalesce, Spec, glom
+from glom import Coalesce, GlomError, Spec, glom
 
+import hdhelpers.metadata._specs as _specs
 from hdhelpers.metadata._helpers import (
     check_dataframe,
     check_series,
     check_series_or_dataframe,
     extract_from_metadata,
+    follows_current_convention,
     get_value_dimension_info,
     singlets_metric_info,
     singlets_value_dimension_info,
+    singlets_value_dimension_info_with_fallbacks,
     spec_not_none,
+    value_dimension_info_with_fallbacks,
 )
-import hdhelpers.metadata._specs as _specs
 from hdhelpers.metadata._specs import spec_by_metric_key
 
 
@@ -135,6 +138,9 @@ def get_display_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdic
     Returns:
         defaultdict[str, defaultdict[str, str | None]]: Dictionary of metrics containing the display names.
         If the display name of the metrics is not present it returns the result of :func:`hdhelpers.metadata.get_names`.
+        For metadata following the current convention, the display name is looked up on the value dimension, on
+        the metric (for the value dimension "value") and in "value_dimensions_shared" before falling back to the
+        name. Fields provided as null count as missing.
 
     Raises:
         TypeError: If `multitsframe` is not a DataFrame.
@@ -169,7 +175,9 @@ def get_display_names(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdic
     """
 
     check_dataframe(multitsframe)
-    return get_value_dimension_info(multitsframe, _specs.DISPLAY_NAME)
+    return value_dimension_info_with_fallbacks(
+        multitsframe, _specs.DISPLAY_NAME_FIELDS, _specs.DISPLAY_NAME
+    )
 
 
 def get_short_display_names(
@@ -183,6 +191,9 @@ def get_short_display_names(
     Returns:
         defaultdict[str, defaultdict[str, str | None]]: Dictionary of metrics containing the short display names.
         If the short display name of the metrics is not present it returns the result of :func:`hdhelpers.metadata.get_display_names`.
+        For metadata following the current convention, each of short display name, display name and name is
+        looked up on the value dimension, on the metric (for the value dimension "value") and in
+        "value_dimensions_shared" before falling back to the next one. Fields provided as null count as missing.
 
     Raises:
         TypeError: If `multitsframe` is not a DataFrame.
@@ -220,7 +231,9 @@ def get_short_display_names(
     """
 
     check_dataframe(multitsframe)
-    return get_value_dimension_info(multitsframe, _specs.SHORT_DISPLAY_NAME)
+    return value_dimension_info_with_fallbacks(
+        multitsframe, _specs.SHORT_DISPLAY_NAME_FIELDS, _specs.SHORT_DISPLAY_NAME
+    )
 
 
 def get_measurements(multitsframe: pd.DataFrame) -> defaultdict[str, defaultdict[str, str | None]]:
@@ -264,7 +277,7 @@ def get_metric_info(multitsframe: pd.DataFrame, metric_info: str | Spec) -> defa
         metric_info (str | Spec): Name of information to retrieve. Note that `metric_info` is interpreted as a glom Spec.
 
     Returns:
-        defaultdict[str, Any]: Dictionary, where keys are the entries of the metrics metadata specified via "metric_key" in "dataset_metadata" and values are the entries specified via "metric_info" in the metrics metadata
+        defaultdict[str, Any]: Dictionary, where keys are the entries of the metrics metadata specified via "metric_key" in "dataset_metadata" and values are the entries specified via "metric_info" in the metrics metadata. Defaults to None, also if there is no metric metadata at all.
 
     Code example:
 
@@ -311,8 +324,11 @@ def get_metric_info(multitsframe: pd.DataFrame, metric_info: str | Spec) -> defa
     """
     check_dataframe(multitsframe)
     spec = spec_by_metric_key(metric_info)
-    metric_info = glom(multitsframe.attrs, spec)
-    return defaultdict(lambda: None, metric_info)
+    try:
+        info_by_metric = glom(multitsframe.attrs, spec)
+    except GlomError:  # no metric metadata present at all
+        info_by_metric = {}
+    return defaultdict(lambda: None, info_by_metric)
 
 
 def get_series_info(series: pd.Series, value_dim_info: str | Spec) -> Any:
@@ -344,10 +360,7 @@ def get_series_info(series: pd.Series, value_dim_info: str | Spec) -> Any:
     # metadata, we can reuse the code that extracts value_dimension metadata for
     # this value dimension.
     check_series(series)
-    series_metric_key = extract_from_metadata(series.attrs, key="single_metric", default="series")
-    from_new_convention = get_value_dimension_info(series, value_dim_info)[series_metric_key].get(
-        "value"
-    )
+    from_new_convention = _series_value(get_value_dimension_info(series, value_dim_info), series)
 
     if from_new_convention is not None:
         return from_new_convention
@@ -371,6 +384,37 @@ def get_series_info(series: pd.Series, value_dim_info: str | Spec) -> Any:
             default=None,
         ),
     )
+
+
+def _series_value(info_by_metric: dict, series: pd.Series) -> Any:
+    """Info of the value dimension "value" of the metric of a Series
+
+    The metric is identified via "single_metric" in "dataset_metadata", defaulting to "series"
+    as used by older metadata structures. If it is not found but exactly one metric is present,
+    that one is used, since a Series cannot be ambiguous in this respect.
+    """
+    series_metric_key = extract_from_metadata(series.attrs, key="single_metric", default="series")
+    if series_metric_key in info_by_metric:
+        return info_by_metric[series_metric_key].get("value")
+    if len(info_by_metric) == 1:
+        return next(iter(info_by_metric.values())).get("value")
+    return None
+
+
+def _series_info_with_fallbacks(series: pd.Series, fields: tuple[str, ...]) -> Any:
+    """Info of a Series, falling back to further fields
+
+    For metadata following the current metadata convention, each field is looked up on the
+    value dimension and the metric before the next field is tried, see
+    value_dimension_info_with_fallbacks. Older metadata structures keep their established
+    behaviour of using the first of the fields present on the first level providing any.
+    """
+    legacy_spec = Coalesce(*(spec_not_none(field) for field in fields))
+    if follows_current_convention(series.attrs):
+        return _series_value(
+            value_dimension_info_with_fallbacks(series, fields, legacy_spec), series
+        )
+    return get_series_info(series, legacy_spec)
 
 
 def get_series_unit(series: pd.Series) -> str | None:
@@ -492,14 +536,7 @@ def get_series_display_name(series: pd.Series) -> str | None:
     check_series(series)
     return cast(
         str | None,
-        get_series_info(
-            series,
-            Coalesce(
-                spec_not_none("display_name"),
-                spec_not_none("name"),
-                spec_not_none("short_display_name"),
-            ),
-        ),
+        _series_info_with_fallbacks(series, ("display_name", "name", "short_display_name")),
     )
 
 
@@ -530,14 +567,7 @@ def get_series_short_display_name(series: pd.Series) -> str | None:
     check_series(series)
     return cast(
         str | None,
-        get_series_info(
-            series,
-            Coalesce(
-                spec_not_none("short_display_name"),
-                spec_not_none("display_name"),
-                spec_not_none("name"),
-            ),
-        ),
+        _series_info_with_fallbacks(series, ("short_display_name", "display_name", "name")),
     )
 
 
@@ -714,7 +744,10 @@ def get_singlets_names(singletsframe: pd.DataFrame) -> defaultdict[str, str | No
 def get_singlets_display_names(singletsframe: pd.DataFrame) -> defaultdict[str, str | None]:
     """Gets display names of the value dimensions of a SingleTSFrame from metadata
 
-    Falls back to the name of the value dimension if no display name is given.
+    Falls back to the name of the value dimension if no display name is given. The display name
+    is looked up on the value dimension, on the metric (for the value dimension "value") and in
+    "value_dimensions_shared" before falling back to the name. Fields provided as null count as
+    missing.
 
     Args:
         singletsframe (pd.DataFrame): STSF with metadata following the convention.
@@ -749,14 +782,18 @@ def get_singlets_display_names(singletsframe: pd.DataFrame) -> defaultdict[str, 
     """
 
     check_dataframe(singletsframe)
-    return singlets_value_dimension_info(singletsframe, _specs.DISPLAY_NAME)
+    return singlets_value_dimension_info_with_fallbacks(
+        singletsframe, _specs.DISPLAY_NAME_FIELDS, _specs.DISPLAY_NAME
+    )
 
 
 def get_singlets_short_display_names(singletsframe: pd.DataFrame) -> defaultdict[str, str | None]:
     """Gets short display names of the value dimensions of a SingleTSFrame from metadata
 
     Falls back to the display name and then to the name of the value dimension if no short
-    display name is given.
+    display name is given. Each of them is looked up on the value dimension, on the metric (for
+    the value dimension "value") and in "value_dimensions_shared" before falling back to the next
+    one. Fields provided as null count as missing.
 
     Args:
         singletsframe (pd.DataFrame): STSF with metadata following the convention.
@@ -791,7 +828,9 @@ def get_singlets_short_display_names(singletsframe: pd.DataFrame) -> defaultdict
     """
 
     check_dataframe(singletsframe)
-    return singlets_value_dimension_info(singletsframe, _specs.SHORT_DISPLAY_NAME)
+    return singlets_value_dimension_info_with_fallbacks(
+        singletsframe, _specs.SHORT_DISPLAY_NAME_FIELDS, _specs.SHORT_DISPLAY_NAME
+    )
 
 
 def get_singlets_measurements(singletsframe: pd.DataFrame) -> defaultdict[str, str | None]:
