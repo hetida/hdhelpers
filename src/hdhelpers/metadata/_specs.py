@@ -16,6 +16,12 @@ SHORT_DISPLAY_NAME: Spec = Coalesce("short_display_name", "display_name", "name"
 # higher up in an asset hierarchy, e.g. the latitude of the plant a sensor belongs to.
 INHERITED = "inherited"
 
+# The fallback chains of the display names for metadata following the current metadata
+# convention: Each field is looked up on all levels (value dimension, metric, shared value
+# dimensions) before the next field is tried, see value_dimension_info_with_fallbacks.
+DISPLAY_NAME_FIELDS = ("display_name", "name")
+SHORT_DISPLAY_NAME_FIELDS = ("short_display_name", "display_name", "name")
+
 
 def of_metric(metadatum_key: str | Spec, include_inherited: bool = True) -> Spec:
     """Provides glom spec that extracts a metadatum from a metric object
