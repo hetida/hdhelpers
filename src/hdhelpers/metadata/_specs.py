@@ -1,7 +1,8 @@
 from collections import defaultdict
 from collections.abc import Callable
+from typing import Any
 
-from glom import A, Check, Coalesce, Iter, Merge, S, Spec, T
+from glom import A, Check, Coalesce, Iter, Merge, S, Spec, T, Val
 
 # The metadatum specs of the individual accessors, including their fallback chains.
 # Defined once here and shared by the MultiTSFrame and the SingleTSFrame accessors, which
@@ -23,23 +24,8 @@ DISPLAY_NAME_FIELDS = ("display_name", "name")
 SHORT_DISPLAY_NAME_FIELDS = ("short_display_name", "display_name", "name")
 
 
-def of_metric(metadatum_key: str | Spec, include_inherited: bool = True) -> Spec:
-    """Provides glom spec that extracts a metadatum from a metric object
-
-    If include_inherited, the metric's inherited properties are used as fallback: the whole
-    metadatum_key spec is first applied to the metric itself and only if that yields None
-    or fails, it is applied to the INHERITED dict of the metric. So in a fallback chain
-    like DISPLAY_NAME an own "name" beats an inherited "display_name".
-
-    metadatum_key can also be any glom spec.
-    """
-    if not include_inherited:
-        return metadatum_key
-    return Coalesce(metadatum_key, (INHERITED, metadatum_key), skip=lambda x: x is None)
-
-
 def by_metric_key_by_val_dimension(
-    metadatum_key: str | Spec, include_inherited: bool = True
+    metadatum_key: str | Spec, include_inherited: bool = False
 ) -> Spec:
     """Providesglom spec that extracts a metadatum by metric by value dimension
 
@@ -54,8 +40,9 @@ def by_metric_key_by_val_dimension(
     Properly falls back to "value_dimensions_shared" metadata if a value_dimension
     is not given for a metric if its available there.
 
-    For the current metadata convention, properties the metric inherits are used as part of
-    the metric metadatum if include_inherited, see of_metric.
+    For the current metadata convention and include_inherited, the properties the metric
+    inherits are used as last resort for the "value" value_dimension, i.e. after
+    "value_dimensions_shared".
 
     metadatum_key can also be any glom spec.
     """
@@ -95,14 +82,30 @@ def _spec_defaults_by_value_dimension(metadatum_key: str | Spec) -> Spec:
     )
 
 
-def _spec_defaults_by_metric(metadatum_key: str | Spec, include_inherited: bool) -> Spec:
+def _spec_defaults_by_metric(metadatum_key: str | Spec) -> Spec:
     return Coalesce(
         (
             "metrics",
             Check(instance_of=list),
             _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
                 S.globals.metric_key,
-                Coalesce(of_metric(metadatum_key, include_inherited), default=None),
+                Coalesce(metadatum_key, default=None),
+                key_as_value=True,
+            ),
+        ),
+        default={},
+    )
+
+
+def _spec_inherited_by_metric(metadatum_key: str | Spec) -> Spec:
+    """The metadatum from the properties each metric inherits, keyed by metric"""
+    return Coalesce(
+        (
+            "metrics",
+            Check(instance_of=list),
+            _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
+                S.globals.metric_key,
+                Coalesce((INHERITED, metadatum_key), default=None),
                 key_as_value=True,
             ),
         ),
@@ -140,39 +143,57 @@ def _spec_new_convention(metadatum_key: str | Spec, include_inherited: bool) -> 
         {  # first gather information at different locations in metadata in a dict
             "metric_key": _spec_metric_key(),
             "defaults_by_value_dimension": _spec_defaults_by_value_dimension(metadatum_key),
-            "defaults_by_metric": _spec_defaults_by_metric(metadatum_key, include_inherited),
+            "defaults_by_metric": _spec_defaults_by_metric(metadatum_key),
+            "inherited_by_metric": (
+                _spec_inherited_by_metric(metadatum_key) if include_inherited else Val({})
+            ),
             "actual_per_metric_per_value_dimensions": _spec_actual_per_metric_per_value_dimensions(
                 metadatum_key
             ),
         },
-        lambda x: defaultdict(
-            lambda: defaultdict(lambda: None, {}),
-            {  # combine dicts with gathered information / falling back to defaults
-                metric: defaultdict(
-                    lambda: None,
-                    {
-                        value_dim: info
-                        if info is not None  # prio 1: use, if explicitely provided
-                        else (
-                            x["defaults_by_metric"][metric]
-                            if (
-                                value_dim == "value"
-                                and x["defaults_by_metric"].get(metric) is not None
-                            )  # prio 2: only for "value" value dim: possibly use from metric
-                            else (
-                                x["defaults_by_value_dimension"].get(
-                                    value_dim, None
-                                )  # prio 3: from global "value_dimensions_shared"
-                            )
-                        )
-                        for value_dim, info in _update_dict_and_return_it(
-                            x["defaults_by_value_dimension"].copy(), info_by_val_dim
-                        ).items()
-                    },
-                )
-                for metric, info_by_val_dim in x["actual_per_metric_per_value_dimensions"].items()
-            },
-        ),
+        _combine_gathered_information,
+    )
+
+
+def _first_not_none(*values: Any) -> Any:
+    return next((value for value in values if value is not None), None)
+
+
+def _combine_gathered_information(gathered: dict) -> defaultdict:
+    """Combine the information gathered by _spec_new_convention
+
+    For each value dimension of each metric, the first information which is not None is used,
+    in the following order:
+    1. the value dimension itself
+    2. only for the value dimension "value": the metric
+    3. "value_dimensions_shared"
+    4. only for the value dimension "value": the properties the metric inherits
+    """
+    return defaultdict(
+        lambda: defaultdict(lambda: None, {}),
+        {
+            metric: defaultdict(
+                lambda: None,
+                {
+                    value_dim: _first_not_none(
+                        info,
+                        gathered["defaults_by_metric"].get(metric)
+                        if value_dim == "value"
+                        else None,
+                        gathered["defaults_by_value_dimension"].get(value_dim),
+                        gathered["inherited_by_metric"].get(metric)
+                        if value_dim == "value"
+                        else None,
+                    )
+                    for value_dim, info in _update_dict_and_return_it(
+                        gathered["defaults_by_value_dimension"].copy(), info_by_val_dim
+                    ).items()
+                },
+            )
+            for metric, info_by_val_dim in gathered[
+                "actual_per_metric_per_value_dimensions"
+            ].items()
+        },
     )
 
 
@@ -244,7 +265,8 @@ def _spec_older_convention4(metadatum_key: str | Spec) -> Spec:
     )
 
 
-def spec_by_metric_key(metadatum_key: str | Spec, include_inherited: bool = True) -> Spec:
+def spec_by_metric_key(metadatum_key: str | Spec) -> Spec:
+    """Provides glom spec that extracts a metadatum from the metric objects, keyed by metric"""
     return Coalesce(
         (  # current metdadata convention
             {
@@ -254,7 +276,7 @@ def spec_by_metric_key(metadatum_key: str | Spec, include_inherited: bool = True
                     Check(instance_of=list),
                     _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
                         S.globals.metric_key,
-                        Coalesce(of_metric(metadatum_key, include_inherited), default=None),
+                        Coalesce(metadatum_key, default=None),
                         key_as_value=True,
                     ),
                 ),

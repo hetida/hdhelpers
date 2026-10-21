@@ -35,7 +35,7 @@ def extract_from_metadata(metadata: Any, key: str, default: str | None = None) -
 def get_value_dimension_info(
     multitsframe: pd.DataFrame | pd.Series,
     value_dim_info: str | Spec,
-    include_inherited: bool = True,
+    include_inherited: bool = False,
 ) -> defaultdict[str, defaultdict[str, Any]]:
     """Obtain metadata info associated to the value dimensions of the metrics
 
@@ -53,8 +53,8 @@ def get_value_dimension_info(
     dimension in the value_dimensions list under the metric, the global "value_dimensions_shared"
     field of the attrs object is searched for corresponding information.
 
-    If include_inherited, the properties a metric inherits are used as part of its metric
-    metadata, i.e. after the metric's own information but before "value_dimensions_shared".
+    If include_inherited, the properties a metric inherits are used as last resort for the
+    "value" value dimension, i.e. after "value_dimensions_shared".
 
     If no information is found, None is set as value and is the default value of the
     inner default dict.
@@ -77,7 +77,7 @@ def value_dimension_info_with_fallbacks(
     data: pd.DataFrame | pd.Series,
     fields: tuple[str, ...],
     legacy_spec: Spec,
-    include_inherited: bool = True,
+    include_inherited: bool = False,
 ) -> defaultdict[str, defaultdict[str, Any]]:
     """Obtain a field of the value dimensions, falling back to further fields
 
@@ -128,7 +128,7 @@ def _select_single_metric(info_by_metric: dict, attrs: Any, empty: Any) -> Any:
 
 
 def singlets_value_dimension_info(
-    singletsframe: pd.DataFrame, value_dim_info: str | Spec, include_inherited: bool = True
+    singletsframe: pd.DataFrame, value_dim_info: str | Spec, include_inherited: bool = False
 ) -> defaultdict[str, Any]:
     """Metadata info of the value dimensions of the single metric of a SingleTSFrame
 
@@ -154,7 +154,7 @@ def singlets_value_dimension_info_with_fallbacks(
     singletsframe: pd.DataFrame,
     fields: tuple[str, ...],
     legacy_spec: Spec,
-    include_inherited: bool = True,
+    include_inherited: bool = False,
 ) -> defaultdict[str, Any]:
     """Counterpart of value_dimension_info_with_fallbacks for SingleTSFrames
 
@@ -167,6 +167,35 @@ def singlets_value_dimension_info_with_fallbacks(
     )
 
 
+def metric_info_by_metric(
+    data: pd.DataFrame | pd.Series, metric_info: str | Spec, include_inherited: bool = True
+) -> dict[str, Any]:
+    """Obtain metadata info associated to the metrics, keyed by metric
+
+    For metadata following the current metadata convention, information the metric itself does
+    not provide is taken from its value dimension "value", then from "value_dimensions_shared"
+    and, if include_inherited, finally from the properties the metric inherits. Information
+    provided as null counts as missing.
+
+    Returns an empty dict if no metric metadata is present at all.
+    """
+    try:
+        info_by_metric = glom(data.attrs, _specs.spec_by_metric_key(metric_info))
+    except GlomError:  # no metric metadata present at all
+        return {}
+
+    if not follows_current_convention(data.attrs):
+        return info_by_metric
+
+    value_dimension_info = get_value_dimension_info(
+        data, Coalesce(metric_info, default=None), include_inherited
+    )
+    return {
+        metric: info if info is not None else value_dimension_info[metric].get("value")
+        for metric, info in info_by_metric.items()
+    }
+
+
 def singlets_metric_info(
     singletsframe: pd.DataFrame, metric_info: str | Spec, include_inherited: bool = True
 ) -> Any:
@@ -177,11 +206,8 @@ def singlets_metric_info(
     be determined - which includes the case of absent metric metadata, since components should
     not require metadata (see the metadata conventions documentation).
     """
-    try:
-        info_by_metric = glom(
-            singletsframe.attrs, _specs.spec_by_metric_key(metric_info, include_inherited)
-        )
-    except GlomError:  # no metric metadata present at all
-        return None
-
-    return _select_single_metric(info_by_metric, singletsframe.attrs, empty=None)
+    return _select_single_metric(
+        metric_info_by_metric(singletsframe, metric_info, include_inherited),
+        singletsframe.attrs,
+        empty=None,
+    )

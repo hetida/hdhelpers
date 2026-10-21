@@ -554,12 +554,18 @@ def test_get_value_dimension_info_falls_back_to_inherited_for_value_only(
     assert get_singlets_info(dataframe, "Latitude")["state"] is None
     assert get_singlets_info(dataframe, "Latitude", include_inherited=False)["value"] is None
 
-    # inherited metadata of the metric beats the dataset wide value_dimensions_shared
-    assert get_units(dataframe)["sensor"]["value"] == "inherited unit"
-    assert get_units(dataframe)["other"]["value"] == "shared unit"
-    assert get_units(dataframe, include_inherited=False)["sensor"]["value"] == "shared unit"
-    assert get_singlets_units(dataframe)["value"] == "inherited unit"
-    assert get_singlets_units(dataframe, include_inherited=False)["value"] == "shared unit"
+    # inherited metadata is the last resort, after the dataset wide value_dimensions_shared
+    assert get_units(dataframe, include_inherited=True)["sensor"]["value"] == "shared unit"
+    assert get_units(dataframe, include_inherited=True)["other"]["value"] == "shared unit"
+    assert get_singlets_units(dataframe, include_inherited=True)["value"] == "shared unit"
+
+    del dataframe.attrs["value_dimensions_shared"]
+    assert get_units(dataframe, include_inherited=True)["sensor"]["value"] == "inherited unit"
+    assert get_singlets_units(dataframe, include_inherited=True)["value"] == "inherited unit"
+
+    # the functions for dedicated information do not fall back to inherited by default
+    assert get_units(dataframe)["sensor"]["value"] is None
+    assert get_singlets_units(dataframe)["value"] is None
 
 
 def test_get_series_info_falls_back_to_inherited(attrs_with_inherited):
@@ -571,8 +577,12 @@ def test_get_series_info_falls_back_to_inherited(attrs_with_inherited):
     assert get_series_info(series, "Latitude") == 51.43
     assert get_series_info(series, "Longitude") == 7.58
     assert get_series_info(series, "Latitude", include_inherited=False) is None
-    assert get_series_unit(series) == "inherited unit"
-    assert get_series_unit(series, include_inherited=False) == "shared unit"
+    assert get_series_unit(series) == "shared unit"
+    assert get_series_unit(series, include_inherited=True) == "shared unit"
+
+    del series.attrs["value_dimensions_shared"]
+    assert get_series_unit(series) is None
+    assert get_series_unit(series, include_inherited=True) == "inherited unit"
 
 
 def test_own_metadata_beats_inherited_metadata_in_fallback_chains(attrs_with_inherited):
@@ -581,9 +591,35 @@ def test_own_metadata_beats_inherited_metadata_in_fallback_chains(attrs_with_inh
     series.attrs = attrs_with_inherited
 
     # own "name" beats inherited "display_name"
-    assert get_series_display_name(series) == "sensor name"
-    assert get_series_short_display_name(series) == "sensor name"
+    assert get_series_display_name(series, include_inherited=True) == "sensor name"
+    assert get_series_short_display_name(series, include_inherited=True) == "sensor name"
 
     del series.attrs["metrics"][0]["name"]
-    assert get_series_display_name(series) == "plant display name"
-    assert get_series_display_name(series, include_inherited=False) is None
+    assert get_series_display_name(series, include_inherited=True) == "plant display name"
+    assert get_series_display_name(series) is None
+
+
+def test_get_metric_info_prefers_value_dimension_and_shared_over_inherited(
+    attrs_with_inherited,
+):
+    """Order of get_metric_info: metric, value dimension "value", shared, inherited"""
+    from hdhelpers.metadata import get_metric_info, get_units
+
+    dataframe = pd.DataFrame()
+    dataframe.attrs = attrs_with_inherited
+
+    assert get_metric_info(dataframe, "unit")["sensor"] == "shared unit"
+
+    dataframe.attrs["metrics"][0]["value_dimensions"][0]["unit"] = "m"
+    assert get_metric_info(dataframe, "unit")["sensor"] == "m"
+    assert get_units(dataframe)["sensor"]["value"] == "m"
+
+    dataframe.attrs["metrics"][0]["unit"] = "kg"
+    assert get_metric_info(dataframe, "unit")["sensor"] == "kg"
+
+    del dataframe.attrs["value_dimensions_shared"]
+    del dataframe.attrs["metrics"][0]["unit"]
+    dataframe.attrs["metrics"][0]["value_dimensions"][0]["unit"] = None
+    assert get_metric_info(dataframe, "unit")["sensor"] == "inherited unit"
+    assert get_metric_info(dataframe, "unit", include_inherited=False)["sensor"] is None
+    assert get_singlets_metric_info(dataframe, "unit") == "inherited unit"
