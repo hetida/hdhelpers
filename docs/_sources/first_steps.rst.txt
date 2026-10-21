@@ -91,6 +91,68 @@ In contrast, the functions for dedicated information do not use them by default,
 inherited property with the same label usually does not describe the metric itself, e.g. a
 property "unit" of a plant. Pass ``include_inherited=True`` to use them as last resort anyway.
 
+How to query nested information?
+================================
+
+The information requested from ``get_metric_info``, ``get_singlets_metric_info``,
+``get_series_info`` and ``get_singlets_info`` is interpreted as a `glom`_ spec. A string is a
+path in which dots separate the keys, so it also reaches into sub dictionaries. Let's say the
+metric of the series above additionally provides comments and information on its sensor (the
+conventions allow additional fields at every level), and the label of one of its inherited
+properties contains a dot:
+
+.. code-block:: json
+
+    {
+        "external_id": "water.north.level",
+        "name": "Water level north",
+        "sensor": {
+            "manufacturer": "Acme",
+            "calibration": {"date": "2026-03-01", "offset": 0.02}
+        },
+        "comments": [
+            {"content": "Gauge maintenance"},
+            {"content": "Sensor replaced"}
+        ],
+        "value_dimensions": [{"column": "value", "unit": "cm"}],
+        "inherited": {"latitude": 51.43, "operator.name": "Ruhrverband"}
+    }
+
+We can retrieve the nested information with the following code
+
+.. code-block:: python
+
+    from glom import Path
+    from hdhelpers.metadata import get_series_info
+
+    def main(*, series):
+        # entrypoint function for this component
+        # ***** DO NOT EDIT LINES ABOVE *****
+
+        manufacturer = get_series_info(series, "sensor.manufacturer")  # "Acme"
+        calibration_date = get_series_info(series, "sensor.calibration.date")  # "2026-03-01"
+        latitude = get_series_info(series, "inherited.latitude")  # 51.43, never the metric's own
+        firmware = get_series_info(series, "sensor.firmware")  # None, not provided
+
+        # any other glom spec, e.g. the content of each comment
+        comments = get_series_info(series, ("comments", ["content"]))
+        # ["Gauge maintenance", "Sensor replaced"]
+
+        # a key which itself contains dots requires a glom Path
+        operator = get_series_info(series, Path("operator.name"))  # "Ruhrverband"
+
+        ...
+
+For a MULTITSFRAME, ``get_metric_info(multitsframe, "sensor.manufacturer")`` provides the
+manufacturer keyed by metric accordingly.
+
+The fallbacks described above apply to the whole path, e.g. ``"sensor.manufacturer"`` is looked
+up in the metric first, then in its value dimension ``"value"`` and so on. A path which is not
+present yields None instead of an error. Note that a plain string like ``"operator.name"`` is
+always split at its dots, so it does not find the inherited property ``"operator.name"``.
+
+.. _glom: https://glom.readthedocs.io/
+
 
 How to use hdhelpers for plotting? (tbd)
 ========================================

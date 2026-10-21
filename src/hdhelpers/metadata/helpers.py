@@ -295,7 +295,7 @@ def get_metric_info(
 
     Args:
         multitsframe (pd.DataFrame): MTSF with metadata following the convention.
-        metric_info (str | Spec): Name of information to retrieve. Note that `metric_info` is interpreted as a glom Spec.
+        metric_info (str | Spec): Information to retrieve, interpreted as a glom Spec: e.g. a field name, a dotted path like "sensor.manufacturer" into sub dictionaries or any other glom Spec. See "How to query nested information?" in the first steps.
         include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata) as last resort, i.e. if neither the metric, its value dimension "value" nor "value_dimensions_shared" provide the information. Defaults to True.
 
     Returns:
@@ -315,6 +315,7 @@ def get_metric_info(
         ...            "external_id": "external_first",
         ...            "unit": "m",
         ...            "display_name": "first display name",
+        ...            "sensor": {"manufacturer": "Acme"},
         ...            "value_dimensions": [
         ...                {
         ...                    "column": "temp",
@@ -343,6 +344,16 @@ def get_metric_info(
         'external_second'
         >>> result["not-given"] is None
         True
+
+    A dotted path reaches into sub dictionaries:
+
+    .. doctest:: metadata.get_metric_info
+
+        >>> result = get_metric_info(multitsframe, "sensor.manufacturer")
+        >>> result["first"]
+        'Acme'
+        >>> result["second"] is None
+        True
     """
     check_dataframe(multitsframe)
     return defaultdict(
@@ -360,7 +371,7 @@ def get_series_info(
 
     Args:
         series (pd.Series): Series with metadata following the convention.
-        value_dim_info (str | Spec): Name of information to retrieve. Note that `value_dim_info` is interpreted as a glom Spec.
+        value_dim_info (str | Spec): Information to retrieve, interpreted as a glom Spec: e.g. a field name, a dotted path like "sensor.manufacturer" into sub dictionaries or any other glom Spec. See "How to query nested information?" in the first steps.
         include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata) as last resort, i.e. if neither the value dimension, the metric nor "value_dimensions_shared" provide the information. Defaults to True.
 
     Returns:
@@ -659,7 +670,7 @@ def get_singlets_info(
 
     Args:
         singletsframe (pd.DataFrame): STSF with metadata following the convention.
-        value_dim_info (str | Spec): Name of information to retrieve. Note that `value_dim_info` is interpreted as a glom Spec.
+        value_dim_info (str | Spec): Information to retrieve, interpreted as a glom Spec: e.g. a field name, a dotted path like "sensor.manufacturer" into sub dictionaries or any other glom Spec. See "How to query nested information?" in the first steps.
         include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata) as last resort, i.e. if neither the value dimension, the metric nor "value_dimensions_shared" provide the information. Defaults to True.
 
     Returns:
@@ -947,7 +958,7 @@ def get_singlets_metric_info(
 
     Args:
         singletsframe (pd.DataFrame): STSF with metadata following the convention.
-        metric_info (str | Spec): Name of information to retrieve. Note that `metric_info` is interpreted as a glom Spec.
+        metric_info (str | Spec): Information to retrieve, interpreted as a glom Spec: e.g. a field name, a dotted path like "sensor.manufacturer" into sub dictionaries or any other glom Spec. See "How to query nested information?" in the first steps.
         include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata) as last resort, i.e. if neither the metric, its value dimension "value" nor "value_dimensions_shared" provide the information. Defaults to True.
 
     Returns:

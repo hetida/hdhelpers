@@ -4,6 +4,7 @@
 - fix: (short) display names of metadata following the current convention treat null as missing and look up each field on the value dimension, the metric and "value_dimensions_shared" before falling back to the next field. So e.g. a display name of the metric wins over the name of its value dimension
 - fix: get_metric_info returns None entries instead of raising if the metadata contains no metric information
 - the series accessors use the only metric if "single_metric" is missing in the dataset metadata
+- documentation: the information requested from get_metric_info, get_singlets_metric_info, get_series_info and get_singlets_info is interpreted as a glom spec. New section "How to query nested information?" with examples for dotted paths into sub dictionaries, other glom specs and keys containing dots
 
 ## [0.0.9] - 2026-09-10
 - singletsframe support

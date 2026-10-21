@@ -60,6 +60,7 @@
 <li class="toctree-l1"><a class="reference internal" href="first_steps.html">First steps</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="first_steps.html#how-to-get-metadata-with-hdhelpers">How to get metadata with hdhelpers?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="first_steps.html#where-does-the-information-come-from">Where does the information come from?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="first_steps.html#how-to-query-nested-information">How to query nested information?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="first_steps.html#how-to-use-hdhelpers-for-plotting-tbd">How to use hdhelpers for plotting? (tbd)</a></li>
 </ul>
 </li>
@@ -174,7 +175,7 @@ to this function, the functions for dedicated information like <a class="referen
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p></li>
-<li><p><strong>metric_info</strong> (<em>str</em><em> | </em><em>Spec</em>) – Name of information to retrieve. Note that <cite>metric_info</cite> is interpreted as a glom Spec.</p></li>
+<li><p><strong>metric_info</strong> (<em>str</em><em> | </em><em>Spec</em>) – Information to retrieve, interpreted as a glom Spec: e.g. a field name, a dotted path like “sensor.manufacturer” into sub dictionaries or any other glom Spec. See “How to query nested information?” in the first steps.</p></li>
 <li><p><strong>include_inherited</strong> (<em>bool</em>) – Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under “inherited” in the metric metadata) as last resort, i.e. if neither the metric, its value dimension “value” nor “value_dimensions_shared” provide the information. Defaults to True.</p></li>
 </ul>
 </dd>
@@ -196,6 +197,7 @@ to this function, the functions for dedicated information like <a class="referen
 <span class="gp">... </span>           <span class="s2">&quot;external_id&quot;</span><span class="p">:</span> <span class="s2">&quot;external_first&quot;</span><span class="p">,</span>
 <span class="gp">... </span>           <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;m&quot;</span><span class="p">,</span>
 <span class="gp">... </span>           <span class="s2">&quot;display_name&quot;</span><span class="p">:</span> <span class="s2">&quot;first display name&quot;</span><span class="p">,</span>
+<span class="gp">... </span>           <span class="s2">&quot;sensor&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;manufacturer&quot;</span><span class="p">:</span> <span class="s2">&quot;Acme&quot;</span><span class="p">},</span>
 <span class="gp">... </span>           <span class="s2">&quot;value_dimensions&quot;</span><span class="p">:</span> <span class="p">[</span>
 <span class="gp">... </span>               <span class="p">{</span>
 <span class="gp">... </span>                   <span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;temp&quot;</span><span class="p">,</span>
@@ -223,6 +225,14 @@ to this function, the functions for dedicated information like <a class="referen
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;second&quot;</span><span class="p">]</span>
 <span class="go">&#39;external_second&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;not-given&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>A dotted path reaches into sub dictionaries:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">get_metric_info</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">,</span> <span class="s2">&quot;sensor.manufacturer&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;first&quot;</span><span class="p">]</span>
+<span class="go">&#39;Acme&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;second&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
 <span class="go">True</span>
 </pre></div>
 </div>
@@ -355,7 +365,7 @@ equivalent to information on the metric.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>series</strong> (<em>pd.Series</em>) – Series with metadata following the convention.</p></li>
-<li><p><strong>value_dim_info</strong> (<em>str</em><em> | </em><em>Spec</em>) – Name of information to retrieve. Note that <cite>value_dim_info</cite> is interpreted as a glom Spec.</p></li>
+<li><p><strong>value_dim_info</strong> (<em>str</em><em> | </em><em>Spec</em>) – Information to retrieve, interpreted as a glom Spec: e.g. a field name, a dotted path like “sensor.manufacturer” into sub dictionaries or any other glom Spec. See “How to query nested information?” in the first steps.</p></li>
 <li><p><strong>include_inherited</strong> (<em>bool</em>) – Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under “inherited” in the metric metadata) as last resort, i.e. if neither the value dimension, the metric nor “value_dimensions_shared” provide the information. Defaults to True.</p></li>
 </ul>
 </dd>
@@ -646,7 +656,7 @@ cannot be ambiguous in this respect.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p></li>
-<li><p><strong>value_dim_info</strong> (<em>str</em><em> | </em><em>Spec</em>) – Name of information to retrieve. Note that <cite>value_dim_info</cite> is interpreted as a glom Spec.</p></li>
+<li><p><strong>value_dim_info</strong> (<em>str</em><em> | </em><em>Spec</em>) – Information to retrieve, interpreted as a glom Spec: e.g. a field name, a dotted path like “sensor.manufacturer” into sub dictionaries or any other glom Spec. See “How to query nested information?” in the first steps.</p></li>
 <li><p><strong>include_inherited</strong> (<em>bool</em>) – Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under “inherited” in the metric metadata) as last resort, i.e. if neither the value dimension, the metric nor “value_dimensions_shared” provide the information. Defaults to True.</p></li>
 </ul>
 </dd>
@@ -733,7 +743,7 @@ by metric this directly returns the requested information for the one metric. Li
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p></li>
-<li><p><strong>metric_info</strong> (<em>str</em><em> | </em><em>Spec</em>) – Name of information to retrieve. Note that <cite>metric_info</cite> is interpreted as a glom Spec.</p></li>
+<li><p><strong>metric_info</strong> (<em>str</em><em> | </em><em>Spec</em>) – Information to retrieve, interpreted as a glom Spec: e.g. a field name, a dotted path like “sensor.manufacturer” into sub dictionaries or any other glom Spec. See “How to query nested information?” in the first steps.</p></li>
 <li><p><strong>include_inherited</strong> (<em>bool</em>) – Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under “inherited” in the metric metadata) as last resort, i.e. if neither the metric, its value dimension “value” nor “value_dimensions_shared” provide the information. Defaults to True.</p></li>
 </ul>
 </dd>
