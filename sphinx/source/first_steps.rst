@@ -5,50 +5,91 @@ First steps
 How to get metadata with hdhelpers?
 ===================================
 
-Let's say we want to retrieve the metadata of a timeseries.
+Let's say we want to retrieve the metadata of a timeseries, which follows the
+`hetida designer metadata conventions`_.
 In hetida designer this series can be represented as json for *direct provisioning*
 
 .. code-block:: json
 
     {
-        "__hd_wrapped_data_object__":"SERIES",
+        "__hd_wrapped_data_object__": "SERIES",
         "__metadata__": {
-            "single_metric_dataset_metadata": {
-                "ref_interval_end_timestamp":"2020-01-01T08:20:00.000Z",
-                "ref_interval_start_timestamp": "2020-01-01T08:10:00.000Z"
+            "dataset_metadata": {
+                "metric_key": "external_id",
+                "single_metric": "water.north.level",
+                "ref_interval_start_timestamp": "2020-01-01T08:10:00+00:00",
+                "ref_interval_end_timestamp": "2020-01-01T08:20:00+00:00",
+                "ref_interval_type": "closed"
             },
-            "single_metric_metadata": {
-                "structured_metadata": {
-                    "metric": {
-                        "short_display_name": "Water Level",
-                        "unit": "cm"
-                    }
+            "metrics": [
+                {
+                    "external_id": "water.north.level",
+                    "name": "Water level north",
+                    "short_display_name": "Water Level",
+                    "value_dimensions": [{"column": "value", "unit": "cm"}],
+                    "inherited": {"latitude": 51.43, "longitude": 7.58}
                 }
-            }
+            ]
         },
         "__data__": {
             "2020-01-01T08:10:00+00:00": 1,
             "2020-01-01T08:15:00+00:00": 2,
             "2020-01-01T08:16:00+00:00": 3,
-            "2020-01-01T08:17:00+00:00": 4,
+            "2020-01-01T08:17:00+00:00": 4
         }
     }
 
-We can retrieve the name and unit of the series with the following code
+We can retrieve the name, unit and latitude of the series with the following code
 
 .. code-block:: python
 
-    from hdhelpers.metadata import get_series_name, get_series_unit
+    from hdhelpers.metadata import get_series_info, get_series_name, get_series_unit
 
     def main(*, series):
         # entrypoint function for this component
         # ***** DO NOT EDIT LINES ABOVE *****
 
-        name = get_series_name(series)
-        unit = get_series_unit(series)
+        name = get_series_name(series)  # "Water level north"
+        unit = get_series_unit(series)  # "cm"
+        latitude = get_series_info(series, "latitude")  # 51.43, inherited from the hierarchy
 
         ...
 
+.. _hetida designer metadata conventions: https://hetida.github.io/hetida-designer/user_guide/attached_metadata/
+
+Where does the information come from?
+=====================================
+
+The metadata conventions allow to provide information on different levels. The functions
+look for it in the following order and use the first information which is not null. Information
+provided as null counts as missing.
+
+**Dedicated information** like the unit, name, display name, short display name and measurement
+(e.g. ``get_units``, ``get_series_unit``, ``get_singlets_units``) is looked up per value dimension:
+
+1. in the value dimension itself,
+2. only for the value dimension ``"value"``: in the metric,
+3. in ``"value_dimensions_shared"``.
+
+For (short) display names, each field is looked up on all of these levels before falling back to
+the next field: short display name, then display name, then name. So e.g. a display name provided
+for the metric wins over the name of its value dimension.
+
+**Other information** is looked up by ``get_metric_info`` and ``get_singlets_metric_info``
+
+1. in the metric itself,
+2. in its value dimension ``"value"``,
+3. in ``"value_dimensions_shared"``,
+4. in the properties the metric inherits from objects higher up in an asset hierarchy (given under
+   ``"inherited"`` in the metric metadata), e.g. the latitude of the plant a sensor belongs to.
+
+``get_series_info`` and ``get_singlets_info`` use the order of the dedicated information, followed
+by the inherited properties as last resort.
+
+The inherited properties can be switched off via the keyword argument ``include_inherited=False``.
+In contrast, the functions for dedicated information do not use them by default, since an
+inherited property with the same label usually does not describe the metric itself, e.g. a
+property "unit" of a plant. Pass ``include_inherited=True`` to use them as last resort anyway.
 
 
 How to use hdhelpers for plotting? (tbd)
@@ -78,10 +119,10 @@ Our component code might look like this to plot the timeseries accordingly:
 
         fig = go.Figure([go.Scatter(x=series.index, y=series.values, marker={"color": resolve_color("ki.vision")})])
 
-        start, end = get_queried_interval(series=series)
+        start, end = get_queried_interval(series)
         fig.update_xaxes(range=(start, end))
 
-        full_title = get_series_name(series=series, default_title="Level")
+        full_title = get_series_name(series) or "Level"
         fig.update_layout(yaxis_title=full_title)
 
         set_dt_ticks(fig)
