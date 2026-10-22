@@ -1,7 +1,4 @@
-from collections import defaultdict
-from collections.abc import Callable
-
-from glom import A, Check, Coalesce, Iter, Merge, S, Spec, T
+from glom import Check, Coalesce, Iter, Merge, Spec, T
 
 # The metadatum specs of the individual accessors, including their fallback chains.
 # Defined once here and shared by the MultiTSFrame and the SingleTSFrame accessors, which
@@ -9,12 +6,30 @@ from glom import A, Check, Coalesce, Iter, Merge, S, Spec, T
 UNIT: Spec = "unit"
 MEASUREMENT: Spec = "measurement"
 NAME: Spec = Coalesce("name", default=None)
-DISPLAY_NAME: Spec = Coalesce("display_name", "name", default=None)
-SHORT_DISPLAY_NAME: Spec = Coalesce("short_display_name", "display_name", "name", default=None)
+
+# The fallback chains of the display names. For metadata following the current metadata
+# convention, each field is looked up on all levels (value dimension, metric, shared value
+# dimensions) before the next field is tried, see _current_convention.value_dimension_info.
+# DISPLAY_NAME and SHORT_DISPLAY_NAME are the corresponding specs for older metadata structures.
+DISPLAY_NAME_FIELDS = ("display_name", "name")
+SHORT_DISPLAY_NAME_FIELDS = ("short_display_name", *DISPLAY_NAME_FIELDS)
+DISPLAY_NAME: Spec = Coalesce(*DISPLAY_NAME_FIELDS, default=None)
+SHORT_DISPLAY_NAME: Spec = Coalesce(*SHORT_DISPLAY_NAME_FIELDS, default=None)
+
+# Key of the dict in a metric object holding the properties the metric inherits from objects
+# higher up in an asset hierarchy, e.g. the latitude of the plant a sensor belongs to.
+INHERITED = "inherited"
+
+# Field of a metric and of the dataset metadata: the time zone the timeseries should be
+# evaluated in by default, e.g. for bucketing days when aggregating.
+DEFAULT_TIMEZONE = "default_timezone"
 
 
 def by_metric_key_by_val_dimension(metadatum_key: str | Spec) -> Spec:
-    """Providesglom spec that extracts a metadatum by metric by value dimension
+    """Provides glom spec that extracts a metadatum by metric by value dimension
+
+    Only for older metadata structures, metadata following the current metadata convention is
+    handled by _current_convention.
 
     The generated glom spec returns a defaultdict of defaultdicts:
         {metric_key: {value_dimension_column_name: metadatum_value}}
@@ -30,7 +45,6 @@ def by_metric_key_by_val_dimension(metadatum_key: str | Spec) -> Spec:
     metadatum_key can also be any glom spec.
     """
     return Coalesce(
-        _spec_new_convention(metadatum_key),
         _spec_platform_convention_series_metric(metadatum_key),
         _spec_platform_convention_series_value_dim(metadatum_key),
         _spec_older_convention1_metric(metadatum_key),
@@ -38,111 +52,6 @@ def by_metric_key_by_val_dimension(metadatum_key: str | Spec) -> Spec:
         _spec_older_convention2(metadatum_key),
         _spec_older_convention4(metadatum_key),
         default={},
-    )
-
-
-def _spec_metric_key() -> Spec:
-    """Which key of the metric objects identifies a metric
-
-    Per the metadata conventions "metric_key" is optional and defaults to "id". Note that
-    it therefore cannot act as the discriminator between the current and the older metadata
-    conventions - that role belongs to "metrics" being a list, see
-    _spec_actual_per_metric_per_value_dimensions.
-    """
-    return (Coalesce("dataset_metadata.metric_key", default="id"), A.globals.metric_key)
-
-
-def _spec_defaults_by_value_dimension(metadatum_key: str | Spec) -> Spec:
-    return Coalesce(
-        (
-            Coalesce("value_dimensions_shared", default=[]),
-            Check(instance_of=list),
-            _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
-                "column", Coalesce(metadatum_key, default=None)
-            ),
-        ),
-        default={},
-    )
-
-
-def _spec_defaults_by_metric(metadatum_key: str | Spec) -> Spec:
-    return Coalesce(
-        (
-            "metrics",
-            Check(instance_of=list),
-            _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
-                S.globals.metric_key,
-                Coalesce(metadatum_key, default=None),
-                key_as_value=True,
-            ),
-        ),
-        default={},
-    )
-
-
-def _spec_actual_per_metric_per_value_dimensions(metadatum_key: str | Spec) -> Spec:
-    """Deliberately without a default: this is what discriminates the metadata conventions
-
-    If "metrics" is absent or is not a list, this spec fails, which makes the enclosing
-    _spec_new_convention fail, so that by_metric_key_by_val_dimension falls through to the
-    older conventions.
-    """
-    return (
-        "metrics",
-        Check(instance_of=list),
-        _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
-            S.globals.metric_key,
-            (
-                Coalesce("value_dimensions", default={}),
-                _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
-                    "column",
-                    Coalesce(metadatum_key, default=None),
-                    add_keys_with_none_values=["value"],
-                ),
-            ),
-            key_as_value=True,
-        ),
-    )
-
-
-def _spec_new_convention(metadatum_key: str | Spec) -> Spec:
-    return (
-        {  # first gather information at different locations in metadata in a dict
-            "metric_key": _spec_metric_key(),
-            "defaults_by_value_dimension": _spec_defaults_by_value_dimension(metadatum_key),
-            "defaults_by_metric": _spec_defaults_by_metric(metadatum_key),
-            "actual_per_metric_per_value_dimensions": _spec_actual_per_metric_per_value_dimensions(
-                metadatum_key
-            ),
-        },
-        lambda x: defaultdict(
-            lambda: defaultdict(lambda: None, {}),
-            {  # combine dicts with gathered information / falling back to defaults
-                metric: defaultdict(
-                    lambda: None,
-                    {
-                        value_dim: info
-                        if info is not None  # prio 1: use, if explicitely provided
-                        else (
-                            x["defaults_by_metric"][metric]
-                            if (
-                                value_dim == "value"
-                                and x["defaults_by_metric"].get(metric) is not None
-                            )  # prio 2: only for "value" value dim: possibly use from metric
-                            else (
-                                x["defaults_by_value_dimension"].get(
-                                    value_dim, None
-                                )  # prio 3: from global "value_dimensions_shared"
-                            )
-                        )
-                        for value_dim, info in _update_dict_and_return_it(
-                            x["defaults_by_value_dimension"].copy(), info_by_val_dim
-                        ).items()
-                    },
-                )
-                for metric, info_by_val_dim in x["actual_per_metric_per_value_dimensions"].items()
-            },
-        ),
     )
 
 
@@ -215,22 +124,12 @@ def _spec_older_convention4(metadatum_key: str | Spec) -> Spec:
 
 
 def spec_by_metric_key(metadatum_key: str | Spec) -> Spec:
+    """Provides glom spec that extracts a metadatum from the metric objects, keyed by metric
+
+    Only for older metadata structures, metadata following the current metadata convention is
+    handled by _current_convention.
+    """
     return Coalesce(
-        (  # current metdadata convention
-            {
-                "metric_key": _spec_metric_key(),
-                "by_metric": (
-                    "metrics",
-                    Check(instance_of=list),
-                    _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
-                        S.globals.metric_key,
-                        Coalesce(metadatum_key, default=None),
-                        key_as_value=True,
-                    ),
-                ),
-            },
-            lambda x: defaultdict(lambda: None, x["by_metric"]),
-        ),
         (  # some older, simpler metadata structure
             "by_metric",
             _glom_dict_with_keys_of_current_dict_and_values_something_deeper_nested(
@@ -246,64 +145,8 @@ def spec_by_metric_key(metadatum_key: str | Spec) -> Spec:
     )
 
 
-def _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result(
-    key_spec: Spec,
-    value_spec: Spec,
-    add_keys_with_none_values: list[str] | None = None,
-    default_dict_func: Callable | None = None,
-    continuation_spec: Spec | None = None,
-    key_as_value: bool = False,
-) -> Spec:
-    """Build dict from an iterable
-
-    Spec to convert an iterable of objects to a dict using one of their fields
-    (or something deeper) as keys and something else as values.
-
-    The key something and the value something can be arbitrary specs that are applyable
-    on each item.
-
-    The resulting glom spec first produces a dictionary which keys being extracted from
-    each element of the iterable using key_spec and values using value_spec.
-
-    If given it then proceeds on the resulting object using the continuation_spec.
-
-    add_keys_with_none_values allows to add keys even if they do not occur
-    with a default value of None.
-
-    .. doctest::
-
-        >>> from hdhelpers.metadata._specs import _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result
-        >>> from glom import glom
-        >>> data = {
-        ...    "some": [
-        ...    {"id": "42", "name": "some_name", "sub": {"unit": "l"}},
-        ...    {"id": "53", "name": "another", "sub": {"unit": "m"}},]
-        ... }
-        >>> result = glom(data, ("some", _build_dict_from_iterable_from_key_and_subspec_and_then_proceed_on_result("id", "sub.unit")))
-        >>> result["42"]
-        'l'
-        >>> result["53"]
-        'm'
-    """
-
-    if add_keys_with_none_values is None:
-        add_keys_with_none_values = []
-
-    start_dict = dict.fromkeys(add_keys_with_none_values, None)
-
-    if default_dict_func is not None:
-        start_dict = defaultdict(default_dict_func, start_dict)
-
-    return (
-        [{"key": key_spec if not key_as_value else T[key_spec], "value": value_spec}],
-        [lambda x: (x.get("key"), x.get("value"))],
-        dict,
-        lambda x: _update_dict_and_return_it(start_dict.copy(), x),
-    ) + ((continuation_spec,) if continuation_spec is not None else ())
-
-
 def _glom_dict_with_keys_of_current_dict_and_values_something_deeper_nested(
-    deeper_glom_spec: Spec, add_keys_with_none_values: list[str] | None = None
+    deeper_glom_spec: Spec,
 ) -> Spec:
     """Create dicts with keys from current dict and values from deeper in their value objects
 
@@ -311,9 +154,6 @@ def _glom_dict_with_keys_of_current_dict_and_values_something_deeper_nested(
     It uses https://glom.readthedocs.io/en/latest/tutorial.html#data-driven-assignment.
 
     deeper_glom_spec is the spec to get to the deeper values in each value object.
-
-    add_keys_with_none_values allows to add keys even if they do not occur
-    with a default value of None.
 
     .. doctest::
 
@@ -353,23 +193,9 @@ def _glom_dict_with_keys_of_current_dict_and_values_something_deeper_nested(
         ... )
         {'item1': 'kg', 'item2': 'meters', 'item3': 'liters'}
     """
-    if add_keys_with_none_values is None:
-        add_keys_with_none_values = []
-
-    start_dict = dict.fromkeys(add_keys_with_none_values, None)
-
+    # T is a stand-in for the target: everything done to T is recorded and executed by glom
     return (
         T.items(),  # treat it as list of (key, value) tuples
         Iter({T[0]: (T[1], deeper_glom_spec)}),
         Merge(),
-        lambda x: _update_dict_and_return_it(start_dict.copy(), x),
     )
-
-
-# info on T: Basically, think of T as your data’s stunt double. Everything that you do to T will be recorded and executed during the glom() call.
-# info to S: On its surface, the glom scope is a dictionary of extra values that can be passed in to the top-level glom call. These values can then be addressed with the S object, which behaves similarly to the T object.
-# info on A: Any keyword arguments to the S will have their values evaluated as a spec, with the result being saved to the keyword argument name in the scope. When only the target is being assigned, you can use the A as a shortcut
-def _update_dict_and_return_it(start_dict: dict, updated_values_dict: dict) -> dict:
-    """Update a dict and return it"""
-    start_dict.update(updated_values_dict)
-    return start_dict
