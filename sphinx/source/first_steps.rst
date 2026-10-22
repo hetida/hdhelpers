@@ -91,6 +91,11 @@ In contrast, the functions for dedicated information do not use them by default,
 inherited property with the same label usually does not describe the metric itself, e.g. a
 property "unit" of a plant. Pass ``include_inherited=True`` to use them as last resort anyway.
 
+Entries which do not adhere to the conventions are skipped: metrics which are no objects or
+whose field named by the metric key is no string, and value dimensions which are no objects or
+whose column is no string. ``"value_dimensions"`` and ``"value_dimensions_shared"`` which are no
+lists count as empty, a metric key which is no string as missing, i.e. ``"id"`` is used.
+
 How to query nested information?
 ================================
 

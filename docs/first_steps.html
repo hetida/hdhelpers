@@ -120,6 +120,10 @@ by the inherited properties as last resort.</p>
 In contrast, the functions for dedicated information do not use them by default, since an
 inherited property with the same label usually does not describe the metric itself, e.g. a
 property “unit” of a plant. Pass <code class="docutils literal notranslate"><span class="pre">include_inherited=True</span></code> to use them as last resort anyway.</p>
+<p>Entries which do not adhere to the conventions are skipped: metrics which are no objects or
+whose field named by the metric key is no string, and value dimensions which are no objects or
+whose column is no string. <code class="docutils literal notranslate"><span class="pre">&quot;value_dimensions&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;value_dimensions_shared&quot;</span></code> which are no
+lists count as empty, a metric key which is no string as missing, i.e. <code class="docutils literal notranslate"><span class="pre">&quot;id&quot;</span></code> is used.</p>
 </section>
 <section id="how-to-query-nested-information">
 <h2>How to query nested information?<a class="headerlink" href="#how-to-query-nested-information" title="Link to this heading">¶</a></h2>

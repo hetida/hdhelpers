@@ -17,12 +17,12 @@ import pandas as pd
 from glom import Coalesce, Spec, glom
 
 import hdhelpers.metadata._specs as _specs
+from hdhelpers.metadata._current_convention import follows_current_convention
 from hdhelpers.metadata._helpers import (
     check_dataframe,
     check_series,
     check_series_or_dataframe,
     extract_from_metadata,
-    follows_current_convention,
     get_value_dimension_info,
     metric_info_by_metric,
     singlets_metric_info,
