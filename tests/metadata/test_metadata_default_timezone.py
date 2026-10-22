@@ -98,6 +98,21 @@ def test_default_timezone_does_not_fall_back_to_other_levels():
         ),
         # without single_metric the only metric is used
         ({"metrics": [{"id": "a", "default_timezone": "UTC"}]}, "UTC"),
+        # but not if it is another one than the single metric
+        (
+            {
+                "dataset_metadata": {"single_metric": "a", "default_timezone": "Europe/Berlin"},
+                "metrics": [{"id": "b", "default_timezone": "America/New_York"}],
+            },
+            "Europe/Berlin",
+        ),
+        (
+            {
+                "dataset_metadata": {"single_metric": "a"},
+                "metrics": [{"id": "b", "default_timezone": "America/New_York"}],
+            },
+            None,
+        ),
         # without metric metadata the dataset metadata still applies
         ({"dataset_metadata": {"default_timezone": "Europe/Berlin"}}, "Europe/Berlin"),
         (

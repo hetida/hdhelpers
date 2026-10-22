@@ -426,13 +426,16 @@ def get_series_info(
 def _series_value(info_by_metric: dict, series: pd.Series) -> Any:
     """Info of the value dimension "value" of the metric of a Series
 
-    The metric is identified via "single_metric" in "dataset_metadata", defaulting to "series"
-    as used by older metadata structures. If it is not found but exactly one metric is present,
-    that one is used, since a Series cannot be ambiguous in this respect.
+    The metric is identified via "single_metric" in "dataset_metadata". If that is missing, the
+    metric "series" as used by older metadata structures is used or else the only metric
+    present, since a Series cannot be ambiguous in this respect. An identified metric which is
+    not present yields None, since the only metric present is another one then.
     """
-    series_metric_key = extract_from_metadata(series.attrs, key="single_metric", default="series")
-    if series_metric_key in info_by_metric:
-        return info_by_metric[series_metric_key].get("value")
+    series_metric_key = extract_from_metadata(series.attrs, key="single_metric")
+    if series_metric_key is not None:
+        return info_by_metric.get(series_metric_key, {}).get("value")
+    if "series" in info_by_metric:
+        return info_by_metric["series"].get("value")
     if len(info_by_metric) == 1:
         return next(iter(info_by_metric.values())).get("value")
     return None

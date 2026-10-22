@@ -209,6 +209,18 @@ def test_series_without_single_metric_uses_its_only_metric():
     assert get_series_display_name(series(attrs)) == "Water-lvl-north"
 
 
+def test_single_metric_is_not_replaced_by_another_only_metric():
+    """If the metadata lacks the single metric, the only metric present is another one"""
+    attrs = deepcopy(platform_series_attrs)
+    attrs["dataset_metadata"]["single_metric"] = "another signal"
+
+    assert get_series_unit(series(attrs)) is None
+    assert get_series_display_name(series(attrs)) is None
+    assert get_singlets_units(frame(attrs))["value"] is None
+    assert get_singlets_display_names(frame(attrs))["value"] is None
+    assert get_singlets_metric_info(frame(attrs), "name") is None
+
+
 @pytest.mark.parametrize(
     "attrs",
     [{}, {"dataset_metadata": {"metric_key": "id"}}, {"metrics": None}],

@@ -108,11 +108,12 @@ def _select_single_metric(info_by_metric: dict, attrs: Any, empty: Any) -> Any:
 
     The single metric is identified via _SINGLE_METRIC_KEY in "dataset_metadata". If that is
     missing but exactly one metric is present, that one is used, since a SingleTSFrame or
-    Series cannot be ambiguous in this respect. Otherwise `empty` is returned.
+    Series cannot be ambiguous in this respect. Otherwise `empty` is returned - also if the
+    identified metric is not present, since the only metric present is another one then.
     """
     metric = extract_from_metadata(attrs, key=_SINGLE_METRIC_KEY)
-    if metric is not None and metric in info_by_metric:
-        return info_by_metric[metric]
+    if metric is not None:
+        return info_by_metric.get(metric, empty)
 
     if len(info_by_metric) == 1:
         return next(iter(info_by_metric.values()))
