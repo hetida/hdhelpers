@@ -6,8 +6,15 @@ from glom import Check, Coalesce, Iter, Merge, Spec, T
 UNIT: Spec = "unit"
 MEASUREMENT: Spec = "measurement"
 NAME: Spec = Coalesce("name", default=None)
-DISPLAY_NAME: Spec = Coalesce("display_name", "name", default=None)
-SHORT_DISPLAY_NAME: Spec = Coalesce("short_display_name", "display_name", "name", default=None)
+
+# The fallback chains of the display names. For metadata following the current metadata
+# convention, each field is looked up on all levels (value dimension, metric, shared value
+# dimensions) before the next field is tried, see _current_convention.value_dimension_info.
+# DISPLAY_NAME and SHORT_DISPLAY_NAME are the corresponding specs for older metadata structures.
+DISPLAY_NAME_FIELDS = ("display_name", "name")
+SHORT_DISPLAY_NAME_FIELDS = ("short_display_name", *DISPLAY_NAME_FIELDS)
+DISPLAY_NAME: Spec = Coalesce(*DISPLAY_NAME_FIELDS, default=None)
+SHORT_DISPLAY_NAME: Spec = Coalesce(*SHORT_DISPLAY_NAME_FIELDS, default=None)
 
 # Key of the dict in a metric object holding the properties the metric inherits from objects
 # higher up in an asset hierarchy, e.g. the latitude of the plant a sensor belongs to.
@@ -16,12 +23,6 @@ INHERITED = "inherited"
 # Field of a metric and of the dataset metadata: the time zone the timeseries should be
 # evaluated in by default, e.g. for bucketing days when aggregating.
 DEFAULT_TIMEZONE = "default_timezone"
-
-# The fallback chains of the display names for metadata following the current metadata
-# convention: Each field is looked up on all levels (value dimension, metric, shared value
-# dimensions) before the next field is tried, see _current_convention.value_dimension_info.
-DISPLAY_NAME_FIELDS = ("display_name", "name")
-SHORT_DISPLAY_NAME_FIELDS = ("short_display_name", "display_name", "name")
 
 
 def by_metric_key_by_val_dimension(metadatum_key: str | Spec) -> Spec:
@@ -145,7 +146,7 @@ def spec_by_metric_key(metadatum_key: str | Spec) -> Spec:
 
 
 def _glom_dict_with_keys_of_current_dict_and_values_something_deeper_nested(
-    deeper_glom_spec: Spec, add_keys_with_none_values: list[str] | None = None
+    deeper_glom_spec: Spec,
 ) -> Spec:
     """Create dicts with keys from current dict and values from deeper in their value objects
 
@@ -153,9 +154,6 @@ def _glom_dict_with_keys_of_current_dict_and_values_something_deeper_nested(
     It uses https://glom.readthedocs.io/en/latest/tutorial.html#data-driven-assignment.
 
     deeper_glom_spec is the spec to get to the deeper values in each value object.
-
-    add_keys_with_none_values allows to add keys even if they do not occur
-    with a default value of None.
 
     .. doctest::
 
@@ -195,23 +193,9 @@ def _glom_dict_with_keys_of_current_dict_and_values_something_deeper_nested(
         ... )
         {'item1': 'kg', 'item2': 'meters', 'item3': 'liters'}
     """
-    if add_keys_with_none_values is None:
-        add_keys_with_none_values = []
-
-    start_dict = dict.fromkeys(add_keys_with_none_values, None)
-
+    # T is a stand-in for the target: everything done to T is recorded and executed by glom
     return (
         T.items(),  # treat it as list of (key, value) tuples
         Iter({T[0]: (T[1], deeper_glom_spec)}),
         Merge(),
-        lambda x: _update_dict_and_return_it(start_dict.copy(), x),
     )
-
-
-# info on T: Basically, think of T as your data’s stunt double. Everything that you do to T will be recorded and executed during the glom() call.
-# info to S: On its surface, the glom scope is a dictionary of extra values that can be passed in to the top-level glom call. These values can then be addressed with the S object, which behaves similarly to the T object.
-# info on A: Any keyword arguments to the S will have their values evaluated as a spec, with the result being saved to the keyword argument name in the scope. When only the target is being assigned, you can use the A as a shortcut
-def _update_dict_and_return_it(start_dict: dict, updated_values_dict: dict) -> dict:
-    """Update a dict and return it"""
-    start_dict.update(updated_values_dict)
-    return start_dict

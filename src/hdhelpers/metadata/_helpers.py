@@ -1,4 +1,5 @@
 from collections import defaultdict
+from collections.abc import Callable, Collection
 from typing import Any, cast
 
 import pandas as pd
@@ -31,6 +32,16 @@ def spec_not_none(spec: str | Spec) -> Spec:
 
 def extract_from_metadata(metadata: Any, key: str, default: str | None = None) -> Any:
     return glom(metadata, Coalesce(f"dataset_metadata.{key}", default=default))
+
+
+def _legacy_value_dimension_info(
+    attrs: Any, value_dim_info: str | Spec
+) -> defaultdict[str, defaultdict[str, Any]]:
+    """get_value_dimension_info for older metadata structures"""
+    return defaultdict(
+        lambda: defaultdict(lambda: None),
+        glom(attrs, _specs.by_metric_key_by_val_dimension(value_dim_info)),
+    )
 
 
 def get_value_dimension_info(
@@ -71,15 +82,12 @@ def get_value_dimension_info(
         return _current_convention.value_dimension_info(
             gathered, [value_dim_info], include_inherited
         )
-    return defaultdict(
-        lambda: defaultdict(lambda: None),
-        glom(multitsframe.attrs, _specs.by_metric_key_by_val_dimension(value_dim_info)),
-    )
+    return _legacy_value_dimension_info(multitsframe.attrs, value_dim_info)
 
 
 def value_dimension_info_with_fallbacks(
     data: pd.DataFrame | pd.Series,
-    fields: tuple[str, ...],
+    fields: tuple[str | Spec, ...],
     legacy_spec: Spec,
     include_inherited: bool = False,
 ) -> defaultdict[str, defaultdict[str, Any]]:
@@ -96,29 +104,70 @@ def value_dimension_info_with_fallbacks(
     """
     gathered = _current_convention.gather(data.attrs)
     if gathered is None:
-        return get_value_dimension_info(data, legacy_spec, include_inherited)
+        return _legacy_value_dimension_info(data.attrs, legacy_spec)
     return _current_convention.value_dimension_info(gathered, fields, include_inherited)
 
 
 _SINGLE_METRIC_KEY = "single_metric"
 
 
-def _select_single_metric(info_by_metric: dict, attrs: Any, empty: Any) -> Any:
-    """Pick the entry of the one metric of a SingleTSFrame or Series out of a by-metric mapping
-
-    The single metric is identified via _SINGLE_METRIC_KEY in "dataset_metadata". If that is
-    missing but exactly one metric is present, that one is used, since a SingleTSFrame or
-    Series cannot be ambiguous in this respect. Otherwise `empty` is returned - also if the
-    identified metric is not present, since the only metric present is another one then.
-    """
+def _single_metric_name(attrs: Any) -> str | None:
+    """The metric named by _SINGLE_METRIC_KEY in "dataset_metadata", if it is a string"""
     metric = extract_from_metadata(attrs, key=_SINGLE_METRIC_KEY)
+    return metric if isinstance(metric, str) else None
+
+
+def _single_metric(attrs: Any, metrics: Collection[str]) -> str | None:
+    """The single metric of a SingleTSFrame or Series among the metrics present
+
+    The single metric is identified via _SINGLE_METRIC_KEY in "dataset_metadata", values which
+    are no strings count as missing. If it is missing but exactly one metric is present, that
+    one is used, since a SingleTSFrame or Series cannot be ambiguous in this respect. Otherwise
+    None is returned - also if the identified metric is not present, since the only metric
+    present is another one then.
+    """
+    metric = _single_metric_name(attrs)
     if metric is not None:
-        return info_by_metric.get(metric, empty)
+        return metric if metric in metrics else None
 
-    if len(info_by_metric) == 1:
-        return next(iter(info_by_metric.values()))
+    if len(metrics) == 1:
+        return next(iter(metrics))
 
-    return empty
+    return None
+
+
+def _select_single_metric(info_by_metric: dict, attrs: Any, empty: Any) -> Any:
+    """Pick the entry of the single metric (see _single_metric) out of a by-metric mapping
+
+    `empty` is returned if the single metric cannot be determined.
+    """
+    metric = _single_metric(attrs, info_by_metric)
+    return empty if metric is None else info_by_metric[metric]
+
+
+def _single_metric_info(
+    attrs: Any,
+    current: Callable[[_current_convention.GatheredMetadata], dict[str, Any]],
+    legacy: Callable[[], dict[str, Any]],
+    empty: Any,
+) -> Any:
+    """Information of the single metric of a SingleTSFrame or Series (see _single_metric)
+
+    For metadata following the current metadata convention, `current` gets the gathered metadata
+    of the single metric only, so that no information of the other metrics is resolved - of
+    which there may be many, e.g. for a Series taken from a MultiTSFrame. For older metadata
+    structures, the entry of the single metric is picked out of the result of `legacy`.
+
+    `empty` is returned if the single metric cannot be determined.
+    """
+    gathered = _current_convention.gather(attrs)
+    if gathered is None:
+        return _select_single_metric(legacy(), attrs, empty)
+
+    metric = _single_metric(attrs, gathered.metrics)
+    if metric is None:
+        return empty
+    return current(_current_convention.restricted_to(gathered, metric))[metric]
 
 
 def singlets_value_dimension_info(
@@ -137,16 +186,14 @@ def singlets_value_dimension_info(
     What is extracted per value dimension is exactly what get_value_dimension_info extracts -
     only the metric level is collapsed away.
     """
-    return _select_single_metric(
-        get_value_dimension_info(singletsframe, value_dim_info, include_inherited),
-        singletsframe.attrs,
-        empty=defaultdict(lambda: None),
+    return singlets_value_dimension_info_with_fallbacks(
+        singletsframe, (value_dim_info,), value_dim_info, include_inherited
     )
 
 
 def singlets_value_dimension_info_with_fallbacks(
     singletsframe: pd.DataFrame,
-    fields: tuple[str, ...],
+    fields: tuple[str | Spec, ...],
     legacy_spec: Spec,
     include_inherited: bool = False,
 ) -> defaultdict[str, Any]:
@@ -154,11 +201,53 @@ def singlets_value_dimension_info_with_fallbacks(
 
     Like singlets_value_dimension_info, the result is keyed by value dimension only.
     """
-    return _select_single_metric(
-        value_dimension_info_with_fallbacks(singletsframe, fields, legacy_spec, include_inherited),
+    return _single_metric_info(
         singletsframe.attrs,
+        lambda gathered: _current_convention.value_dimension_info(
+            gathered, fields, include_inherited
+        ),
+        lambda: _legacy_value_dimension_info(singletsframe.attrs, legacy_spec),
         empty=defaultdict(lambda: None),
     )
+
+
+# the metric of a Series in older metadata structures, used if "single_metric" is missing
+_LEGACY_SERIES_METRIC = "series"
+
+
+def series_value_info(
+    series: pd.Series, fields: tuple[str | Spec, ...], legacy_spec: Spec, include_inherited: bool
+) -> Any:
+    """Info of the value dimension "value" of the single metric of a Series
+
+    Each field is looked up as described in value_dimension_info_with_fallbacks. The single
+    metric is determined like for SingleTSFrames, see singlets_value_dimension_info. Only older
+    metadata structures name the metric of a Series "series", which is used if "single_metric"
+    is missing.
+    """
+
+    def legacy() -> dict[str, Any]:
+        info_by_metric = _legacy_value_dimension_info(series.attrs, legacy_spec)
+        if _single_metric_name(series.attrs) is None and _LEGACY_SERIES_METRIC in info_by_metric:
+            return {_LEGACY_SERIES_METRIC: info_by_metric[_LEGACY_SERIES_METRIC]}
+        return info_by_metric
+
+    return _single_metric_info(
+        series.attrs,
+        lambda gathered: _current_convention.value_dimension_info(
+            gathered, fields, include_inherited
+        ),
+        legacy,
+        empty={},
+    ).get("value")
+
+
+def _legacy_metric_info(attrs: Any, metric_info: str | Spec) -> dict[str, Any]:
+    """metric_info_by_metric for older metadata structures"""
+    try:
+        return glom(attrs, _specs.spec_by_metric_key(metric_info))  # type: ignore[no-any-return]
+    except CoalesceError:  # no metric metadata present at all
+        return {}
 
 
 def metric_info_by_metric(
@@ -178,11 +267,7 @@ def metric_info_by_metric(
     gathered = _current_convention.gather(data.attrs)
     if gathered is not None:
         return _current_convention.metric_info(gathered, metric_info, include_inherited)
-
-    try:
-        return glom(data.attrs, _specs.spec_by_metric_key(metric_info))  # type: ignore[no-any-return]
-    except CoalesceError:  # no metric metadata present at all
-        return {}
+    return _legacy_metric_info(data.attrs, metric_info)
 
 
 def singlets_metric_info(
@@ -195,9 +280,10 @@ def singlets_metric_info(
     be determined - which includes the case of absent metric metadata, since components should
     not require metadata (see the metadata conventions documentation).
     """
-    return _select_single_metric(
-        metric_info_by_metric(singletsframe, metric_info, include_inherited),
+    return _single_metric_info(
         singletsframe.attrs,
+        lambda gathered: _current_convention.metric_info(gathered, metric_info, include_inherited),
+        lambda: _legacy_metric_info(singletsframe.attrs, metric_info),
         empty=None,
     )
 
@@ -210,16 +296,9 @@ def _dataset_default_timezone(attrs: Any) -> str | None:
     return _string_or_none(extract_from_metadata(attrs, key=_specs.DEFAULT_TIMEZONE))
 
 
-def default_timezone_by_metric(data: pd.DataFrame | pd.Series) -> defaultdict[str, str | None]:
-    """The default time zone of each metric, falling back to the one of the dataset metadata
-
-    As specified by the metadata conventions, the default time zone of a metric only falls back
-    to the one of the dataset metadata, not to its value dimensions or inherited properties.
-    The default of the returned defaultdict is the one of the dataset metadata, since it applies
-    to all metrics without their own. Values which are no (non-empty) strings count as missing.
-    """
-    dataset_timezone = _dataset_default_timezone(data.attrs)
-    gathered = _current_convention.gather(data.attrs)
+def _default_timezones(
+    gathered: _current_convention.GatheredMetadata | None, dataset_timezone: str | None
+) -> defaultdict[str, str | None]:
     own_timezones = (
         {}
         if gathered is None
@@ -234,16 +313,31 @@ def default_timezone_by_metric(data: pd.DataFrame | pd.Series) -> defaultdict[st
     )
 
 
+def default_timezone_by_metric(data: pd.DataFrame | pd.Series) -> defaultdict[str, str | None]:
+    """The default time zone of each metric, falling back to the one of the dataset metadata
+
+    As specified by the metadata conventions, the default time zone of a metric only falls back
+    to the one of the dataset metadata, not to its value dimensions or inherited properties.
+    The default of the returned defaultdict is the one of the dataset metadata, since it applies
+    to all metrics without their own. Values which are no (non-empty) strings count as missing.
+    """
+    return _default_timezones(
+        _current_convention.gather(data.attrs), _dataset_default_timezone(data.attrs)
+    )
+
+
 def single_metric_default_timezone(data: pd.DataFrame | pd.Series) -> str | None:
     """The default time zone of the single metric of a Series or SingleTSFrame
 
     Falls back to the one of the dataset metadata, also if the single metric is not found.
     """
+    dataset_timezone = _dataset_default_timezone(data.attrs)
     return cast(
         str | None,
-        _select_single_metric(
-            default_timezone_by_metric(data),
+        _single_metric_info(
             data.attrs,
-            empty=_dataset_default_timezone(data.attrs),
+            lambda gathered: _default_timezones(gathered, dataset_timezone),
+            dict,  # older metadata structures provide no default time zones of the metrics
+            empty=dataset_timezone,
         ),
     )

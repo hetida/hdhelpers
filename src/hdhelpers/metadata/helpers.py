@@ -17,7 +17,6 @@ import pandas as pd
 from glom import Coalesce, Spec, glom
 
 import hdhelpers.metadata._specs as _specs
-from hdhelpers.metadata._current_convention import follows_current_convention
 from hdhelpers.metadata._helpers import (
     check_dataframe,
     check_series,
@@ -26,6 +25,7 @@ from hdhelpers.metadata._helpers import (
     extract_from_metadata,
     get_value_dimension_info,
     metric_info_by_metric,
+    series_value_info,
     singlets_metric_info,
     singlets_value_dimension_info,
     single_metric_default_timezone,
@@ -391,16 +391,24 @@ def get_series_info(
         True
     """
 
-    # Since the fallback behaviour for this value dimension is to fall back to the metric
-    # metadata, we can reuse the code that extracts value_dimension metadata for
-    # this value dimension.
     check_series(series)
-    from_new_convention = _series_value(
-        get_value_dimension_info(series, value_dim_info, include_inherited), series
-    )
+    return _series_info(series, (value_dim_info,), value_dim_info, include_inherited)
 
-    if from_new_convention is not None:
-        return from_new_convention
+
+def _series_info(
+    series: pd.Series, fields: tuple[str | Spec, ...], legacy_spec: Spec, include_inherited: bool
+) -> Any:
+    """Info of a Series, falling back to further fields
+
+    Since a Series has only one value dimension named "value", it falls back to the metric
+    metadata. For metadata following the current metadata convention, each field is looked up
+    on the value dimension, the metric and "value_dimensions_shared" before the next field is
+    tried, see value_dimension_info_with_fallbacks. Older metadata structures are handled via
+    legacy_spec, keeping their established behaviour.
+    """
+    from_metrics = series_value_info(series, fields, legacy_spec, include_inherited)
+    if from_metrics is not None:
+        return from_metrics
 
     # compatibility with some older format
     return glom(
@@ -409,13 +417,13 @@ def get_series_info(
             spec_not_none(
                 (
                     "single_metric_metadata.structured_metadata.value_dimensions.value",
-                    value_dim_info,
+                    legacy_spec,
                 )
             ),
             spec_not_none(
                 (
                     "single_metric_metadata.structured_metadata.metric",
-                    value_dim_info,
+                    legacy_spec,
                 )
             ),
             default=None,
@@ -423,41 +431,16 @@ def get_series_info(
     )
 
 
-def _series_value(info_by_metric: dict, series: pd.Series) -> Any:
-    """Info of the value dimension "value" of the metric of a Series
-
-    The metric is identified via "single_metric" in "dataset_metadata". If that is missing, the
-    metric "series" as used by older metadata structures is used or else the only metric
-    present, since a Series cannot be ambiguous in this respect. An identified metric which is
-    not present yields None, since the only metric present is another one then.
-    """
-    series_metric_key = extract_from_metadata(series.attrs, key="single_metric")
-    if series_metric_key is not None:
-        return info_by_metric.get(series_metric_key, {}).get("value")
-    if "series" in info_by_metric:
-        return info_by_metric["series"].get("value")
-    if len(info_by_metric) == 1:
-        return next(iter(info_by_metric.values())).get("value")
-    return None
-
-
 def _series_info_with_fallbacks(
-    series: pd.Series, fields: tuple[str, ...], include_inherited: bool
+    series: pd.Series, fields: tuple[str | Spec, ...], include_inherited: bool
 ) -> Any:
-    """Info of a Series, falling back to further fields
+    """Info of a Series, falling back to further fields, which may be provided as null
 
-    For metadata following the current metadata convention, each field is looked up on the
-    value dimension and the metric before the next field is tried, see
-    value_dimension_info_with_fallbacks. Older metadata structures keep their established
-    behaviour of using the first of the fields present on the first level providing any.
+    Older metadata structures keep their established behaviour of using the first of the
+    fields present on the first level providing any.
     """
     legacy_spec = Coalesce(*(spec_not_none(field) for field in fields))
-    if follows_current_convention(series.attrs):
-        return _series_value(
-            value_dimension_info_with_fallbacks(series, fields, legacy_spec, include_inherited),
-            series,
-        )
-    return get_series_info(series, legacy_spec, include_inherited=include_inherited)
+    return _series_info(series, fields, legacy_spec, include_inherited)
 
 
 def get_series_unit(series: pd.Series, *, include_inherited: bool = False) -> str | None:
@@ -505,7 +488,7 @@ def get_series_unit(series: pd.Series, *, include_inherited: bool = False) -> st
     check_series(series)
     return cast(
         str | None,
-        get_series_info(series, spec_not_none("unit"), include_inherited=include_inherited),
+        _series_info_with_fallbacks(series, (_specs.UNIT,), include_inherited),
     )
 
 
@@ -556,7 +539,7 @@ def get_series_name(series: pd.Series, *, include_inherited: bool = False) -> st
     check_series(series)
     return cast(
         str | None,
-        get_series_info(series, spec_not_none("name"), include_inherited=include_inherited),
+        _series_info_with_fallbacks(series, ("name",), include_inherited),
     )
 
 
@@ -588,9 +571,7 @@ def get_series_display_name(series: pd.Series, *, include_inherited: bool = Fals
     check_series(series)
     return cast(
         str | None,
-        _series_info_with_fallbacks(
-            series, ("display_name", "name", "short_display_name"), include_inherited
-        ),
+        _series_info_with_fallbacks(series, _specs.DISPLAY_NAME_FIELDS, include_inherited),
     )
 
 
@@ -624,9 +605,7 @@ def get_series_short_display_name(
     check_series(series)
     return cast(
         str | None,
-        _series_info_with_fallbacks(
-            series, ("short_display_name", "display_name", "name"), include_inherited
-        ),
+        _series_info_with_fallbacks(series, _specs.SHORT_DISPLAY_NAME_FIELDS, include_inherited),
     )
 
 

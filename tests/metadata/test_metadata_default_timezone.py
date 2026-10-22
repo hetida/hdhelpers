@@ -113,6 +113,14 @@ def test_default_timezone_does_not_fall_back_to_other_levels():
             },
             None,
         ),
+        # a single_metric which is no string counts as missing
+        (
+            {
+                "dataset_metadata": {"single_metric": ["a"]},
+                "metrics": [{"id": "a", "default_timezone": "UTC"}],
+            },
+            "UTC",
+        ),
         # without metric metadata the dataset metadata still applies
         ({"dataset_metadata": {"default_timezone": "Europe/Berlin"}}, "Europe/Berlin"),
         (

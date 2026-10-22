@@ -17,7 +17,7 @@ Older metadata structures are handled by the glom specs in _specs.
 
 from collections import defaultdict
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
 from glom import Coalesce, Spec, glom
@@ -78,6 +78,11 @@ def gather(attrs: Any) -> GatheredMetadata | None:
         },
         value_dimensions_shared=_by_column(attrs.get("value_dimensions_shared")),
     )
+
+
+def restricted_to(gathered: GatheredMetadata, metric: str) -> GatheredMetadata:
+    """The gathered metadata of one of the metrics only, so that only its information is resolved"""
+    return replace(gathered, metrics={metric: gathered.metrics[metric]})
 
 
 def _simple_path(spec: Any) -> tuple[str, ...] | None:

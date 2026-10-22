@@ -15,7 +15,9 @@ from hdhelpers.metadata import (
     get_measurements,
     get_metric_info,
     get_names,
+    get_series_default_timezone,
     get_series_display_name,
+    get_series_info,
     get_series_measurement,
     get_series_name,
     get_series_short_display_name,
@@ -219,6 +221,54 @@ def test_single_metric_is_not_replaced_by_another_only_metric():
     assert get_singlets_units(frame(attrs))["value"] is None
     assert get_singlets_display_names(frame(attrs))["value"] is None
     assert get_singlets_metric_info(frame(attrs), "name") is None
+
+
+@pytest.mark.parametrize("single_metric", [None, 1, [SIGNAL_ID]])
+def test_single_metric_which_is_no_string_counts_as_missing(single_metric):
+    attrs = deepcopy(platform_series_attrs)
+    attrs["dataset_metadata"]["single_metric"] = single_metric
+
+    assert get_series_unit(series(attrs)) == "m"
+    assert get_singlets_units(frame(attrs))["value"] == "m"
+    assert get_singlets_metric_info(frame(attrs), "name") == "Water-lvl-north"
+
+
+def test_series_with_metadata_of_several_metrics_has_no_metric():
+    """E.g. a Series taken from a MultiTSFrame, whose metadata it carries
+
+    A metric named "series" is only the metric of a Series in older metadata structures.
+    """
+    attrs = {
+        "dataset_metadata": {"default_timezone": "UTC"},
+        "metrics": [
+            metric(id="series", name="Series", default_timezone="Asia/Tokyo"),
+            metric(id="other", name="Other"),
+        ],
+    }
+
+    assert get_series_name(series(attrs)) is None
+    assert get_series_default_timezone(series(attrs)) == "UTC"
+
+
+def test_only_the_single_metric_is_resolved():
+    """The spec is not applied to other metrics, so failing on their null names does not matter"""
+    attrs = deepcopy(platform_series_attrs)
+    attrs["metrics"].append(metric(id="other"))
+
+    assert get_series_info(series(attrs), ("name", str.upper)) == "WATER-LVL-NORTH"
+    assert get_singlets_metric_info(frame(attrs), ("name", str.upper)) == "WATER-LVL-NORTH"
+
+
+def test_series_display_name_does_not_fall_back_to_short_display_name():
+    """Like the display names of MultiTSFrames and SingleTSFrames"""
+    attrs = deepcopy(platform_series_attrs)
+    attrs["metrics"][0]["name"] = None
+    attrs["metrics"][0]["value_dimensions"][0]["name"] = None
+    attrs["metrics"][0]["short_display_name"] = "north"
+
+    assert get_series_display_name(series(attrs)) is None
+    assert get_singlets_display_names(frame(attrs))["value"] is None
+    assert get_series_short_display_name(series(attrs)) == "north"
 
 
 @pytest.mark.parametrize(
