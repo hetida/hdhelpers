@@ -3,6 +3,15 @@ Metadata information can follow varying conventions as the package glom is used 
 extract the requested information."""
 
 from hdhelpers.metadata.helpers import (
+    Recording,
+    get_default_aggregation_methods,
+    get_recordings,
+    get_series_default_aggregation_method,
+    get_series_recording,
+    get_singlets_default_aggregation_method,
+    get_singlets_recording,
+    recording_grid,
+    recording_interval_starts,
     get_default_timezones,
     get_display_names,
     get_measurements,
@@ -52,4 +61,13 @@ __all__ = [
     "get_default_timezones",
     "get_series_default_timezone",
     "get_singlets_default_timezone",
+    "Recording",
+    "get_recordings",
+    "get_series_recording",
+    "get_singlets_recording",
+    "recording_interval_starts",
+    "recording_grid",
+    "get_default_aggregation_methods",
+    "get_series_default_aggregation_method",
+    "get_singlets_default_aggregation_method",
 ]

@@ -17,6 +17,17 @@ import pandas as pd
 from glom import Coalesce, Spec, glom
 
 import hdhelpers.metadata._specs as _specs
+from hdhelpers.metadata._recording import (
+    Recording,
+    default_aggregation_method_by_metric,
+    recording_by_metric,
+    single_metric_default_aggregation_method,
+    single_metric_recording,
+)
+from hdhelpers.metadata._recording import recording_grid as _recording_grid
+from hdhelpers.metadata._recording import (
+    recording_interval_starts as _recording_interval_starts,
+)
 from hdhelpers.metadata._helpers import (
     check_dataframe,
     check_series,
@@ -1147,3 +1158,310 @@ def get_singlets_default_timezone(singletsframe: pd.DataFrame) -> str | None:
     """
     check_dataframe(singletsframe)
     return single_metric_default_timezone(singletsframe)
+
+
+def get_recordings(multitsframe: pd.DataFrame) -> defaultdict[str, Recording]:
+    """Gets how the values of each metric of a MultiTSFrame are recorded
+
+    The recording consists of the "recording_mode" of the metric (e.g. "periodic" or
+    "on_change"), the frequency of its values with offset and time zone and its
+    "recording_aggregation_method", see "Recording of the values" in the metadata conventions.
+
+    The frequency falls back as a whole: If the metric has a "data_frequency", it applies
+    together with the metric's "data_frequency_offset" and "data_frequency_timezone". Otherwise
+    "ref_data_frequency" of the dataset metadata applies together with
+    "ref_data_frequency_offset" and "ref_data_frequency_timezone". The values are provided as
+    given in the metadata, an offset of None means 0. Use :func:`recording_interval_starts` and
+    :func:`recording_grid` for the timestamps of the recording intervals.
+
+    Args:
+        multitsframe (pd.DataFrame): MTSF with metadata following the convention.
+
+    Returns:
+        defaultdict[str, Recording]: Dictionary, where keys are the entries of the metrics metadata specified via "metric_key" in "dataset_metadata" and values are their recordings. Defaults to a recording with the frequency of the dataset metadata, also for metrics without metadata.
+
+    Raises:
+        TypeError: If `multitsframe` is not a DataFrame.
+
+    Code example:
+
+    .. doctest:: metadata.get_recordings
+
+        >>> multitsframe.attrs = {
+        ...     "dataset_metadata": {"metric_key": "id", "ref_data_frequency": "1h"},
+        ...     "metrics": [
+        ...         {
+        ...             "id": "average_level",
+        ...             "recording_mode": "periodic",
+        ...             "data_frequency": "15min",
+        ...             "recording_aggregation_method": "MEAN",
+        ...         },
+        ...         {"id": "pump_state", "recording_mode": "on_change"},
+        ...     ],
+        ... }
+        >>> recordings = get_recordings(multitsframe)
+        >>> recordings["average_level"].data_frequency
+        '15min'
+        >>> recordings["pump_state"].recording_mode
+        'on_change'
+        >>> recordings["pump_state"].data_frequency
+        '1h'
+    """
+    check_dataframe(multitsframe)
+    return recording_by_metric(multitsframe)
+
+
+def get_series_recording(series: pd.Series) -> Recording:
+    """Gets how the values of a Series are recorded
+
+    See :func:`get_recordings` for the recording and how its frequency falls back to the one of
+    the dataset metadata.
+
+    Args:
+        series (pd.Series): Series with metadata following the convention.
+
+    Returns:
+        Recording: The recording of the metric, with the frequency of the dataset metadata if the metric does not provide one.
+
+    Raises:
+        TypeError: If `series` is not a Series.
+
+    Code example:
+
+    .. doctest:: metadata.get_series_recording
+
+        >>> series.attrs = {
+        ...     "dataset_metadata": {"single_metric": "water.north.level", "metric_key": "external_id"},
+        ...     "metrics": [
+        ...         {
+        ...             "external_id": "water.north.level",
+        ...             "recording_mode": "periodic",
+        ...             "data_frequency": "2h",
+        ...             "data_frequency_timezone": "Europe/Berlin",
+        ...         }
+        ...     ],
+        ... }
+        >>> recording = get_series_recording(series)
+        >>> recording.data_frequency, recording.data_frequency_offset, recording.data_frequency_timezone
+        ('2h', None, 'Europe/Berlin')
+    """
+    check_series(series)
+    return single_metric_recording(series)
+
+
+def get_singlets_recording(singletsframe: pd.DataFrame) -> Recording:
+    """Gets how the values of the single metric of a SingleTSFrame are recorded
+
+    See :func:`get_recordings` for the recording and how its frequency falls back to the one of
+    the dataset metadata.
+
+    Args:
+        singletsframe (pd.DataFrame): STSF with metadata following the convention.
+
+    Returns:
+        Recording: The recording of the metric, with the frequency of the dataset metadata if the metric does not provide one.
+
+    Raises:
+        TypeError: If `singletsframe` is not a DataFrame.
+
+    Code example:
+
+    .. doctest:: metadata.get_singlets_recording
+
+        >>> dataframe.attrs = {
+        ...     "dataset_metadata": {
+        ...         "single_metric": "abc.temp",
+        ...         "ref_data_frequency": "5min",
+        ...         "ref_data_frequency_offset": "1min",
+        ...     },
+        ...     "metrics": [{"id": "abc.temp", "recording_mode": "periodic"}],
+        ... }
+        >>> recording = get_singlets_recording(dataframe)
+        >>> recording.recording_mode, recording.data_frequency, recording.data_frequency_offset
+        ('periodic', '5min', '1min')
+    """
+    check_dataframe(singletsframe)
+    return single_metric_recording(singletsframe)
+
+
+def get_default_aggregation_methods(multitsframe: pd.DataFrame) -> defaultdict[str, str]:
+    """Gets the method each metric of a MultiTSFrame should be aggregated with by default
+
+    E.g. for plotting or reporting it in coarser intervals. It is the "default_aggregation_method"
+    of the metric, with "AVG" normalized to its alias "MEAN". If the metric does not provide one,
+    it is "LAST" for values of the data type "boolean" or "string" (the "value_data_type" of the
+    value dimension "value"), i.e. the state holding at the end of the interval, and "MEAN"
+    otherwise. As specified by the metadata conventions, it is not taken from inherited
+    properties.
+
+    Args:
+        multitsframe (pd.DataFrame): MTSF with metadata following the convention.
+
+    Returns:
+        defaultdict[str, str]: Dictionary, where keys are the entries of the metrics metadata specified via "metric_key" in "dataset_metadata" and values are their default aggregation methods, e.g. "MEAN", "SUM" or "LAST". Defaults to "MEAN" for metrics without metadata.
+
+    Raises:
+        TypeError: If `multitsframe` is not a DataFrame.
+
+    Code example:
+
+    .. doctest:: metadata.get_default_aggregation_methods
+
+        >>> multitsframe.attrs = {
+        ...     "dataset_metadata": {"metric_key": "id"},
+        ...     "metrics": [
+        ...         {"id": "level", "default_aggregation_method": "AVG"},
+        ...         {"id": "rainfall", "default_aggregation_method": "SUM"},
+        ...         {
+        ...             "id": "pump_running",
+        ...             "value_dimensions": [{"column": "value", "value_data_type": "boolean"}],
+        ...         },
+        ...     ],
+        ... }
+        >>> methods = get_default_aggregation_methods(multitsframe)
+        >>> methods["level"], methods["rainfall"], methods["pump_running"]
+        ('MEAN', 'SUM', 'LAST')
+        >>> methods["metric_without_metadata"]
+        'MEAN'
+    """
+    check_dataframe(multitsframe)
+    return default_aggregation_method_by_metric(multitsframe)
+
+
+def get_series_default_aggregation_method(series: pd.Series) -> str:
+    """Gets the method a Series should be aggregated with by default
+
+    See :func:`get_default_aggregation_methods` for the method and its default.
+
+    Args:
+        series (pd.Series): Series with metadata following the convention.
+
+    Returns:
+        str: The default aggregation method, e.g. "MEAN", "SUM" or "LAST".
+
+    Raises:
+        TypeError: If `series` is not a Series.
+
+    Code example:
+
+    .. doctest:: metadata.get_series_default_aggregation_method
+
+        >>> series.attrs = {
+        ...     "dataset_metadata": {"single_metric": "rainfall"},
+        ...     "metrics": [{"id": "rainfall", "default_aggregation_method": "SUM"}],
+        ... }
+        >>> get_series_default_aggregation_method(series)
+        'SUM'
+        >>> series.attrs = {}
+        >>> get_series_default_aggregation_method(series)
+        'MEAN'
+    """
+    check_series(series)
+    return single_metric_default_aggregation_method(series)
+
+
+def get_singlets_default_aggregation_method(singletsframe: pd.DataFrame) -> str:
+    """Gets the method the single metric of a SingleTSFrame should be aggregated with by default
+
+    See :func:`get_default_aggregation_methods` for the method and its default.
+
+    Args:
+        singletsframe (pd.DataFrame): STSF with metadata following the convention.
+
+    Returns:
+        str: The default aggregation method, e.g. "MEAN", "SUM" or "LAST".
+
+    Raises:
+        TypeError: If `singletsframe` is not a DataFrame.
+
+    Code example:
+
+    .. doctest:: metadata.get_singlets_default_aggregation_method
+
+        >>> dataframe.attrs = {
+        ...     "dataset_metadata": {"single_metric": "valve"},
+        ...     "metrics": [
+        ...         {
+        ...             "id": "valve",
+        ...             "value_dimensions": [{"column": "value", "value_data_type": "string"}],
+        ...         }
+        ...     ],
+        ... }
+        >>> get_singlets_default_aggregation_method(dataframe)
+        'LAST'
+    """
+    check_dataframe(singletsframe)
+    return single_metric_default_aggregation_method(singletsframe)
+
+
+def recording_interval_starts[T: (pd.DatetimeIndex, pd.Series)](
+    timestamps: T, recording: Recording
+) -> T:
+    """Gets the start of the recording interval of each timestamp
+
+    The recording intervals start at the multiples of the frequency of the recording plus its
+    offset (0 if None):
+
+    * Without time zone, these are the multiples since 1970-01-01T00:00:00Z.
+    * With time zone and a frequency shorter than a day, the intervals restart at each local
+      midnight (plus offset) of the time zone, counted in elapsed time. The last interval of a
+      day ends at the next local midnight, so it is shorter on days with a daylight saving time
+      change or if the frequency does not divide a day. This is how e.g. the hetida platform
+      compresses values in windows.
+    * With time zone and a frequency of a day or longer, e.g. "1D" or "1MS", the intervals follow
+      the calendar of the time zone, e.g. local days of 23, 24 or 25 hours.
+
+    Args:
+        timestamps (pd.DatetimeIndex | pd.Series): The timestamps, naive ones are considered to be UTC.
+        recording (Recording): The recording, e.g. from :func:`get_series_recording`.
+
+    Returns:
+        pd.DatetimeIndex | pd.Series: The start of the recording interval of each timestamp in UTC, as DatetimeIndex or Series (with the index of `timestamps`) like `timestamps`.
+
+    Raises:
+        ValueError: If the recording has no data_frequency or its frequency, offset or time zone cannot be interpreted.
+
+    Code example:
+
+    .. doctest:: metadata.recording_interval_starts
+
+        >>> recording = Recording(data_frequency="2h", data_frequency_timezone="Europe/Berlin")
+        >>> # on 2026-03-29 the clocks in Berlin are put forward at 2:00 local time (1:00 UTC)
+        >>> starts = recording_interval_starts(
+        ...     pd.DatetimeIndex(["2026-03-29T00:30:00Z", "2026-03-29T01:30:00Z"]), recording
+        ... )
+        >>> [start.isoformat() for start in starts.tz_convert("Europe/Berlin")]
+        ['2026-03-29T00:00:00+01:00', '2026-03-29T03:00:00+02:00']
+    """
+    return _recording_interval_starts(timestamps, recording)
+
+
+def recording_grid(
+    start: pd.Timestamp | str, end: pd.Timestamp | str, recording: Recording
+) -> pd.DatetimeIndex:
+    """Gets the starts of the recording intervals from start to end, both inclusive
+
+    For a periodic recording, these are the timestamps at which values are expected. See
+    :func:`recording_interval_starts` for how the intervals are determined.
+
+    Args:
+        start (pd.Timestamp | str): Start, naive timestamps are considered to be UTC.
+        end (pd.Timestamp | str): End, naive timestamps are considered to be UTC.
+        recording (Recording): The recording, e.g. from :func:`get_series_recording`.
+
+    Returns:
+        pd.DatetimeIndex: The interval starts in UTC.
+
+    Raises:
+        ValueError: If the recording has no data_frequency or its frequency, offset or time zone cannot be interpreted.
+
+    Code example:
+
+    .. doctest:: metadata.recording_grid
+
+        >>> recording = Recording(data_frequency="15min", data_frequency_offset="5min")
+        >>> grid = recording_grid("2026-01-01T00:00:00Z", "2026-01-01T00:40:00Z", recording)
+        >>> [timestamp.isoformat() for timestamp in grid]
+        ['2026-01-01T00:05:00+00:00', '2026-01-01T00:20:00+00:00', '2026-01-01T00:35:00+00:00']
+    """
+    return _recording_grid(pd.Timestamp(start), pd.Timestamp(end), recording)
