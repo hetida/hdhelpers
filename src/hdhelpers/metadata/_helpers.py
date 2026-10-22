@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Any
+from typing import Any, cast
 
 import pandas as pd
 from glom import Check, Coalesce, CoalesceError, Spec, glom
@@ -198,4 +198,51 @@ def singlets_metric_info(
         metric_info_by_metric(singletsframe, metric_info, include_inherited),
         singletsframe.attrs,
         empty=None,
+    )
+
+
+def _string_or_none(value: Any) -> str | None:
+    return value if isinstance(value, str) and value != "" else None
+
+
+def _dataset_default_timezone(attrs: Any) -> str | None:
+    return _string_or_none(extract_from_metadata(attrs, key=_specs.DEFAULT_TIMEZONE))
+
+
+def default_timezone_by_metric(data: pd.DataFrame | pd.Series) -> defaultdict[str, str | None]:
+    """The default time zone of each metric, falling back to the one of the dataset metadata
+
+    As specified by the metadata conventions, the default time zone of a metric only falls back
+    to the one of the dataset metadata, not to its value dimensions or inherited properties.
+    The default of the returned defaultdict is the one of the dataset metadata, since it applies
+    to all metrics without their own. Values which are no (non-empty) strings count as missing.
+    """
+    dataset_timezone = _dataset_default_timezone(data.attrs)
+    gathered = _current_convention.gather(data.attrs)
+    own_timezones = (
+        {}
+        if gathered is None
+        else _current_convention.own_metric_info(gathered, _specs.DEFAULT_TIMEZONE)
+    )
+    return defaultdict(
+        lambda: dataset_timezone,
+        {
+            metric: _string_or_none(timezone) or dataset_timezone
+            for metric, timezone in own_timezones.items()
+        },
+    )
+
+
+def single_metric_default_timezone(data: pd.DataFrame | pd.Series) -> str | None:
+    """The default time zone of the single metric of a Series or SingleTSFrame
+
+    Falls back to the one of the dataset metadata, also if the single metric is not found.
+    """
+    return cast(
+        str | None,
+        _select_single_metric(
+            default_timezone_by_metric(data),
+            data.attrs,
+            empty=_dataset_default_timezone(data.attrs),
+        ),
     )

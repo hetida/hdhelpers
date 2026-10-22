@@ -13,6 +13,10 @@ SHORT_DISPLAY_NAME: Spec = Coalesce("short_display_name", "display_name", "name"
 # higher up in an asset hierarchy, e.g. the latitude of the plant a sensor belongs to.
 INHERITED = "inherited"
 
+# Field of a metric and of the dataset metadata: the time zone the timeseries should be
+# evaluated in by default, e.g. for bucketing days when aggregating.
+DEFAULT_TIMEZONE = "default_timezone"
+
 # The fallback chains of the display names for metadata following the current metadata
 # convention: Each field is looked up on all levels (value dimension, metric, shared value
 # dimensions) before the next field is tried, see _current_convention.value_dimension_info.

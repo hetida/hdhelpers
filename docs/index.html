@@ -61,6 +61,7 @@
 <li class="toctree-l2"><a class="reference internal" href="first_steps.html#how-to-get-metadata-with-hdhelpers">How to get metadata with hdhelpers?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="first_steps.html#where-does-the-information-come-from">Where does the information come from?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="first_steps.html#how-to-query-nested-information">How to query nested information?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="first_steps.html#which-time-zone-to-compute-in">Which time zone to compute in?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="first_steps.html#how-to-use-hdhelpers-for-plotting-tbd">How to use hdhelpers for plotting? (tbd)</a></li>
 </ul>
 </li>
@@ -74,6 +75,54 @@
 <p>Collection of functions to access metadata information from timeseries objects.
 Metadata information can follow varying conventions as the package glom is used to
 extract the requested information.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="hdhelpers.metadata.get_default_timezones">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_default_timezones</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_default_timezones" title="Link to this definition">¶</a></dt>
+<dd><p>Gets the default time zone of each metric of a MultiTSFrame</p>
+<p>The default time zone is meant for computations: It is the time zone the timeseries should
+be evaluated in by default, e.g. for bucketing days when aggregating, so that each day
+starts at midnight of this time zone. It belongs to the data, e.g. it is the time zone of
+the plant a sensor belongs to. It is not meant for displaying timestamps - that is what the
+time zone of the plot target settings is for, which e.g. <a class="reference internal" href="#hdhelpers.helpers.modify_timezone" title="hdhelpers.helpers.modify_timezone"><code class="xref py py-func docutils literal notranslate"><span class="pre">hdhelpers.helpers.modify_timezone()</span></code></a>
+uses by default. See “Which time zone to compute in?” in the first steps.</p>
+<p>The time zone is an IANA time zone name like “Europe/Berlin” or a fixed UTC offset like
+“+02:00”, both accepted by pandas, e.g. by <code class="docutils literal notranslate"><span class="pre">tz_convert</span></code>.</p>
+<p>The default time zone of a metric falls back to the one of the dataset metadata, which
+applies to all metrics without their own. As specified by the metadata conventions, it does
+not fall back to value dimensions or inherited properties.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary, where keys are the entries of the metrics metadata specified via “metric_key” in “dataset_metadata” and values are their default time zones. Defaults to the default time zone of the dataset metadata, also for metrics without metadata, and to None if that is missing as well.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>defaultdict[str, str | None]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>TypeError</strong> – If <cite>multitsframe</cite> is not a DataFrame.</p>
+</dd>
+</dl>
+<p>Code example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">multitsframe</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;metric_key&quot;</span><span class="p">:</span> <span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;default_timezone&quot;</span><span class="p">:</span> <span class="s2">&quot;Europe/Berlin&quot;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="gp">... </span>        <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;new_york_sensor&quot;</span><span class="p">,</span> <span class="s2">&quot;default_timezone&quot;</span><span class="p">:</span> <span class="s2">&quot;America/New_York&quot;</span><span class="p">},</span>
+<span class="gp">... </span>        <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;berlin_sensor&quot;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="p">],</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">timezones</span> <span class="o">=</span> <span class="n">get_default_timezones</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">timezones</span><span class="p">[</span><span class="s2">&quot;new_york_sensor&quot;</span><span class="p">]</span>
+<span class="go">&#39;America/New_York&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">timezones</span><span class="p">[</span><span class="s2">&quot;berlin_sensor&quot;</span><span class="p">]</span>
+<span class="go">&#39;Europe/Berlin&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">timezones</span><span class="p">[</span><span class="s2">&quot;metric_without_metadata&quot;</span><span class="p">]</span>
+<span class="go">&#39;Europe/Berlin&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_display_names">
 <span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_display_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_display_names" title="Link to this definition">¶</a></dt>
@@ -319,6 +368,47 @@ to this function, the functions for dedicated information like <a class="referen
 <span class="go">&#39;2025-11-05T13:28:00+00:00&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">end</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
 <span class="go">&#39;2025-11-06T13:28:00+00:00&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hdhelpers.metadata.get_series_default_timezone">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_series_default_timezone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_series_default_timezone" title="Link to this definition">¶</a></dt>
+<dd><p>Gets the default time zone of a Series</p>
+<p>The default time zone is meant for computations: It is the time zone the timeseries should
+be evaluated in by default, e.g. for bucketing days when aggregating, so that each day
+starts at midnight of this time zone. It belongs to the data, e.g. it is the time zone of
+the plant a sensor belongs to. It is not meant for displaying timestamps - that is what the
+time zone of the plot target settings is for, which e.g. <a class="reference internal" href="#hdhelpers.helpers.modify_timezone" title="hdhelpers.helpers.modify_timezone"><code class="xref py py-func docutils literal notranslate"><span class="pre">hdhelpers.helpers.modify_timezone()</span></code></a>
+uses by default. See “Which time zone to compute in?” in the first steps.</p>
+<p>The time zone is an IANA time zone name like “Europe/Berlin” or a fixed UTC offset like
+“+02:00”, both accepted by pandas, e.g. by <code class="docutils literal notranslate"><span class="pre">tz_convert</span></code>.</p>
+<p>The default time zone of the metric falls back to the one of the dataset metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>series</strong> (<em>pd.Series</em>) – Series with metadata following the convention.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The default time zone, or None if neither the metric nor the dataset metadata provide one.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str | None</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>TypeError</strong> – If <cite>series</cite> is not a Series.</p>
+</dd>
+</dl>
+<p>Code example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">series</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;single_metric&quot;</span><span class="p">:</span> <span class="s2">&quot;water.north.level&quot;</span><span class="p">,</span> <span class="s2">&quot;metric_key&quot;</span><span class="p">:</span> <span class="s2">&quot;external_id&quot;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;external_id&quot;</span><span class="p">:</span> <span class="s2">&quot;water.north.level&quot;</span><span class="p">,</span> <span class="s2">&quot;default_timezone&quot;</span><span class="p">:</span> <span class="s2">&quot;Europe/Berlin&quot;</span><span class="p">}],</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_series_default_timezone</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+<span class="go">&#39;Europe/Berlin&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">series</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_series_default_timezone</span><span class="p">(</span><span class="n">series</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -591,6 +681,44 @@ looked up on the value dimension, on the metric (for the value dimension “valu
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">get_short_display_names</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;ruhr-temperature&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
 <span class="go">&#39;temp. [°C]&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hdhelpers.metadata.get_singlets_default_timezone">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_default_timezone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_default_timezone" title="Link to this definition">¶</a></dt>
+<dd><p>Gets the default time zone of the single metric of a SingleTSFrame</p>
+<p>The default time zone is meant for computations: It is the time zone the timeseries should
+be evaluated in by default, e.g. for bucketing days when aggregating, so that each day
+starts at midnight of this time zone. It belongs to the data, e.g. it is the time zone of
+the plant a sensor belongs to. It is not meant for displaying timestamps - that is what the
+time zone of the plot target settings is for, which e.g. <a class="reference internal" href="#hdhelpers.helpers.modify_timezone" title="hdhelpers.helpers.modify_timezone"><code class="xref py py-func docutils literal notranslate"><span class="pre">hdhelpers.helpers.modify_timezone()</span></code></a>
+uses by default. See “Which time zone to compute in?” in the first steps.</p>
+<p>The time zone is an IANA time zone name like “Europe/Berlin” or a fixed UTC offset like
+“+02:00”, both accepted by pandas, e.g. by <code class="docutils literal notranslate"><span class="pre">tz_convert</span></code>.</p>
+<p>The default time zone of the metric falls back to the one of the dataset metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The default time zone, or None if neither the metric nor the dataset metadata provide one.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str | None</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>TypeError</strong> – If <cite>singletsframe</cite> is not a DataFrame.</p>
+</dd>
+</dl>
+<p>Code example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataframe</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;single_metric&quot;</span><span class="p">:</span> <span class="s2">&quot;abc.temp&quot;</span><span class="p">,</span> <span class="s2">&quot;default_timezone&quot;</span><span class="p">:</span> <span class="s2">&quot;+02:00&quot;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;abc.temp&quot;</span><span class="p">,</span> <span class="s2">&quot;default_timezone&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}],</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_singlets_default_timezone</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
+<span class="go">&#39;+02:00&#39;</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1192,11 +1320,13 @@ empty plot and showing an adequate message instead.</p>
 <li><a class="reference internal" href="#further-information">Further Information</a></li>
 <li><a class="reference internal" href="#functions">Functions</a><ul>
 <li><a class="reference internal" href="#module-hdhelpers.metadata">metadata</a><ul>
+<li><a class="reference internal" href="#hdhelpers.metadata.get_default_timezones"><code class="docutils literal notranslate"><span class="pre">get_default_timezones()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_display_names"><code class="docutils literal notranslate"><span class="pre">get_display_names()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_measurements"><code class="docutils literal notranslate"><span class="pre">get_measurements()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_metric_info"><code class="docutils literal notranslate"><span class="pre">get_metric_info()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_names"><code class="docutils literal notranslate"><span class="pre">get_names()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_queried_interval"><code class="docutils literal notranslate"><span class="pre">get_queried_interval()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.get_series_default_timezone"><code class="docutils literal notranslate"><span class="pre">get_series_default_timezone()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_series_display_name"><code class="docutils literal notranslate"><span class="pre">get_series_display_name()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_series_info"><code class="docutils literal notranslate"><span class="pre">get_series_info()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_series_measurement"><code class="docutils literal notranslate"><span class="pre">get_series_measurement()</span></code></a></li>
@@ -1204,6 +1334,7 @@ empty plot and showing an adequate message instead.</p>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_series_short_display_name"><code class="docutils literal notranslate"><span class="pre">get_series_short_display_name()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_series_unit"><code class="docutils literal notranslate"><span class="pre">get_series_unit()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_short_display_names"><code class="docutils literal notranslate"><span class="pre">get_short_display_names()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.get_singlets_default_timezone"><code class="docutils literal notranslate"><span class="pre">get_singlets_default_timezone()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_singlets_display_names"><code class="docutils literal notranslate"><span class="pre">get_singlets_display_names()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_singlets_info"><code class="docutils literal notranslate"><span class="pre">get_singlets_info()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_singlets_measurements"><code class="docutils literal notranslate"><span class="pre">get_singlets_measurements()</span></code></a></li>

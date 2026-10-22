@@ -164,6 +164,75 @@ after retrieving it.
 
 .. _glom: https://glom.readthedocs.io/
 
+Which time zone to compute in?
+==============================
+
+Metadata may provide a ``default_timezone`` for each metric and for the dataset metadata: the
+time zone the timeseries should be evaluated in by default. It belongs to the data, e.g. it is
+the time zone of the plant a sensor belongs to, and it is meant for **computations**:
+Components evaluating timeseries in calendar intervals should respect it. E.g. a component
+aggregating daily values should bucket the days from midnight to midnight of this time zone,
+so its results depend on it.
+
+It is **not** meant for displaying timestamps. That is what the time zone of the plot target
+settings is for, which the hetida platform provides for the view, e.g. the time zone of a
+dashboard or of the user looking at a plot. ``modify_timezone`` uses it if no ``to_timezone``
+is given. Both may differ: A report on a plant in Germany may aggregate days in
+``"Europe/Berlin"`` and nevertheless show its timestamps to a viewer in New York in
+``"America/New_York"``.
+
+``get_series_default_timezone``, ``get_singlets_default_timezone`` and
+``get_default_timezones`` (keyed by metric) provide the default time zone of a metric. If the
+metric does not provide one, they fall back to the one of the dataset metadata, which applies
+to all metrics without their own. If neither provides one, they return None. The time zone is
+an IANA time zone name like ``"Europe/Berlin"``, which respects daylight saving time, or a
+fixed UTC offset like ``"+02:00"``. pandas accepts both.
+
+.. code-block:: python
+
+    from hdhelpers.helpers import modify_timezone
+    from hdhelpers.metadata import get_series_default_timezone
+
+    def main(*, series):
+        # entrypoint function for this component
+        # ***** DO NOT EDIT LINES ABOVE *****
+
+        # compute: each day starts at midnight of the default time zone of the data,
+        # e.g. at midnight in "Europe/Berlin", and has 23 or 25 hours when switching
+        # from or to daylight saving time
+        timezone = get_series_default_timezone(series) or "UTC"
+        daily_sums = modify_timezone(series, to_timezone=timezone).resample("1D").sum()
+
+        # view: show the timestamps in the time zone of the plot target settings
+        daily_sums = modify_timezone(daily_sums)
+
+        ...
+
+Note the explicit fallback ``or "UTC"`` in the example: Without it, ``modify_timezone`` would
+use the time zone of the plot target settings if the metadata provide no default time zone,
+so the results of the computation would depend on who looks at them.
+
+For a MULTITSFRAME, each metric may have its own default time zone:
+
+.. code-block:: python
+
+    from hdhelpers.metadata import get_default_timezones
+
+    def main(*, multitsframe):
+        # entrypoint function for this component
+        # ***** DO NOT EDIT LINES ABOVE *****
+
+        timezones = get_default_timezones(multitsframe)
+        daily_sums = {
+            metric: group.set_index("timestamp")["value"]
+            .tz_convert(timezones[metric] or "UTC")
+            .resample("1D")
+            .sum()
+            for metric, group in multitsframe.groupby("metric")
+        }
+
+        ...
+
 
 How to use hdhelpers for plotting? (tbd)
 ========================================

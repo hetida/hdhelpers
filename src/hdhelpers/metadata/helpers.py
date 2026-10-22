@@ -22,11 +22,13 @@ from hdhelpers.metadata._helpers import (
     check_dataframe,
     check_series,
     check_series_or_dataframe,
+    default_timezone_by_metric,
     extract_from_metadata,
     get_value_dimension_info,
     metric_info_by_metric,
     singlets_metric_info,
     singlets_value_dimension_info,
+    single_metric_default_timezone,
     singlets_value_dimension_info_with_fallbacks,
     spec_not_none,
     value_dimension_info_with_fallbacks,
@@ -1033,3 +1035,133 @@ def get_queried_interval(
     formatted_end = datetime.datetime.fromisoformat(end) if end else None
 
     return formatted_start, formatted_end
+
+
+def get_default_timezones(multitsframe: pd.DataFrame) -> defaultdict[str, str | None]:
+    """Gets the default time zone of each metric of a MultiTSFrame
+
+    The default time zone is meant for computations: It is the time zone the timeseries should
+    be evaluated in by default, e.g. for bucketing days when aggregating, so that each day
+    starts at midnight of this time zone. It belongs to the data, e.g. it is the time zone of
+    the plant a sensor belongs to. It is not meant for displaying timestamps - that is what the
+    time zone of the plot target settings is for, which e.g. :func:`hdhelpers.helpers.modify_timezone`
+    uses by default. See "Which time zone to compute in?" in the first steps.
+
+    The time zone is an IANA time zone name like "Europe/Berlin" or a fixed UTC offset like
+    "+02:00", both accepted by pandas, e.g. by ``tz_convert``.
+
+    The default time zone of a metric falls back to the one of the dataset metadata, which
+    applies to all metrics without their own. As specified by the metadata conventions, it does
+    not fall back to value dimensions or inherited properties.
+
+    Args:
+        multitsframe (pd.DataFrame): MTSF with metadata following the convention.
+
+    Returns:
+        defaultdict[str, str | None]: Dictionary, where keys are the entries of the metrics metadata specified via "metric_key" in "dataset_metadata" and values are their default time zones. Defaults to the default time zone of the dataset metadata, also for metrics without metadata, and to None if that is missing as well.
+
+    Raises:
+        TypeError: If `multitsframe` is not a DataFrame.
+
+    Code example:
+
+    .. doctest:: metadata.get_default_timezones
+
+        >>> multitsframe.attrs = {
+        ...     "dataset_metadata": {"metric_key": "id", "default_timezone": "Europe/Berlin"},
+        ...     "metrics": [
+        ...         {"id": "new_york_sensor", "default_timezone": "America/New_York"},
+        ...         {"id": "berlin_sensor"},
+        ...     ],
+        ... }
+        >>> timezones = get_default_timezones(multitsframe)
+        >>> timezones["new_york_sensor"]
+        'America/New_York'
+        >>> timezones["berlin_sensor"]
+        'Europe/Berlin'
+        >>> timezones["metric_without_metadata"]
+        'Europe/Berlin'
+    """
+    check_dataframe(multitsframe)
+    return default_timezone_by_metric(multitsframe)
+
+
+def get_series_default_timezone(series: pd.Series) -> str | None:
+    """Gets the default time zone of a Series
+
+    The default time zone is meant for computations: It is the time zone the timeseries should
+    be evaluated in by default, e.g. for bucketing days when aggregating, so that each day
+    starts at midnight of this time zone. It belongs to the data, e.g. it is the time zone of
+    the plant a sensor belongs to. It is not meant for displaying timestamps - that is what the
+    time zone of the plot target settings is for, which e.g. :func:`hdhelpers.helpers.modify_timezone`
+    uses by default. See "Which time zone to compute in?" in the first steps.
+
+    The time zone is an IANA time zone name like "Europe/Berlin" or a fixed UTC offset like
+    "+02:00", both accepted by pandas, e.g. by ``tz_convert``.
+
+    The default time zone of the metric falls back to the one of the dataset metadata.
+
+    Args:
+        series (pd.Series): Series with metadata following the convention.
+
+    Returns:
+        str | None: The default time zone, or None if neither the metric nor the dataset metadata provide one.
+
+    Raises:
+        TypeError: If `series` is not a Series.
+
+    Code example:
+
+    .. doctest:: metadata.get_series_default_timezone
+
+        >>> series.attrs = {
+        ...     "dataset_metadata": {"single_metric": "water.north.level", "metric_key": "external_id"},
+        ...     "metrics": [{"external_id": "water.north.level", "default_timezone": "Europe/Berlin"}],
+        ... }
+        >>> get_series_default_timezone(series)
+        'Europe/Berlin'
+        >>> series.attrs = {}
+        >>> get_series_default_timezone(series) is None
+        True
+    """
+    check_series(series)
+    return single_metric_default_timezone(series)
+
+
+def get_singlets_default_timezone(singletsframe: pd.DataFrame) -> str | None:
+    """Gets the default time zone of the single metric of a SingleTSFrame
+
+    The default time zone is meant for computations: It is the time zone the timeseries should
+    be evaluated in by default, e.g. for bucketing days when aggregating, so that each day
+    starts at midnight of this time zone. It belongs to the data, e.g. it is the time zone of
+    the plant a sensor belongs to. It is not meant for displaying timestamps - that is what the
+    time zone of the plot target settings is for, which e.g. :func:`hdhelpers.helpers.modify_timezone`
+    uses by default. See "Which time zone to compute in?" in the first steps.
+
+    The time zone is an IANA time zone name like "Europe/Berlin" or a fixed UTC offset like
+    "+02:00", both accepted by pandas, e.g. by ``tz_convert``.
+
+    The default time zone of the metric falls back to the one of the dataset metadata.
+
+    Args:
+        singletsframe (pd.DataFrame): STSF with metadata following the convention.
+
+    Returns:
+        str | None: The default time zone, or None if neither the metric nor the dataset metadata provide one.
+
+    Raises:
+        TypeError: If `singletsframe` is not a DataFrame.
+
+    Code example:
+
+    .. doctest:: metadata.get_singlets_default_timezone
+
+        >>> dataframe.attrs = {
+        ...     "dataset_metadata": {"single_metric": "abc.temp", "default_timezone": "+02:00"},
+        ...     "metrics": [{"id": "abc.temp", "default_timezone": None}],
+        ... }
+        >>> get_singlets_default_timezone(dataframe)
+        '+02:00'
+    """
+    check_dataframe(singletsframe)
+    return single_metric_default_timezone(singletsframe)

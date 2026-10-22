@@ -184,6 +184,68 @@ the metric does not provide the information, on the levels it falls back to. Err
 the spec are not caught. So either let it handle None, or rather transform the information
 after retrieving it.</p>
 </section>
+<section id="which-time-zone-to-compute-in">
+<h2>Which time zone to compute in?<a class="headerlink" href="#which-time-zone-to-compute-in" title="Link to this heading">¶</a></h2>
+<p>Metadata may provide a <code class="docutils literal notranslate"><span class="pre">default_timezone</span></code> for each metric and for the dataset metadata: the
+time zone the timeseries should be evaluated in by default. It belongs to the data, e.g. it is
+the time zone of the plant a sensor belongs to, and it is meant for <strong>computations</strong>:
+Components evaluating timeseries in calendar intervals should respect it. E.g. a component
+aggregating daily values should bucket the days from midnight to midnight of this time zone,
+so its results depend on it.</p>
+<p>It is <strong>not</strong> meant for displaying timestamps. That is what the time zone of the plot target
+settings is for, which the hetida platform provides for the view, e.g. the time zone of a
+dashboard or of the user looking at a plot. <code class="docutils literal notranslate"><span class="pre">modify_timezone</span></code> uses it if no <code class="docutils literal notranslate"><span class="pre">to_timezone</span></code>
+is given. Both may differ: A report on a plant in Germany may aggregate days in
+<code class="docutils literal notranslate"><span class="pre">&quot;Europe/Berlin&quot;</span></code> and nevertheless show its timestamps to a viewer in New York in
+<code class="docutils literal notranslate"><span class="pre">&quot;America/New_York&quot;</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">get_series_default_timezone</span></code>, <code class="docutils literal notranslate"><span class="pre">get_singlets_default_timezone</span></code> and
+<code class="docutils literal notranslate"><span class="pre">get_default_timezones</span></code> (keyed by metric) provide the default time zone of a metric. If the
+metric does not provide one, they fall back to the one of the dataset metadata, which applies
+to all metrics without their own. If neither provides one, they return None. The time zone is
+an IANA time zone name like <code class="docutils literal notranslate"><span class="pre">&quot;Europe/Berlin&quot;</span></code>, which respects daylight saving time, or a
+fixed UTC offset like <code class="docutils literal notranslate"><span class="pre">&quot;+02:00&quot;</span></code>. pandas accepts both.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hdhelpers.helpers</span><span class="w"> </span><span class="kn">import</span> <span class="n">modify_timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hdhelpers.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_series_default_timezone</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">series</span><span class="p">):</span>
+    <span class="c1"># entrypoint function for this component</span>
+    <span class="c1"># ***** DO NOT EDIT LINES ABOVE *****</span>
+
+    <span class="c1"># compute: each day starts at midnight of the default time zone of the data,</span>
+    <span class="c1"># e.g. at midnight in &quot;Europe/Berlin&quot;, and has 23 or 25 hours when switching</span>
+    <span class="c1"># from or to daylight saving time</span>
+    <span class="n">timezone</span> <span class="o">=</span> <span class="n">get_series_default_timezone</span><span class="p">(</span><span class="n">series</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;UTC&quot;</span>
+    <span class="n">daily_sums</span> <span class="o">=</span> <span class="n">modify_timezone</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">to_timezone</span><span class="o">=</span><span class="n">timezone</span><span class="p">)</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s2">&quot;1D&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+    <span class="c1"># view: show the timestamps in the time zone of the plot target settings</span>
+    <span class="n">daily_sums</span> <span class="o">=</span> <span class="n">modify_timezone</span><span class="p">(</span><span class="n">daily_sums</span><span class="p">)</span>
+
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>Note the explicit fallback <code class="docutils literal notranslate"><span class="pre">or</span> <span class="pre">&quot;UTC&quot;</span></code> in the example: Without it, <code class="docutils literal notranslate"><span class="pre">modify_timezone</span></code> would
+use the time zone of the plot target settings if the metadata provide no default time zone,
+so the results of the computation would depend on who looks at them.</p>
+<p>For a MULTITSFRAME, each metric may have its own default time zone:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hdhelpers.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_default_timezones</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">multitsframe</span><span class="p">):</span>
+    <span class="c1"># entrypoint function for this component</span>
+    <span class="c1"># ***** DO NOT EDIT LINES ABOVE *****</span>
+
+    <span class="n">timezones</span> <span class="o">=</span> <span class="n">get_default_timezones</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">)</span>
+    <span class="n">daily_sums</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">metric</span><span class="p">:</span> <span class="n">group</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;timestamp&quot;</span><span class="p">)[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+        <span class="o">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="n">timezones</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">&quot;UTC&quot;</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s2">&quot;1D&quot;</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">multitsframe</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;metric&quot;</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="o">...</span>
+</pre></div>
+</div>
+</section>
 <section id="how-to-use-hdhelpers-for-plotting-tbd">
 <h2>How to use hdhelpers for plotting? (tbd)<a class="headerlink" href="#how-to-use-hdhelpers-for-plotting-tbd" title="Link to this heading">¶</a></h2>
 <p>Let’s say we want to plot the same timeseries above using hdhelpers functionalities.
@@ -235,6 +297,7 @@ For example, we want to:
 <li><a class="reference internal" href="#how-to-get-metadata-with-hdhelpers">How to get metadata with hdhelpers?</a></li>
 <li><a class="reference internal" href="#where-does-the-information-come-from">Where does the information come from?</a></li>
 <li><a class="reference internal" href="#how-to-query-nested-information">How to query nested information?</a></li>
+<li><a class="reference internal" href="#which-time-zone-to-compute-in">Which time zone to compute in?</a></li>
 <li><a class="reference internal" href="#how-to-use-hdhelpers-for-plotting-tbd">How to use hdhelpers for plotting? (tbd)</a></li>
 </ul>
 </li>

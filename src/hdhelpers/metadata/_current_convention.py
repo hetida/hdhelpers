@@ -208,3 +208,11 @@ def metric_info(
             info = _inherited_info(gathered_metric.metric, get)
         result[metric] = info
     return result
+
+
+def own_metric_info(gathered: GatheredMetadata, key: str) -> dict[str, Any]:
+    """A field of each metric itself, without falling back to other levels"""
+    return {
+        metric: gathered_metric.metric.get(key)
+        for metric, gathered_metric in gathered.metrics.items()
+    }
