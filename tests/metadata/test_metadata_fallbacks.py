@@ -22,6 +22,7 @@ from hdhelpers.metadata import (
     get_series_unit,
     get_short_display_names,
     get_singlets_display_names,
+    get_singlets_metric_info,
     get_singlets_short_display_names,
     get_singlets_units,
     get_units,
@@ -225,3 +226,54 @@ def test_metric_info_from_platform():
 
     assert aggregation_methods["level"] == "SUM"
     assert aggregation_methods["flow"] is None
+
+
+def test_metric_info_falls_back_only_for_metrics_lacking_it():
+    """A spec transforming the information is not applied to fallback levels needlessly
+
+    The null name of the value dimension of metric "a" would let str.upper fail.
+    """
+    metric_b = metric(id="b", value_dimensions=[value_dimension(name="value name")])
+    del metric_b["name"]
+    multitsframe = frame({"metrics": [metric(id="a", name="Sensor"), metric_b]})
+
+    names = get_metric_info(multitsframe, ("name", str.upper))
+
+    assert names["a"] == "SENSOR"
+    assert names["b"] == "VALUE NAME"
+    assert get_singlets_metric_info(frame(platform_series_attrs), ("name", str.upper)) == (
+        "WATER-LVL-NORTH"
+    )
+
+
+def test_metric_info_raises_errors_of_the_spec():
+    """Errors of the spec must not be mistaken for missing metric metadata"""
+    with pytest.raises(TypeError):
+        get_metric_info(frame(platform_multitsframe_attrs), ("display_name", str.upper))
+
+
+@pytest.mark.parametrize("include_inherited", [False, True])
+def test_short_display_names_of_metrics_resolved_by_different_fields(include_inherited):
+    """Each metric gets its information from the first field providing it, independently"""
+    attrs = {
+        "metrics": [
+            metric(
+                id="a",
+                short_display_name="a short",
+                value_dimensions=[value_dimension(), value_dimension(column="state")],
+            ),
+            metric(id="b", display_name="b display", name="b name"),
+            metric(id="c", name="c name"),
+            metric(id="d", inherited={"display_name": "d inherited"}),
+        ],
+        "value_dimensions_shared": [{"column": "state", "name": "shared state"}],
+    }
+
+    short_display_names = get_short_display_names(frame(attrs), include_inherited=include_inherited)
+
+    assert short_display_names["a"]["value"] == "a short"
+    assert short_display_names["a"]["state"] == "shared state"
+    assert short_display_names["b"]["value"] == "b display"
+    assert short_display_names["c"]["value"] == "c name"
+    assert short_display_names["c"]["state"] == "shared state"
+    assert short_display_names["d"]["value"] == ("d inherited" if include_inherited else None)

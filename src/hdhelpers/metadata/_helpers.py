@@ -2,7 +2,7 @@ from collections import defaultdict
 from typing import Any
 
 import pandas as pd
-from glom import Check, Coalesce, GlomError, Spec, glom
+from glom import Check, Coalesce, CoalesceError, Spec, glom
 
 import hdhelpers.metadata._specs as _specs
 
@@ -61,16 +61,50 @@ def get_value_dimension_info(
 
     For examples we refer to the corresponding unit tests (/tests/helpers/test_metadata.py).
     """
-    spec = _specs.by_metric_key_by_val_dimension(value_dim_info, include_inherited)
-    value_dimension_info_by_metric_by_value_dimension = glom(multitsframe.attrs, spec)
     return defaultdict(
-        lambda: defaultdict(lambda: None), value_dimension_info_by_metric_by_value_dimension
+        lambda: defaultdict(lambda: None),
+        _value_dimension_info_of_attrs(multitsframe.attrs, value_dim_info, include_inherited),
     )
+
+
+def _value_dimension_info_of_attrs(
+    attrs: Any, value_dim_info: str | Spec, include_inherited: bool = False
+) -> Any:
+    spec = _specs.by_metric_key_by_val_dimension(value_dim_info, include_inherited)
+    return glom(attrs, spec)
 
 
 def follows_current_convention(attrs: Any) -> bool:
     """Whether metadata follows the current metadata convention, i.e. has a list of metrics"""
     return isinstance(attrs, dict) and isinstance(attrs.get("metrics"), list)
+
+
+def _restricted_to_metrics(attrs: dict, metrics: set) -> dict:
+    """The metadata with only the metric objects of the given metrics
+
+    The information of a metric is extracted independently of the other metrics, so fallbacks
+    only need to be evaluated for the metrics still lacking information. Besides saving time
+    for frames with many metrics, this avoids applying a spec to fallback levels whose values
+    (e.g. null) the spec cannot handle, while the metric itself provides the information.
+
+    Only for metadata following the current metadata convention.
+    """
+    metric_key = extract_from_metadata(attrs, key="metric_key", default="id")
+    return attrs | {
+        "metrics": [
+            metric
+            for metric in attrs["metrics"]
+            if isinstance(metric, dict) and metric.get(metric_key) in metrics
+        ]
+    }
+
+
+def _metrics_lacking_info(info_by_metric_by_value_dimension: dict) -> set:
+    return {
+        metric
+        for metric, info_by_value_dimension in info_by_metric_by_value_dimension.items()
+        if any(info is None for info in info_by_value_dimension.values())
+    }
 
 
 def value_dimension_info_with_fallbacks(
@@ -94,16 +128,37 @@ def value_dimension_info_with_fallbacks(
         return get_value_dimension_info(data, legacy_spec, include_inherited)
 
     result: defaultdict[str, defaultdict[str, Any]] = defaultdict(lambda: defaultdict(lambda: None))
-    # inherited properties only after all fields of the metadata itself
-    for inherited in [False, True] if include_inherited else [False]:
+    attrs = data.attrs
+    for field in fields:
+        info_by_metric = _value_dimension_info_of_attrs(attrs, Coalesce(field, default=None))
+        for metric, info_by_value_dimension in info_by_metric.items():
+            for value_dimension, info in info_by_value_dimension.items():
+                if result[metric][value_dimension] is None:
+                    result[metric][value_dimension] = info
+
+        # further fields only for the metrics still lacking information
+        metrics_lacking_info = _metrics_lacking_info(result)
+        if len(metrics_lacking_info) == 0:
+            return result
+        attrs = _restricted_to_metrics(data.attrs, metrics_lacking_info)
+
+    if include_inherited:
+        # inherited properties only after all fields of the metadata itself and, as in
+        # get_value_dimension_info, only for the value dimension "value"
         for field in fields:
-            info_by_metric = get_value_dimension_info(
-                data, Coalesce(field, default=None), inherited
+            metrics_lacking_value_info = {
+                metric
+                for metric, info_by_value_dimension in result.items()
+                if info_by_value_dimension["value"] is None
+            }
+            if len(metrics_lacking_value_info) == 0:
+                break
+            inherited_by_metric = glom(
+                _restricted_to_metrics(data.attrs, metrics_lacking_value_info),
+                _specs.inherited_by_metric_key(Coalesce(field, default=None)),
             )
-            for metric, info_by_value_dimension in info_by_metric.items():
-                for value_dimension, info in info_by_value_dimension.items():
-                    if result[metric][value_dimension] is None:
-                        result[metric][value_dimension] = info
+            for metric in metrics_lacking_value_info:
+                result[metric]["value"] = inherited_by_metric.get(metric)
     return result
 
 
@@ -175,23 +230,31 @@ def metric_info_by_metric(
     For metadata following the current metadata convention, information the metric itself does
     not provide is taken from its value dimension "value", then from "value_dimensions_shared"
     and, if include_inherited, finally from the properties the metric inherits. Information
-    provided as null counts as missing.
+    provided as null counts as missing. The fallbacks are only evaluated for metrics lacking the
+    information, see _restricted_to_metrics.
 
-    Returns an empty dict if no metric metadata is present at all.
+    Returns an empty dict if no metric metadata is present at all. Errors raised by applying
+    metric_info, e.g. a transformation failing on null, are not caught.
     """
     try:
         info_by_metric = glom(data.attrs, _specs.spec_by_metric_key(metric_info))
-    except GlomError:  # no metric metadata present at all
+    except CoalesceError:  # no metric metadata present at all
         return {}
 
     if not follows_current_convention(data.attrs):
         return info_by_metric
 
-    value_dimension_info = get_value_dimension_info(
-        data, Coalesce(metric_info, default=None), include_inherited
+    metrics_lacking_info = {metric for metric, info in info_by_metric.items() if info is None}
+    if len(metrics_lacking_info) == 0:
+        return info_by_metric
+
+    value_dimension_info = _value_dimension_info_of_attrs(
+        _restricted_to_metrics(data.attrs, metrics_lacking_info),
+        Coalesce(metric_info, default=None),
+        include_inherited,
     )
     return {
-        metric: info if info is not None else value_dimension_info[metric].get("value")
+        metric: info if info is not None else value_dimension_info.get(metric, {}).get("value")
         for metric, info in info_by_metric.items()
     }
 

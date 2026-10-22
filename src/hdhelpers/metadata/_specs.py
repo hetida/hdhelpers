@@ -113,6 +113,18 @@ def _spec_inherited_by_metric(metadatum_key: str | Spec) -> Spec:
     )
 
 
+def inherited_by_metric_key(metadatum_key: str | Spec) -> Spec:
+    """Provides glom spec that extracts a metadatum from the properties each metric inherits
+
+    Only for the current metadata convention. Returns a dict keyed by metric, which is empty if
+    there is no list of metrics.
+    """
+    return (
+        {"metric_key": _spec_metric_key(), "by_metric": _spec_inherited_by_metric(metadatum_key)},
+        "by_metric",
+    )
+
+
 def _spec_actual_per_metric_per_value_dimensions(metadatum_key: str | Spec) -> Spec:
     """Deliberately without a default: this is what discriminates the metadata conventions
 

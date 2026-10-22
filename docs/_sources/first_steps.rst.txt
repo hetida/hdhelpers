@@ -151,6 +151,12 @@ up in the metric first, then in its value dimension ``"value"`` and so on. A pat
 present yields None instead of an error. Note that a plain string like ``"operator.name"`` is
 always split at its dots, so it does not find the inherited property ``"operator.name"``.
 
+A spec may also transform the information, e.g. ``("name", str.upper)``. Since information
+provided as null counts as missing, such a spec may receive null: on the metric itself and, if
+the metric does not provide the information, on the levels it falls back to. Errors raised by
+the spec are not caught. So either let it handle None, or rather transform the information
+after retrieving it.
+
 .. _glom: https://glom.readthedocs.io/
 
 
