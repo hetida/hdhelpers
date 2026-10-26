@@ -30,9 +30,7 @@ maintainers = [
 requires-python = ">=3.12"
 dependencies = [
     "pandas>=3",
-    "plotly",
     "pydantic",
-    "glom>25,<26",
     "numpy",
     "pytz",
 ]
@@ -53,6 +51,12 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "License :: OSI Approved :: MIT License",
+]
+
+[project.optional-dependencies]
+# the plotting helpers (hdhelpers.plotting and its names in hdhelpers)
+plotting = [
+    "plotly",
 ]
 
 [project.urls]
@@ -101,10 +105,6 @@ dev = [
 [tool.ruff.lint.per-file-ignores]
 "/**/tests/**/*.py" = ["S101", "PT023", "T201", "INP001", "PT001", "ARG001", "S113", "S603", "PLR0912"]
 "tests/conftest.py" = ["F401"]
-
-[[tool.mypy.overrides]]
-module = ["glom"]
-ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["plotly", "plotly.*"]

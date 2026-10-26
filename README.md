@@ -18,6 +18,9 @@ The documentation of the package is a [GitHub page](https://hetida.github.io/hdh
 ## Getting Started with hdhelpers
 Since version >0.13.10 the hetida designer runtime comes with an installed version of hdhelpers. To start the hetida designer we recommend following the [hetida designer setup guide](https://github.com/hetida/hetida-designer/blob/release/README.md#getting-started-with-hetida-designer).
 
+The plotting helpers (`hdhelpers.plotting` and their names in `hdhelpers`) need plotly, which is the optional extra
+`plotting`: `pip install "hdhelpers[plotting]"`. Everything else, e.g. the metadata models, works without plotly.
+
 An example is given in [GitHub page](https://hetida.github.io/hdhelpers/first_steps.html#how-to-get-metadata-with-hdhelpers) of how to use functionalities of hdhelpers inside a hetida designer component. Furthermore the base component [Single Time Series Plot](https://github.com/hetida/hetida-designer/blob/release/runtime/transformations/components/visualization) uses hdhelpers to demonstrate the usage (since version >0.13.10).
 
 ## Developing for hdhelpers
@@ -27,7 +30,8 @@ For dependency management and venv setup, building and publishing, [uv](https://
 #### Python environment
 1) Create a virtual environment with `uv venv`. This will create a hidden `.venv` directory.
 2) Activate the virtual environment via `source .venv/bin/activate`
-3) Run `uv sync` to install all dependencies given in pyproject.toml.
+3) Run `uv sync --all-extras` to install all dependencies given in pyproject.toml, including the optional
+   ones of the plotting helpers.
 4) In case you need to add a new dependency, do so via `uv add <new_dependency>`. That way, uv finds versions of all
    dependencies that are compatible with each other.
 5) In case you need a new requirement for development purposes please use `uv add --dev <new_dependency>`
@@ -43,7 +47,7 @@ FROM hetida/designer-backend:<<hd_version>>
 
 USER root
 
-RUN pip install .
+RUN pip install ".[plotting]"
 
 USER hd_app
 

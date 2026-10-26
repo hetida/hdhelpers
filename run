@@ -39,7 +39,6 @@ build_docs(){
     uv pip install .
     uv run sphinx-build -M html sphinx/source sphinx/build
     uv run sphinx-build -M doctest sphinx/source sphinx/build
-    uv run pytest --doctest-modules src/hdhelpers/metadata/_specs.py
     cp -r sphinx/build/html/* docs/
 }
 
