@@ -10,8 +10,6 @@ from hdhelpers.metadata.helpers import (
     get_series_recording,
     get_singlets_default_aggregation_method,
     get_singlets_recording,
-    recording_grid,
-    recording_interval_starts,
     get_default_timezones,
     get_display_names,
     get_measurements,
@@ -35,6 +33,7 @@ from hdhelpers.metadata.helpers import (
     get_singlets_short_display_names,
     get_singlets_units,
     get_units,
+    without_metadata,
 )
 
 __all__ = [
@@ -65,9 +64,8 @@ __all__ = [
     "get_recordings",
     "get_series_recording",
     "get_singlets_recording",
-    "recording_interval_starts",
-    "recording_grid",
     "get_default_aggregation_methods",
     "get_series_default_aggregation_method",
     "get_singlets_default_aggregation_method",
+    "without_metadata",
 ]

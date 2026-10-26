@@ -24,10 +24,6 @@ from hdhelpers.metadata._recording import (
     single_metric_default_aggregation_method,
     single_metric_recording,
 )
-from hdhelpers.metadata._recording import recording_grid as _recording_grid
-from hdhelpers.metadata._recording import (
-    recording_interval_starts as _recording_interval_starts,
-)
 from hdhelpers.metadata._helpers import (
     check_dataframe,
     check_series,
@@ -1044,8 +1040,8 @@ def get_default_timezones(multitsframe: pd.DataFrame) -> defaultdict[str, str | 
     "+02:00", both accepted by pandas, e.g. by ``tz_convert``.
 
     The default time zone of a metric falls back to the one of the dataset metadata, which
-    applies to all metrics without their own. As specified by the metadata conventions, it does
-    not fall back to value dimensions or inherited properties.
+    applies to all metrics without their own. It does not fall back to value dimensions or
+    inherited properties.
 
     Args:
         multitsframe (pd.DataFrame): MTSF with metadata following the convention.
@@ -1165,14 +1161,13 @@ def get_recordings(multitsframe: pd.DataFrame) -> defaultdict[str, Recording]:
 
     The recording consists of the "recording_mode" of the metric (e.g. "periodic" or
     "on_change"), the frequency of its values with offset and time zone and its
-    "recording_aggregation_method", see "Recording of the values" in the metadata conventions.
+    "recording_aggregation_method", see :class:`Recording` for what they mean.
 
     The frequency falls back as a whole: If the metric has a "data_frequency", it applies
     together with the metric's "data_frequency_offset" and "data_frequency_timezone". Otherwise
     "ref_data_frequency" of the dataset metadata applies together with
     "ref_data_frequency_offset" and "ref_data_frequency_timezone". The values are provided as
-    given in the metadata, an offset of None means 0. Use :func:`recording_interval_starts` and
-    :func:`recording_grid` for the timestamps of the recording intervals.
+    given in the metadata.
 
     Args:
         multitsframe (pd.DataFrame): MTSF with metadata following the convention.
@@ -1291,8 +1286,7 @@ def get_default_aggregation_methods(multitsframe: pd.DataFrame) -> defaultdict[s
     of the metric, with "AVG" normalized to its alias "MEAN". If the metric does not provide one,
     it is "LAST" for values of the data type "boolean" or "string" (the "value_data_type" of the
     value dimension "value"), i.e. the state holding at the end of the interval, and "MEAN"
-    otherwise. As specified by the metadata conventions, it is not taken from inherited
-    properties.
+    otherwise. It is not taken from inherited properties.
 
     Args:
         multitsframe (pd.DataFrame): MTSF with metadata following the convention.
@@ -1394,74 +1388,37 @@ def get_singlets_default_aggregation_method(singletsframe: pd.DataFrame) -> str:
     return single_metric_default_aggregation_method(singletsframe)
 
 
-def recording_interval_starts[T: (pd.DatetimeIndex, pd.Series)](
-    timestamps: T, recording: Recording
-) -> T:
-    """Gets the start of the recording interval of each timestamp
+def without_metadata[T: (pd.Series, pd.DataFrame)](data: T) -> T:
+    """Gets a copy of a Series or DataFrame without its metadata, to compute on
 
-    The recording intervals start at the multiples of the frequency of the recording plus its
-    offset (0 if None):
+    pandas deep-copies the metadata (``attrs``) of a Series or DataFrame to every object an
+    operation creates from it, e.g. when filtering rows, selecting a column or grouping. For
+    metadata of many metrics, e.g. with comments, loops over the metrics then take much longer
+    than the computation itself. Compute on the copy without metadata instead and attach the
+    metadata of the result once at the end.
 
-    * Without time zone, these are the multiples since 1970-01-01T00:00:00Z.
-    * With time zone and a frequency shorter than a day, the intervals restart at each local
-      midnight (plus offset) of the time zone, counted in elapsed time. The last interval of a
-      day ends at the next local midnight, so it is shorter on days with a daylight saving time
-      change or if the frequency does not divide a day. This is how e.g. the hetida platform
-      compresses values in windows.
-    * With time zone and a frequency of a day or longer, e.g. "1D" or "1MS", the intervals follow
-      the calendar of the time zone, e.g. local days of 23, 24 or 25 hours.
+    The copy is cheap: It shares the data with ``data`` until one of them is changed (copy on
+    write), so changing the copy does not change ``data``.
 
     Args:
-        timestamps (pd.DatetimeIndex | pd.Series): The timestamps, naive ones are considered to be UTC.
-        recording (Recording): The recording, e.g. from :func:`get_series_recording`.
+        data (pd.Series | pd.DataFrame): Series or DataFrame, e.g. a MTSF with metadata.
 
     Returns:
-        pd.DatetimeIndex | pd.Series: The start of the recording interval of each timestamp in UTC, as DatetimeIndex or Series (with the index of `timestamps`) like `timestamps`.
-
-    Raises:
-        ValueError: If the recording has no data_frequency or its frequency, offset or time zone cannot be interpreted.
+        pd.Series | pd.DataFrame: Copy of ``data`` with empty ``attrs``.
 
     Code example:
 
-    .. doctest:: metadata.recording_interval_starts
+    .. doctest:: metadata.without_metadata
 
-        >>> recording = Recording(data_frequency="2h", data_frequency_timezone="Europe/Berlin")
-        >>> # on 2026-03-29 the clocks in Berlin are put forward at 2:00 local time (1:00 UTC)
-        >>> starts = recording_interval_starts(
-        ...     pd.DatetimeIndex(["2026-03-29T00:30:00Z", "2026-03-29T01:30:00Z"]), recording
-        ... )
-        >>> [start.isoformat() for start in starts.tz_convert("Europe/Berlin")]
-        ['2026-03-29T00:00:00+01:00', '2026-03-29T03:00:00+02:00']
+        >>> multitsframe.attrs = {"dataset_metadata": {"metric_key": "id"}, "metrics": []}
+        >>> data = without_metadata(multitsframe)
+        >>> data.attrs
+        {}
+        >>> multitsframe.attrs
+        {'dataset_metadata': {'metric_key': 'id'}, 'metrics': []}
     """
-    return _recording_interval_starts(timestamps, recording)
-
-
-def recording_grid(
-    start: pd.Timestamp | str, end: pd.Timestamp | str, recording: Recording
-) -> pd.DatetimeIndex:
-    """Gets the starts of the recording intervals from start to end, both inclusive
-
-    For a periodic recording, these are the timestamps at which values are expected. See
-    :func:`recording_interval_starts` for how the intervals are determined.
-
-    Args:
-        start (pd.Timestamp | str): Start, naive timestamps are considered to be UTC.
-        end (pd.Timestamp | str): End, naive timestamps are considered to be UTC.
-        recording (Recording): The recording, e.g. from :func:`get_series_recording`.
-
-    Returns:
-        pd.DatetimeIndex: The interval starts in UTC.
-
-    Raises:
-        ValueError: If the recording has no data_frequency or its frequency, offset or time zone cannot be interpreted.
-
-    Code example:
-
-    .. doctest:: metadata.recording_grid
-
-        >>> recording = Recording(data_frequency="15min", data_frequency_offset="5min")
-        >>> grid = recording_grid("2026-01-01T00:00:00Z", "2026-01-01T00:40:00Z", recording)
-        >>> [timestamp.isoformat() for timestamp in grid]
-        ['2026-01-01T00:05:00+00:00', '2026-01-01T00:20:00+00:00', '2026-01-01T00:35:00+00:00']
-    """
-    return _recording_grid(pd.Timestamp(start), pd.Timestamp(end), recording)
+    check_series_or_dataframe(data)
+    # The constructor does not copy attrs, in contrast to e.g. copy(deep=False)
+    copy = type(data)(data)
+    copy.attrs = {}
+    return copy

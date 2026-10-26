@@ -316,8 +316,8 @@ def _default_timezones(
 def default_timezone_by_metric(data: pd.DataFrame | pd.Series) -> defaultdict[str, str | None]:
     """The default time zone of each metric, falling back to the one of the dataset metadata
 
-    As specified by the metadata conventions, the default time zone of a metric only falls back
-    to the one of the dataset metadata, not to its value dimensions or inherited properties.
+    The default time zone of a metric only falls back to the one of the dataset metadata, not to
+    its value dimensions or inherited properties.
     The default of the returned defaultdict is the one of the dataset metadata, since it applies
     to all metrics without their own. Values which are no (non-empty) strings count as missing.
     """
