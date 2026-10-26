@@ -33,6 +33,8 @@ dependencies = [
     "pydantic",
     "numpy",
     "pytz",
+    # the time zone names the metadata conventions accept, independent of the system
+    "tzdata",
 ]
 license = "MIT"
 license-files = ["LICENSE"]

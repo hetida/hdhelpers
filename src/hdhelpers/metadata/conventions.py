@@ -27,8 +27,8 @@ from collections import Counter
 from collections.abc import Mapping
 from enum import StrEnum
 from functools import cache, lru_cache
+from importlib import resources
 from typing import Annotated, Any, ClassVar, Literal, NoReturn, Self
-from zoneinfo import available_timezones
 
 import pandas as pd
 from pydantic import (
@@ -1249,9 +1249,14 @@ _UTC_OFFSET_PATTERN = re.compile(r"^[+-](0[0-9]|1[0-4]):[0-5][0-9]$")
 
 
 @cache
-def _timezone_names() -> set[str]:
-    # Independent of the system, unlike ZoneInfo, which also accepts e.g. "posixrules"
-    return available_timezones()
+def _timezone_names() -> frozenset[str]:
+    """The IANA time zone names of the tzdata package, independent of the system
+
+    Not zoneinfo.available_timezones, which also lists the files of the system's time zone
+    database, e.g. "localtime" on Debian or Ubuntu, which is no time zone name.
+    """
+    with resources.files("tzdata").joinpath("zones").open(encoding="utf-8") as zones:
+        return frozenset(line.strip() for line in zones if line.strip() != "")
 
 
 def _is_timezone(value: str) -> bool:

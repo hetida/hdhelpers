@@ -233,6 +233,7 @@ dependencies = [
     { name = "pandas" },
     { name = "pydantic" },
     { name = "pytz" },
+    { name = "tzdata" },
 ]
 
 [package.optional-dependencies]
@@ -259,6 +260,7 @@ requires-dist = [
     { name = "plotly", marker = "extra == 'plotting'" },
     { name = "pydantic" },
     { name = "pytz" },
+    { name = "tzdata" },
 ]
 provides-extras = ["plotting"]
 
