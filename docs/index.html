@@ -75,6 +75,126 @@
 <p>Collection of functions to access metadata information from timeseries objects.
 Metadata information can follow varying conventions as the package glom is used to
 extract the requested information.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="hdhelpers.metadata.Recording">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">Recording</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">recording_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_frequency_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_frequency_timezone</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recording_aggregation_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.Recording" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>How the values of a metric are recorded, as given in its metadata</p>
+<p>The fields mean the following:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>recording_mode</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>data_frequency</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>data_frequency_offset</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>data_frequency_timezone</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>recording_aggregation_method</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hdhelpers.metadata.Recording.recording_mode">
+<span class="sig-name descname"><span class="pre">recording_mode</span></span><a class="headerlink" href="#hdhelpers.metadata.Recording.recording_mode" title="Link to this definition">¶</a></dt>
+<dd><p>“periodic”: one value per interval of data_frequency, timestamped with the start of the interval. A missing value is a gap. “on_change”: a value is recorded when it changes by more than the deadband of its value dimension and holds until the next one. Missing timestamps are no gaps. “irregular”: values at arbitrary points in time. None if unknown.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hdhelpers.metadata.Recording.data_frequency">
+<span class="sig-name descname"><span class="pre">data_frequency</span></span><a class="headerlink" href="#hdhelpers.metadata.Recording.data_frequency" title="Link to this definition">¶</a></dt>
+<dd><p>Frequency as Pandas date offset alias or timedelta string, e.g. “15min”, “1D” or “1MS”. For “on_change”, the interval after which the value is recorded again at the latest, also without a change (heartbeat).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hdhelpers.metadata.Recording.data_frequency_offset">
+<span class="sig-name descname"><span class="pre">data_frequency_offset</span></span><a class="headerlink" href="#hdhelpers.metadata.Recording.data_frequency_offset" title="Link to this definition">¶</a></dt>
+<dd><p>Timedelta string by which the intervals of data_frequency are shifted, e.g. “5min”. None means 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hdhelpers.metadata.Recording.data_frequency_timezone">
+<span class="sig-name descname"><span class="pre">data_frequency_timezone</span></span><a class="headerlink" href="#hdhelpers.metadata.Recording.data_frequency_timezone" title="Link to this definition">¶</a></dt>
+<dd><p>Time zone the intervals of data_frequency are aligned to, e.g. “Europe/Berlin”. None means UTC.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hdhelpers.metadata.Recording.recording_aggregation_method">
+<span class="sig-name descname"><span class="pre">recording_aggregation_method</span></span><a class="headerlink" href="#hdhelpers.metadata.Recording.recording_aggregation_method" title="Link to this definition">¶</a></dt>
+<dd><p>Only for “periodic”: the method each value aggregates its interval with, e.g. “MEAN” or “MAX”. None if the values are samples, e.g. the value holding at the timestamp.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>data_frequency_offset and data_frequency_timezone belong to data_frequency: They are None
+if no data_frequency applies.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hdhelpers.metadata.get_default_aggregation_methods">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_default_aggregation_methods</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_default_aggregation_methods" title="Link to this definition">¶</a></dt>
+<dd><p>Gets the method each metric of a MultiTSFrame should be aggregated with by default</p>
+<p>E.g. for plotting or reporting it in coarser intervals. It is the “default_aggregation_method”
+of the metric, with “AVG” normalized to its alias “MEAN”. If the metric does not provide one,
+it is “LAST” for values of the data type “boolean” or “string” (the “value_data_type” of the
+value dimension “value”), i.e. the state holding at the end of the interval, and “MEAN”
+otherwise. It is not taken from inherited properties.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary, where keys are the entries of the metrics metadata specified via “metric_key” in “dataset_metadata” and values are their default aggregation methods, e.g. “MEAN”, “SUM” or “LAST”. Defaults to “MEAN” for metrics without metadata.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>defaultdict[str, str]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>TypeError</strong> – If <cite>multitsframe</cite> is not a DataFrame.</p>
+</dd>
+</dl>
+<p>Code example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">multitsframe</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;metric_key&quot;</span><span class="p">:</span> <span class="s2">&quot;id&quot;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="gp">... </span>        <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;level&quot;</span><span class="p">,</span> <span class="s2">&quot;default_aggregation_method&quot;</span><span class="p">:</span> <span class="s2">&quot;AVG&quot;</span><span class="p">},</span>
+<span class="gp">... </span>        <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;rainfall&quot;</span><span class="p">,</span> <span class="s2">&quot;default_aggregation_method&quot;</span><span class="p">:</span> <span class="s2">&quot;SUM&quot;</span><span class="p">},</span>
+<span class="gp">... </span>        <span class="p">{</span>
+<span class="gp">... </span>            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;pump_running&quot;</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s2">&quot;value_dimensions&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;value_data_type&quot;</span><span class="p">:</span> <span class="s2">&quot;boolean&quot;</span><span class="p">}],</span>
+<span class="gp">... </span>        <span class="p">},</span>
+<span class="gp">... </span>    <span class="p">],</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">methods</span> <span class="o">=</span> <span class="n">get_default_aggregation_methods</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">methods</span><span class="p">[</span><span class="s2">&quot;level&quot;</span><span class="p">],</span> <span class="n">methods</span><span class="p">[</span><span class="s2">&quot;rainfall&quot;</span><span class="p">],</span> <span class="n">methods</span><span class="p">[</span><span class="s2">&quot;pump_running&quot;</span><span class="p">]</span>
+<span class="go">(&#39;MEAN&#39;, &#39;SUM&#39;, &#39;LAST&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">methods</span><span class="p">[</span><span class="s2">&quot;metric_without_metadata&quot;</span><span class="p">]</span>
+<span class="go">&#39;MEAN&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_default_timezones">
 <span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_default_timezones</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_default_timezones" title="Link to this definition">¶</a></dt>
@@ -88,8 +208,8 @@ uses by default. See “Which time zone to compute in?” in the first steps.</p
 <p>The time zone is an IANA time zone name like “Europe/Berlin” or a fixed UTC offset like
 “+02:00”, both accepted by pandas, e.g. by <code class="docutils literal notranslate"><span class="pre">tz_convert</span></code>.</p>
 <p>The default time zone of a metric falls back to the one of the dataset metadata, which
-applies to all metrics without their own. As specified by the metadata conventions, it does
-not fall back to value dimensions or inherited properties.</p>
+applies to all metrics without their own. It does not fall back to value dimensions or
+inherited properties.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p>
@@ -373,6 +493,89 @@ to this function, the functions for dedicated information like <a class="referen
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="hdhelpers.metadata.get_recordings">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_recordings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multitsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_recordings" title="Link to this definition">¶</a></dt>
+<dd><p>Gets how the values of each metric of a MultiTSFrame are recorded</p>
+<p>The recording consists of the “recording_mode” of the metric (e.g. “periodic” or
+“on_change”), the frequency of its values with offset and time zone and its
+“recording_aggregation_method”, see <a class="reference internal" href="#hdhelpers.metadata.Recording" title="hdhelpers.metadata.Recording"><code class="xref py py-class docutils literal notranslate"><span class="pre">Recording</span></code></a> for what they mean.</p>
+<p>The frequency falls back as a whole: If the metric has a “data_frequency”, it applies
+together with the metric’s “data_frequency_offset” and “data_frequency_timezone”. Otherwise
+“ref_data_frequency” of the dataset metadata applies together with
+“ref_data_frequency_offset” and “ref_data_frequency_timezone”. The values are provided as
+given in the metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>multitsframe</strong> (<em>pd.DataFrame</em>) – MTSF with metadata following the convention.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary, where keys are the entries of the metrics metadata specified via “metric_key” in “dataset_metadata” and values are their recordings. Defaults to a recording with the frequency of the dataset metadata, also for metrics without metadata.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>defaultdict[str, <a class="reference internal" href="#hdhelpers.metadata.Recording" title="hdhelpers.metadata.Recording">Recording</a>]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>TypeError</strong> – If <cite>multitsframe</cite> is not a DataFrame.</p>
+</dd>
+</dl>
+<p>Code example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">multitsframe</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;metric_key&quot;</span><span class="p">:</span> <span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;ref_data_frequency&quot;</span><span class="p">:</span> <span class="s2">&quot;1h&quot;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="gp">... </span>        <span class="p">{</span>
+<span class="gp">... </span>            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;average_level&quot;</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s2">&quot;recording_mode&quot;</span><span class="p">:</span> <span class="s2">&quot;periodic&quot;</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s2">&quot;data_frequency&quot;</span><span class="p">:</span> <span class="s2">&quot;15min&quot;</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s2">&quot;recording_aggregation_method&quot;</span><span class="p">:</span> <span class="s2">&quot;MEAN&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="p">},</span>
+<span class="gp">... </span>        <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;pump_state&quot;</span><span class="p">,</span> <span class="s2">&quot;recording_mode&quot;</span><span class="p">:</span> <span class="s2">&quot;on_change&quot;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="p">],</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">recordings</span> <span class="o">=</span> <span class="n">get_recordings</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">recordings</span><span class="p">[</span><span class="s2">&quot;average_level&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">data_frequency</span>
+<span class="go">&#39;15min&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">recordings</span><span class="p">[</span><span class="s2">&quot;pump_state&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">recording_mode</span>
+<span class="go">&#39;on_change&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">recordings</span><span class="p">[</span><span class="s2">&quot;pump_state&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">data_frequency</span>
+<span class="go">&#39;1h&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hdhelpers.metadata.get_series_default_aggregation_method">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_series_default_aggregation_method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_series_default_aggregation_method" title="Link to this definition">¶</a></dt>
+<dd><p>Gets the method a Series should be aggregated with by default</p>
+<p>See <a class="reference internal" href="#hdhelpers.metadata.get_default_aggregation_methods" title="hdhelpers.metadata.get_default_aggregation_methods"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_default_aggregation_methods()</span></code></a> for the method and its default.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>series</strong> (<em>pd.Series</em>) – Series with metadata following the convention.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The default aggregation method, e.g. “MEAN”, “SUM” or “LAST”.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>TypeError</strong> – If <cite>series</cite> is not a Series.</p>
+</dd>
+</dl>
+<p>Code example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">series</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;single_metric&quot;</span><span class="p">:</span> <span class="s2">&quot;rainfall&quot;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;rainfall&quot;</span><span class="p">,</span> <span class="s2">&quot;default_aggregation_method&quot;</span><span class="p">:</span> <span class="s2">&quot;SUM&quot;</span><span class="p">}],</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_series_default_aggregation_method</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+<span class="go">&#39;SUM&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">series</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_series_default_aggregation_method</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+<span class="go">&#39;MEAN&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_series_default_timezone">
 <span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_series_default_timezone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_series_default_timezone" title="Link to this definition">¶</a></dt>
 <dd><p>Gets the default time zone of a Series</p>
@@ -556,6 +759,45 @@ If the value name is not present it returns None.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="hdhelpers.metadata.get_series_recording">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_series_recording</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_series_recording" title="Link to this definition">¶</a></dt>
+<dd><p>Gets how the values of a Series are recorded</p>
+<p>See <a class="reference internal" href="#hdhelpers.metadata.get_recordings" title="hdhelpers.metadata.get_recordings"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_recordings()</span></code></a> for the recording and how its frequency falls back to the one of
+the dataset metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>series</strong> (<em>pd.Series</em>) – Series with metadata following the convention.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The recording of the metric, with the frequency of the dataset metadata if the metric does not provide one.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hdhelpers.metadata.Recording" title="hdhelpers.metadata.Recording">Recording</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>TypeError</strong> – If <cite>series</cite> is not a Series.</p>
+</dd>
+</dl>
+<p>Code example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">series</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;single_metric&quot;</span><span class="p">:</span> <span class="s2">&quot;water.north.level&quot;</span><span class="p">,</span> <span class="s2">&quot;metric_key&quot;</span><span class="p">:</span> <span class="s2">&quot;external_id&quot;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="gp">... </span>        <span class="p">{</span>
+<span class="gp">... </span>            <span class="s2">&quot;external_id&quot;</span><span class="p">:</span> <span class="s2">&quot;water.north.level&quot;</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s2">&quot;recording_mode&quot;</span><span class="p">:</span> <span class="s2">&quot;periodic&quot;</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s2">&quot;data_frequency&quot;</span><span class="p">:</span> <span class="s2">&quot;2h&quot;</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s2">&quot;data_frequency_timezone&quot;</span><span class="p">:</span> <span class="s2">&quot;Europe/Berlin&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="p">}</span>
+<span class="gp">... </span>    <span class="p">],</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">recording</span> <span class="o">=</span> <span class="n">get_series_recording</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">recording</span><span class="o">.</span><span class="n">data_frequency</span><span class="p">,</span> <span class="n">recording</span><span class="o">.</span><span class="n">data_frequency_offset</span><span class="p">,</span> <span class="n">recording</span><span class="o">.</span><span class="n">data_frequency_timezone</span>
+<span class="go">(&#39;2h&#39;, None, &#39;Europe/Berlin&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_series_short_display_name">
 <span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_series_short_display_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">series</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_series_short_display_name" title="Link to this definition">¶</a></dt>
 <dd><p>Gets short display name of the Series from metadata</p>
@@ -681,6 +923,41 @@ looked up on the value dimension, on the metric (for the value dimension “valu
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">get_short_display_names</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;ruhr-temperature&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
 <span class="go">&#39;temp. [°C]&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hdhelpers.metadata.get_singlets_default_aggregation_method">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_default_aggregation_method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_default_aggregation_method" title="Link to this definition">¶</a></dt>
+<dd><p>Gets the method the single metric of a SingleTSFrame should be aggregated with by default</p>
+<p>See <a class="reference internal" href="#hdhelpers.metadata.get_default_aggregation_methods" title="hdhelpers.metadata.get_default_aggregation_methods"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_default_aggregation_methods()</span></code></a> for the method and its default.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The default aggregation method, e.g. “MEAN”, “SUM” or “LAST”.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>TypeError</strong> – If <cite>singletsframe</cite> is not a DataFrame.</p>
+</dd>
+</dl>
+<p>Code example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataframe</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;single_metric&quot;</span><span class="p">:</span> <span class="s2">&quot;valve&quot;</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="gp">... </span>        <span class="p">{</span>
+<span class="gp">... </span>            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;valve&quot;</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="s2">&quot;value_dimensions&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;value_data_type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">}],</span>
+<span class="gp">... </span>        <span class="p">}</span>
+<span class="gp">... </span>    <span class="p">],</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_singlets_default_aggregation_method</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
+<span class="go">&#39;LAST&#39;</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -948,6 +1225,42 @@ by metric this directly returns the requested information for the one metric. Li
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="hdhelpers.metadata.get_singlets_recording">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_recording</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_recording" title="Link to this definition">¶</a></dt>
+<dd><p>Gets how the values of the single metric of a SingleTSFrame are recorded</p>
+<p>See <a class="reference internal" href="#hdhelpers.metadata.get_recordings" title="hdhelpers.metadata.get_recordings"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_recordings()</span></code></a> for the recording and how its frequency falls back to the one of
+the dataset metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>singletsframe</strong> (<em>pd.DataFrame</em>) – STSF with metadata following the convention.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The recording of the metric, with the frequency of the dataset metadata if the metric does not provide one.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hdhelpers.metadata.Recording" title="hdhelpers.metadata.Recording">Recording</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>TypeError</strong> – If <cite>singletsframe</cite> is not a DataFrame.</p>
+</dd>
+</dl>
+<p>Code example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dataframe</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s2">&quot;single_metric&quot;</span><span class="p">:</span> <span class="s2">&quot;abc.temp&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s2">&quot;ref_data_frequency&quot;</span><span class="p">:</span> <span class="s2">&quot;5min&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s2">&quot;ref_data_frequency_offset&quot;</span><span class="p">:</span> <span class="s2">&quot;1min&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="p">},</span>
+<span class="gp">... </span>    <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;abc.temp&quot;</span><span class="p">,</span> <span class="s2">&quot;recording_mode&quot;</span><span class="p">:</span> <span class="s2">&quot;periodic&quot;</span><span class="p">}],</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">recording</span> <span class="o">=</span> <span class="n">get_singlets_recording</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">recording</span><span class="o">.</span><span class="n">recording_mode</span><span class="p">,</span> <span class="n">recording</span><span class="o">.</span><span class="n">data_frequency</span><span class="p">,</span> <span class="n">recording</span><span class="o">.</span><span class="n">data_frequency_offset</span>
+<span class="go">(&#39;periodic&#39;, &#39;5min&#39;, &#39;1min&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="hdhelpers.metadata.get_singlets_short_display_names">
 <span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">get_singlets_short_display_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">singletsframe</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.get_singlets_short_display_names" title="Link to this definition">¶</a></dt>
 <dd><p>Gets short display names of the value dimensions of a SingleTSFrame from metadata</p>
@@ -1101,6 +1414,39 @@ If the short display name of the value_dimension is not present it returns the r
 <span class="go">True</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;metric2&quot;</span><span class="p">][</span><span class="s1">&#39;value_dim_1&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
 <span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hdhelpers.metadata.without_metadata">
+<span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.</span></span><span class="sig-name descname"><span class="pre">without_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hdhelpers.metadata.without_metadata" title="Link to this definition">¶</a></dt>
+<dd><p>Gets a copy of a Series or DataFrame without its metadata, to compute on</p>
+<p>pandas deep-copies the metadata (<code class="docutils literal notranslate"><span class="pre">attrs</span></code>) of a Series or DataFrame to every object an
+operation creates from it, e.g. when filtering rows, selecting a column or grouping. For
+metadata of many metrics, e.g. with comments, loops over the metrics then take much longer
+than the computation itself. Compute on the copy without metadata instead and attach the
+metadata of the result once at the end.</p>
+<p>The copy is cheap: It shares the data with <code class="docutils literal notranslate"><span class="pre">data</span></code> until one of them is changed (copy on
+write), so changing the copy does not change <code class="docutils literal notranslate"><span class="pre">data</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>pd.Series</em><em> | </em><em>pd.DataFrame</em>) – Series or DataFrame, e.g. a MTSF with metadata.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Copy of <code class="docutils literal notranslate"><span class="pre">data</span></code> with empty <code class="docutils literal notranslate"><span class="pre">attrs</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.Series | pd.DataFrame</p>
+</dd>
+</dl>
+<p>Code example:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">multitsframe</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;dataset_metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;metric_key&quot;</span><span class="p">:</span> <span class="s2">&quot;id&quot;</span><span class="p">},</span> <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">[]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">without_metadata</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="o">.</span><span class="n">attrs</span>
+<span class="go">{}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">multitsframe</span><span class="o">.</span><span class="n">attrs</span>
+<span class="go">{&#39;dataset_metadata&#39;: {&#39;metric_key&#39;: &#39;id&#39;}, &#39;metrics&#39;: []}</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1320,29 +1666,44 @@ empty plot and showing an adequate message instead.</p>
 <li><a class="reference internal" href="#further-information">Further Information</a></li>
 <li><a class="reference internal" href="#functions">Functions</a><ul>
 <li><a class="reference internal" href="#module-hdhelpers.metadata">metadata</a><ul>
+<li><a class="reference internal" href="#hdhelpers.metadata.Recording"><code class="docutils literal notranslate"><span class="pre">Recording</span></code></a><ul>
+<li><a class="reference internal" href="#hdhelpers.metadata.Recording.recording_mode"><code class="docutils literal notranslate"><span class="pre">recording_mode</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.Recording.data_frequency"><code class="docutils literal notranslate"><span class="pre">data_frequency</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.Recording.data_frequency_offset"><code class="docutils literal notranslate"><span class="pre">data_frequency_offset</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.Recording.data_frequency_timezone"><code class="docutils literal notranslate"><span class="pre">data_frequency_timezone</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.Recording.recording_aggregation_method"><code class="docutils literal notranslate"><span class="pre">recording_aggregation_method</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#hdhelpers.metadata.get_default_aggregation_methods"><code class="docutils literal notranslate"><span class="pre">get_default_aggregation_methods()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_default_timezones"><code class="docutils literal notranslate"><span class="pre">get_default_timezones()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_display_names"><code class="docutils literal notranslate"><span class="pre">get_display_names()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_measurements"><code class="docutils literal notranslate"><span class="pre">get_measurements()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_metric_info"><code class="docutils literal notranslate"><span class="pre">get_metric_info()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_names"><code class="docutils literal notranslate"><span class="pre">get_names()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_queried_interval"><code class="docutils literal notranslate"><span class="pre">get_queried_interval()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.get_recordings"><code class="docutils literal notranslate"><span class="pre">get_recordings()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.get_series_default_aggregation_method"><code class="docutils literal notranslate"><span class="pre">get_series_default_aggregation_method()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_series_default_timezone"><code class="docutils literal notranslate"><span class="pre">get_series_default_timezone()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_series_display_name"><code class="docutils literal notranslate"><span class="pre">get_series_display_name()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_series_info"><code class="docutils literal notranslate"><span class="pre">get_series_info()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_series_measurement"><code class="docutils literal notranslate"><span class="pre">get_series_measurement()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_series_name"><code class="docutils literal notranslate"><span class="pre">get_series_name()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.get_series_recording"><code class="docutils literal notranslate"><span class="pre">get_series_recording()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_series_short_display_name"><code class="docutils literal notranslate"><span class="pre">get_series_short_display_name()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_series_unit"><code class="docutils literal notranslate"><span class="pre">get_series_unit()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_short_display_names"><code class="docutils literal notranslate"><span class="pre">get_short_display_names()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.get_singlets_default_aggregation_method"><code class="docutils literal notranslate"><span class="pre">get_singlets_default_aggregation_method()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_singlets_default_timezone"><code class="docutils literal notranslate"><span class="pre">get_singlets_default_timezone()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_singlets_display_names"><code class="docutils literal notranslate"><span class="pre">get_singlets_display_names()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_singlets_info"><code class="docutils literal notranslate"><span class="pre">get_singlets_info()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_singlets_measurements"><code class="docutils literal notranslate"><span class="pre">get_singlets_measurements()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_singlets_metric_info"><code class="docutils literal notranslate"><span class="pre">get_singlets_metric_info()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_singlets_names"><code class="docutils literal notranslate"><span class="pre">get_singlets_names()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.get_singlets_recording"><code class="docutils literal notranslate"><span class="pre">get_singlets_recording()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_singlets_short_display_names"><code class="docutils literal notranslate"><span class="pre">get_singlets_short_display_names()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_singlets_units"><code class="docutils literal notranslate"><span class="pre">get_singlets_units()</span></code></a></li>
 <li><a class="reference internal" href="#hdhelpers.metadata.get_units"><code class="docutils literal notranslate"><span class="pre">get_units()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.without_metadata"><code class="docutils literal notranslate"><span class="pre">without_metadata()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-hdhelpers.helpers">helpers</a><ul>
