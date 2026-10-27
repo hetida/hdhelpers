@@ -48,30 +48,32 @@
 <a class="reference external" href="https://hetida.github.io/hetida-designer/user_guide/attached_metadata/">hetida designer metadata conventions</a>.
 In hetida designer this series can be represented as json for <em>direct provisioning</em></p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;__hd_wrapped_data_object__&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;SERIES&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;__metadata__&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;dataset_metadata&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="nt">&quot;metric_key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;external_id&quot;</span><span class="p">,</span>
-<span class="w">            </span><span class="nt">&quot;single_metric&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;water.north.level&quot;</span><span class="p">,</span>
-<span class="w">            </span><span class="nt">&quot;ref_interval_start_timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2020-01-01T08:10:00+00:00&quot;</span><span class="p">,</span>
-<span class="w">            </span><span class="nt">&quot;ref_interval_end_timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2020-01-01T08:20:00+00:00&quot;</span><span class="p">,</span>
-<span class="w">            </span><span class="nt">&quot;ref_interval_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;closed&quot;</span>
+<span class="w">    </span><span class="nt">"__hd_wrapped_data_object__"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SERIES"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"__metadata__"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">"dataset_metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">"metric_key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"external_id"</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">"single_metric"</span><span class="p">:</span><span class="w"> </span><span class="s2">"water.north.level"</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">"queried_metrics"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"water.north.level"</span><span class="p">],</span>
+<span class="w">            </span><span class="nt">"ref_interval_start_timestamp"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-01-01T08:10:00+00:00"</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">"ref_interval_end_timestamp"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2020-01-01T08:20:00+00:00"</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">"ref_interval_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"closed"</span>
 <span class="w">        </span><span class="p">},</span>
-<span class="w">        </span><span class="nt">&quot;metrics&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="nt">"metrics"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">            </span><span class="p">{</span>
-<span class="w">                </span><span class="nt">&quot;external_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;water.north.level&quot;</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Water level north&quot;</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">&quot;short_display_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Water Level&quot;</span><span class="p">,</span>
-<span class="w">                </span><span class="nt">&quot;value_dimensions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">&quot;column&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;value&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;unit&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cm&quot;</span><span class="p">}],</span>
-<span class="w">                </span><span class="nt">&quot;inherited&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;latitude&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">51.43</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;longitude&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">7.58</span><span class="p">}</span>
+<span class="w">                </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"4c1f0e2a-7b3d-4e5f-9a8b-1c2d3e4f5a6b"</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">"external_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"water.north.level"</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Water level north"</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">"short_display_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Water Level"</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">"value_dimensions"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"column"</span><span class="p">:</span><span class="w"> </span><span class="s2">"value"</span><span class="p">,</span><span class="w"> </span><span class="nt">"unit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cm"</span><span class="p">,</span><span class="w"> </span><span class="nt">"measurement"</span><span class="p">:</span><span class="w"> </span><span class="s2">"level"</span><span class="p">}],</span>
+<span class="w">                </span><span class="nt">"inherited"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"latitude"</span><span class="p">:</span><span class="w"> </span><span class="mf">51.43</span><span class="p">,</span><span class="w"> </span><span class="nt">"longitude"</span><span class="p">:</span><span class="w"> </span><span class="mf">7.58</span><span class="p">}</span>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">        </span><span class="p">]</span>
 <span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="nt">&quot;__data__&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;2020-01-01T08:10:00+00:00&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;2020-01-01T08:15:00+00:00&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;2020-01-01T08:16:00+00:00&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;2020-01-01T08:17:00+00:00&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span>
+<span class="w">    </span><span class="nt">"__data__"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">"2020-01-01T08:10:00+00:00"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"2020-01-01T08:15:00+00:00"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"2020-01-01T08:16:00+00:00"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"2020-01-01T08:17:00+00:00"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
@@ -83,13 +85,63 @@ In hetida designer this series can be represented as json for <em>direct provisi
     <span class="c1"># entrypoint function for this component</span>
     <span class="c1"># ***** DO NOT EDIT LINES ABOVE *****</span>
 
-    <span class="n">name</span> <span class="o">=</span> <span class="n">get_series_name</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>  <span class="c1"># &quot;Water level north&quot;</span>
-    <span class="n">unit</span> <span class="o">=</span> <span class="n">get_series_unit</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>  <span class="c1"># &quot;cm&quot;</span>
-    <span class="n">latitude</span> <span class="o">=</span> <span class="n">get_series_info</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="s2">&quot;latitude&quot;</span><span class="p">)</span>  <span class="c1"># 51.43, inherited from the hierarchy</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">get_series_name</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>  <span class="c1"># "Water level north"</span>
+    <span class="n">unit</span> <span class="o">=</span> <span class="n">get_series_unit</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>  <span class="c1"># "cm"</span>
+    <span class="n">latitude</span> <span class="o">=</span> <span class="n">get_series_info</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="s2">"latitude"</span><span class="p">)</span>  <span class="c1"># 51.43, inherited from the hierarchy</span>
 
     <span class="o">...</span>
 </pre></div>
 </div>
+<p>or, equivalently, via the metadata as model:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hdhelpers.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_metadata</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">series</span><span class="p">):</span>
+    <span class="c1"># entrypoint function for this component</span>
+    <span class="c1"># ***** DO NOT EDIT LINES ABOVE *****</span>
+
+    <span class="n">meta</span> <span class="o">=</span> <span class="n">read_metadata</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>  <span class="c1"># None if the series has no valid metadata</span>
+    <span class="k">if</span> <span class="n">meta</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">name</span><span class="p">()</span>  <span class="c1"># "Water level north"</span>
+        <span class="n">unit</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">unit</span><span class="p">()</span>  <span class="c1"># "cm"</span>
+        <span class="n">latitude</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">metric_info</span><span class="p">(</span><span class="s2">"latitude"</span><span class="p">)</span>  <span class="c1"># 51.43</span>
+
+    <span class="o">...</span>
+</pre></div>
+</div>
+</section>
+<section id="metadata-as-model">
+<h2>Metadata as model<a class="headerlink" href="#metadata-as-model" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">hdhelpers.metadata.conventions</span></code> holds the models of the metadata conventions, one per data
+type: <code class="docutils literal notranslate"><span class="pre">SeriesMetadata</span></code>, <code class="docutils literal notranslate"><span class="pre">SingleTSFrameMetadata</span></code> and <code class="docutils literal notranslate"><span class="pre">MultiTSFrameMetadata</span></code>. They are the
+contract of the conventions: Parsing fails for metadata which does not follow them.
+<code class="docutils literal notranslate"><span class="pre">check_metadata_conventions</span></code> reports the issues of such metadata at their locations.</p>
+<p><code class="docutils literal notranslate"><span class="pre">read_metadata(obj)</span></code> gives the metadata of a Series or DataFrame as model, or None if there is
+no valid metadata. With <code class="docutils literal notranslate"><span class="pre">required=True</span></code> it raises a <code class="docutils literal notranslate"><span class="pre">MetadataConventionError</span></code> listing the
+issues instead, for components which cannot work without metadata. The methods of the models
+resolve the fallbacks described below, e.g. <code class="docutils literal notranslate"><span class="pre">unit()</span></code>, <code class="docutils literal notranslate"><span class="pre">display_name()</span></code>, <code class="docutils literal notranslate"><span class="pre">metric_info()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">default_timezone()</span></code>, <code class="docutils literal notranslate"><span class="pre">recording()</span></code> and <code class="docutils literal notranslate"><span class="pre">queried_interval()</span></code>. For a SERIES or
+SINGLETSFRAME, the metric can be omitted. For a MULTITSFRAME, the methods take the metric, and
+methods in plural like <code class="docutils literal notranslate"><span class="pre">units()</span></code> return the information of all metrics.</p>
+<p>The hetida designer runtime parses the metadata of the workflow inputs once and attaches the
+model to them (<code class="docutils literal notranslate"><span class="pre">attach_metadata</span></code>). The models are immutable, so that all objects pandas
+derives from an input share the model instead of copying the metadata, which saves a lot of
+time for metadata of many metrics. To change metadata, create a changed version, which shares
+all unchanged parts, and set it on your result:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hdhelpers.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_metadata</span><span class="p">,</span> <span class="n">set_metadata</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">series</span><span class="p">):</span>
+    <span class="c1"># entrypoint function for this component</span>
+    <span class="c1"># ***** DO NOT EDIT LINES ABOVE *****</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">series</span> <span class="o">*</span> <span class="mi">100</span>
+    <span class="n">meta</span> <span class="o">=</span> <span class="n">read_metadata</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">set_metadata</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">meta</span><span class="o">.</span><span class="n">with_value_dimension</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"m"</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"result"</span><span class="p">:</span> <span class="n">result</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Since the model is no JSON value, <code class="docutils literal notranslate"><span class="pre">json.dumps(obj.attrs)</span></code> or <code class="docutils literal notranslate"><span class="pre">obj.to_parquet()</span></code> fail for
+objects with attached metadata. Use <code class="docutils literal notranslate"><span class="pre">attrs_to_json(obj.attrs)</span></code> to get attrs in their JSON form.</p>
 </section>
 <section id="where-does-the-information-come-from">
 <h2>Where does the information come from?<a class="headerlink" href="#where-does-the-information-come-from" title="Link to this heading">¶</a></h2>
@@ -120,54 +172,40 @@ by the inherited properties as last resort.</p>
 In contrast, the functions for dedicated information do not use them by default, since an
 inherited property with the same label usually does not describe the metric itself, e.g. a
 property “unit” of a plant. Pass <code class="docutils literal notranslate"><span class="pre">include_inherited=True</span></code> to use them as last resort anyway.</p>
-<p>Entries which do not adhere to the conventions are skipped: metrics which are no objects or
-whose field named by the metric key is no string, and value dimensions which are no objects or
-whose column is no string. <code class="docutils literal notranslate"><span class="pre">&quot;value_dimensions&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;value_dimensions_shared&quot;</span></code> which are no
-lists count as empty, a metric key which is no string as missing, i.e. <code class="docutils literal notranslate"><span class="pre">&quot;id&quot;</span></code> is used.</p>
+<p>Metadata which does not follow the conventions provides no information at all: The functions
+return None or empty results for it.</p>
 </section>
 <section id="how-to-query-nested-information">
 <h2>How to query nested information?<a class="headerlink" href="#how-to-query-nested-information" title="Link to this heading">¶</a></h2>
 <p>The information requested from <code class="docutils literal notranslate"><span class="pre">get_metric_info</span></code>, <code class="docutils literal notranslate"><span class="pre">get_singlets_metric_info</span></code>,
-<code class="docutils literal notranslate"><span class="pre">get_series_info</span></code> and <code class="docutils literal notranslate"><span class="pre">get_singlets_info</span></code> is interpreted as a <a class="reference external" href="https://glom.readthedocs.io/">glom</a> spec. A string is a
-path in which dots separate the keys, so it also reaches into sub dictionaries. Let’s say the
-metric of the series above additionally provides comments and information on its sensor (the
-conventions allow additional fields at every level), and the label of one of its inherited
-properties contains a dot:</p>
+<code class="docutils literal notranslate"><span class="pre">get_series_info</span></code> and <code class="docutils literal notranslate"><span class="pre">get_singlets_info</span></code> (and from the corresponding methods of the models)
+is a field or a path of fields separated by dots, which reaches into sub objects. Let’s say the
+metric of the series above additionally provides information on its sensor (the conventions
+allow additional fields at every level):</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;external_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;water.north.level&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Water level north&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;sensor&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;manufacturer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Acme&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;calibration&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;date&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-03-01&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;offset&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.02</span><span class="p">}</span>
+<span class="w">    </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"4c1f0e2a-7b3d-4e5f-9a8b-1c2d3e4f5a6b"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"external_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"water.north.level"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Water level north"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"sensor"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">"manufacturer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Acme"</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"calibration"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-03-01"</span><span class="p">,</span><span class="w"> </span><span class="nt">"offset"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.02</span><span class="p">}</span>
 <span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="nt">&quot;comments&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="p">{</span><span class="nt">&quot;content&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Gauge maintenance&quot;</span><span class="p">},</span>
-<span class="w">        </span><span class="p">{</span><span class="nt">&quot;content&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Sensor replaced&quot;</span><span class="p">}</span>
-<span class="w">    </span><span class="p">],</span>
-<span class="w">    </span><span class="nt">&quot;value_dimensions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">&quot;column&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;value&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;unit&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cm&quot;</span><span class="p">}],</span>
-<span class="w">    </span><span class="nt">&quot;inherited&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;latitude&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">51.43</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;operator.name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Ruhrverband&quot;</span><span class="p">}</span>
+<span class="w">    </span><span class="nt">"value_dimensions"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"column"</span><span class="p">:</span><span class="w"> </span><span class="s2">"value"</span><span class="p">,</span><span class="w"> </span><span class="nt">"unit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cm"</span><span class="p">,</span><span class="w"> </span><span class="nt">"measurement"</span><span class="p">:</span><span class="w"> </span><span class="s2">"level"</span><span class="p">}],</span>
+<span class="w">    </span><span class="nt">"inherited"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"latitude"</span><span class="p">:</span><span class="w"> </span><span class="mf">51.43</span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p>We can retrieve the nested information with the following code</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">glom</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">hdhelpers.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_series_info</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hdhelpers.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_series_info</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">series</span><span class="p">):</span>
     <span class="c1"># entrypoint function for this component</span>
     <span class="c1"># ***** DO NOT EDIT LINES ABOVE *****</span>
 
-    <span class="n">manufacturer</span> <span class="o">=</span> <span class="n">get_series_info</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="s2">&quot;sensor.manufacturer&quot;</span><span class="p">)</span>  <span class="c1"># &quot;Acme&quot;</span>
-    <span class="n">calibration_date</span> <span class="o">=</span> <span class="n">get_series_info</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="s2">&quot;sensor.calibration.date&quot;</span><span class="p">)</span>  <span class="c1"># &quot;2026-03-01&quot;</span>
-    <span class="n">latitude</span> <span class="o">=</span> <span class="n">get_series_info</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="s2">&quot;inherited.latitude&quot;</span><span class="p">)</span>  <span class="c1"># 51.43, never the metric&#39;s own</span>
-    <span class="n">firmware</span> <span class="o">=</span> <span class="n">get_series_info</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="s2">&quot;sensor.firmware&quot;</span><span class="p">)</span>  <span class="c1"># None, not provided</span>
-
-    <span class="c1"># any other glom spec, e.g. the content of each comment</span>
-    <span class="n">comments</span> <span class="o">=</span> <span class="n">get_series_info</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;comments&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]))</span>
-    <span class="c1"># [&quot;Gauge maintenance&quot;, &quot;Sensor replaced&quot;]</span>
-
-    <span class="c1"># a key which itself contains dots requires a glom Path</span>
-    <span class="n">operator</span> <span class="o">=</span> <span class="n">get_series_info</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;operator.name&quot;</span><span class="p">))</span>  <span class="c1"># &quot;Ruhrverband&quot;</span>
+    <span class="n">manufacturer</span> <span class="o">=</span> <span class="n">get_series_info</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="s2">"sensor.manufacturer"</span><span class="p">)</span>  <span class="c1"># "Acme"</span>
+    <span class="n">calibration_date</span> <span class="o">=</span> <span class="n">get_series_info</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="s2">"sensor.calibration.date"</span><span class="p">)</span>  <span class="c1"># "2026-03-01"</span>
+    <span class="n">latitude</span> <span class="o">=</span> <span class="n">get_series_info</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="s2">"inherited.latitude"</span><span class="p">)</span>  <span class="c1"># 51.43, never the metric's own</span>
+    <span class="n">firmware</span> <span class="o">=</span> <span class="n">get_series_info</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="s2">"sensor.firmware"</span><span class="p">)</span>  <span class="c1"># None, not provided</span>
 
     <span class="o">...</span>
 </pre></div>
@@ -176,13 +214,9 @@ properties contains a dot:</p>
 manufacturer keyed by metric accordingly.</p>
 <p>The fallbacks described above apply to the whole path, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;sensor.manufacturer&quot;</span></code> is looked
 up in the metric first, then in its value dimension <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code> and so on. A path which is not
-present yields None instead of an error. Note that a plain string like <code class="docutils literal notranslate"><span class="pre">&quot;operator.name&quot;</span></code> is
-always split at its dots, so it does not find the inherited property <code class="docutils literal notranslate"><span class="pre">&quot;operator.name&quot;</span></code>.</p>
-<p>A spec may also transform the information, e.g. <code class="docutils literal notranslate"><span class="pre">(&quot;name&quot;,</span> <span class="pre">str.upper)</span></code>. Since information
-provided as null counts as missing, such a spec may receive null: on the metric itself and, if
-the metric does not provide the information, on the levels it falls back to. Errors raised by
-the spec are not caught. So either let it handle None, or rather transform the information
-after retrieving it.</p>
+present yields None instead of an error. Paths cannot address list items or keys which contain
+dots themselves. Such information, e.g. the comments of a metric, is available via the models:
+<code class="docutils literal notranslate"><span class="pre">read_metadata(series).metric().comments</span></code>.</p>
 </section>
 <section id="which-time-zone-to-compute-in">
 <h2>Which time zone to compute in?<a class="headerlink" href="#which-time-zone-to-compute-in" title="Link to this heading">¶</a></h2>
@@ -212,10 +246,10 @@ fixed UTC offset like <code class="docutils literal notranslate"><span class="pr
     <span class="c1"># ***** DO NOT EDIT LINES ABOVE *****</span>
 
     <span class="c1"># compute: each day starts at midnight of the default time zone of the data,</span>
-    <span class="c1"># e.g. at midnight in &quot;Europe/Berlin&quot;, and has 23 or 25 hours when switching</span>
+    <span class="c1"># e.g. at midnight in "Europe/Berlin", and has 23 or 25 hours when switching</span>
     <span class="c1"># from or to daylight saving time</span>
-    <span class="n">timezone</span> <span class="o">=</span> <span class="n">get_series_default_timezone</span><span class="p">(</span><span class="n">series</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;UTC&quot;</span>
-    <span class="n">daily_sums</span> <span class="o">=</span> <span class="n">modify_timezone</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">to_timezone</span><span class="o">=</span><span class="n">timezone</span><span class="p">)</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s2">&quot;1D&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="n">timezone</span> <span class="o">=</span> <span class="n">get_series_default_timezone</span><span class="p">(</span><span class="n">series</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"UTC"</span>
+    <span class="n">daily_sums</span> <span class="o">=</span> <span class="n">modify_timezone</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">to_timezone</span><span class="o">=</span><span class="n">timezone</span><span class="p">)</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s2">"1D"</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 
     <span class="c1"># view: show the timestamps in the time zone of the plot target settings</span>
     <span class="n">daily_sums</span> <span class="o">=</span> <span class="n">modify_timezone</span><span class="p">(</span><span class="n">daily_sums</span><span class="p">)</span>
@@ -235,11 +269,11 @@ so the results of the computation would depend on who looks at them.</p>
 
     <span class="n">timezones</span> <span class="o">=</span> <span class="n">get_default_timezones</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">)</span>
     <span class="n">daily_sums</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="n">metric</span><span class="p">:</span> <span class="n">group</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;timestamp&quot;</span><span class="p">)[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
-        <span class="o">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="n">timezones</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">&quot;UTC&quot;</span><span class="p">)</span>
-        <span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s2">&quot;1D&quot;</span><span class="p">)</span>
+        <span class="n">metric</span><span class="p">:</span> <span class="n">group</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">"timestamp"</span><span class="p">)[</span><span class="s2">"value"</span><span class="p">]</span>
+        <span class="o">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="n">timezones</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">"UTC"</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s2">"1D"</span><span class="p">)</span>
         <span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">multitsframe</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;metric&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">multitsframe</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"metric"</span><span class="p">)</span>
     <span class="p">}</span>
 
     <span class="o">...</span>
@@ -266,18 +300,18 @@ For example, we want to:
 
     <span class="n">series</span> <span class="o">=</span> <span class="n">modify_timezone</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
 
-    <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">([</span><span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">series</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">series</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="n">resolve_color</span><span class="p">(</span><span class="s2">&quot;ki.vision&quot;</span><span class="p">)})])</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">([</span><span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">series</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">series</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="p">{</span><span class="s2">"color"</span><span class="p">:</span> <span class="n">resolve_color</span><span class="p">(</span><span class="s2">"ki.vision"</span><span class="p">)})])</span>
 
     <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">get_queried_interval</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
     <span class="n">fig</span><span class="o">.</span><span class="n">update_xaxes</span><span class="p">(</span><span class="nb">range</span><span class="o">=</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">))</span>
 
-    <span class="n">full_title</span> <span class="o">=</span> <span class="n">get_series_name</span><span class="p">(</span><span class="n">series</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;Level&quot;</span>
+    <span class="n">full_title</span> <span class="o">=</span> <span class="n">get_series_name</span><span class="p">(</span><span class="n">series</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"Level"</span>
     <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span><span class="n">yaxis_title</span><span class="o">=</span><span class="n">full_title</span><span class="p">)</span>
 
     <span class="n">set_dt_ticks</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
     <span class="n">set_agnostic_theme</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;plot&quot;</span><span class="p">:</span> <span class="n">fig</span><span class="p">}</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"plot"</span><span class="p">:</span> <span class="n">fig</span><span class="p">}</span>
 </pre></div>
 </div>
 </section>
@@ -295,6 +329,7 @@ For example, we want to:
     <ul>
 <li><a class="reference internal" href="#">First steps</a><ul>
 <li><a class="reference internal" href="#how-to-get-metadata-with-hdhelpers">How to get metadata with hdhelpers?</a></li>
+<li><a class="reference internal" href="#metadata-as-model">Metadata as model</a></li>
 <li><a class="reference internal" href="#where-does-the-information-come-from">Where does the information come from?</a></li>
 <li><a class="reference internal" href="#how-to-query-nested-information">How to query nested information?</a></li>
 <li><a class="reference internal" href="#which-time-zone-to-compute-in">Which time zone to compute in?</a></li>
@@ -348,7 +383,7 @@ For example, we want to:
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2026, Steffen Wittkamp, Jenny Kupzig.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
     </div>
   </body>
 </html>

@@ -16,6 +16,7 @@ from hdhelpers.metadata.attached import (
 from hdhelpers.metadata.conventions import MetadataConventionError, check_metadata_conventions
 from hdhelpers.metadata.helpers import (
     Recording,
+    copy_without_metadata,
     get_default_aggregation_methods,
     get_default_timezones,
     get_display_names,
@@ -45,7 +46,6 @@ from hdhelpers.metadata.helpers import (
     get_singlets_short_display_names,
     get_singlets_units,
     get_units,
-    without_metadata,
 )
 
 __all__ = [
@@ -86,5 +86,5 @@ __all__ = [
     "get_default_aggregation_methods",
     "get_series_default_aggregation_method",
     "get_singlets_default_aggregation_method",
-    "without_metadata",
+    "copy_without_metadata",
 ]

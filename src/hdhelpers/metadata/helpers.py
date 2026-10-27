@@ -558,7 +558,7 @@ def get_singlets_default_aggregation_method(singletsframe: pd.DataFrame) -> str:
     )
 
 
-def without_metadata[T: (pd.Series, pd.DataFrame)](data: T) -> T:
+def copy_without_metadata[T: (pd.Series, pd.DataFrame)](data: T) -> T:
     """Gets a copy of a Series or DataFrame without its metadata
 
     The copy is cheap: It shares the data with ``data`` until one of them is changed (copy on
@@ -574,10 +574,10 @@ def without_metadata[T: (pd.Series, pd.DataFrame)](data: T) -> T:
 
     Code example:
 
-    .. doctest:: metadata.without_metadata
+    .. doctest:: metadata.copy_without_metadata
 
         >>> multitsframe.attrs = {"dataset_metadata": {"metric_key": "id"}, "metrics": []}
-        >>> data = without_metadata(multitsframe)
+        >>> data = copy_without_metadata(multitsframe)
         >>> data.attrs
         {}
         >>> multitsframe.attrs

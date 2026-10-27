@@ -17,16 +17,18 @@ In hetida designer this series can be represented as json for *direct provisioni
             "dataset_metadata": {
                 "metric_key": "external_id",
                 "single_metric": "water.north.level",
+                "queried_metrics": ["water.north.level"],
                 "ref_interval_start_timestamp": "2020-01-01T08:10:00+00:00",
                 "ref_interval_end_timestamp": "2020-01-01T08:20:00+00:00",
                 "ref_interval_type": "closed"
             },
             "metrics": [
                 {
+                    "id": "4c1f0e2a-7b3d-4e5f-9a8b-1c2d3e4f5a6b",
                     "external_id": "water.north.level",
                     "name": "Water level north",
                     "short_display_name": "Water Level",
-                    "value_dimensions": [{"column": "value", "unit": "cm"}],
+                    "value_dimensions": [{"column": "value", "unit": "cm", "measurement": "level"}],
                     "inherited": {"latitude": 51.43, "longitude": 7.58}
                 }
             ]
@@ -55,7 +57,64 @@ We can retrieve the name, unit and latitude of the series with the following cod
 
         ...
 
+or, equivalently, via the metadata as model:
+
+.. code-block:: python
+
+    from hdhelpers.metadata import read_metadata
+
+    def main(*, series):
+        # entrypoint function for this component
+        # ***** DO NOT EDIT LINES ABOVE *****
+
+        meta = read_metadata(series)  # None if the series has no valid metadata
+        if meta is not None:
+            name = meta.name()  # "Water level north"
+            unit = meta.unit()  # "cm"
+            latitude = meta.metric_info("latitude")  # 51.43
+
+        ...
+
 .. _hetida designer metadata conventions: https://hetida.github.io/hetida-designer/user_guide/attached_metadata/
+
+Metadata as model
+=================
+
+``hdhelpers.metadata.conventions`` holds the models of the metadata conventions, one per data
+type: ``SeriesMetadata``, ``SingleTSFrameMetadata`` and ``MultiTSFrameMetadata``. They are the
+contract of the conventions: Parsing fails for metadata which does not follow them.
+``check_metadata_conventions`` reports the issues of such metadata at their locations.
+
+``read_metadata(obj)`` gives the metadata of a Series or DataFrame as model, or None if there is
+no valid metadata. With ``required=True`` it raises a ``MetadataConventionError`` listing the
+issues instead, for components which cannot work without metadata. The methods of the models
+resolve the fallbacks described below, e.g. ``unit()``, ``display_name()``, ``metric_info()``,
+``default_timezone()``, ``recording()`` and ``queried_interval()``. For a SERIES or
+SINGLETSFRAME, the metric can be omitted. For a MULTITSFRAME, the methods take the metric, and
+methods in plural like ``units()`` return the information of all metrics.
+
+The hetida designer runtime parses the metadata of the workflow inputs once and attaches the
+model to them (``attach_metadata``). The models are immutable, so that all objects pandas
+derives from an input share the model instead of copying the metadata, which saves a lot of
+time for metadata of many metrics. To change metadata, create a changed version, which shares
+all unchanged parts, and set it on your result:
+
+.. code-block:: python
+
+    from hdhelpers.metadata import read_metadata, set_metadata
+
+    def main(*, series):
+        # entrypoint function for this component
+        # ***** DO NOT EDIT LINES ABOVE *****
+
+        result = series * 100
+        meta = read_metadata(series, required=True)
+        set_metadata(result, meta.with_value_dimension(None, "value", unit="m"))
+
+        return {"result": result}
+
+Since the model is no JSON value, ``json.dumps(obj.attrs)`` or ``obj.to_parquet()`` fail for
+objects with attached metadata. Use ``attrs_to_json(obj.attrs)`` to get attrs in their JSON form.
 
 Where does the information come from?
 =====================================
@@ -91,43 +150,36 @@ In contrast, the functions for dedicated information do not use them by default,
 inherited property with the same label usually does not describe the metric itself, e.g. a
 property "unit" of a plant. Pass ``include_inherited=True`` to use them as last resort anyway.
 
-Entries which do not adhere to the conventions are skipped: metrics which are no objects or
-whose field named by the metric key is no string, and value dimensions which are no objects or
-whose column is no string. ``"value_dimensions"`` and ``"value_dimensions_shared"`` which are no
-lists count as empty, a metric key which is no string as missing, i.e. ``"id"`` is used.
+Metadata which does not follow the conventions provides no information at all: The functions
+return None or empty results for it.
 
 How to query nested information?
 ================================
 
 The information requested from ``get_metric_info``, ``get_singlets_metric_info``,
-``get_series_info`` and ``get_singlets_info`` is interpreted as a `glom`_ spec. A string is a
-path in which dots separate the keys, so it also reaches into sub dictionaries. Let's say the
-metric of the series above additionally provides comments and information on its sensor (the
-conventions allow additional fields at every level), and the label of one of its inherited
-properties contains a dot:
+``get_series_info`` and ``get_singlets_info`` (and from the corresponding methods of the models)
+is a field or a path of fields separated by dots, which reaches into sub objects. Let's say the
+metric of the series above additionally provides information on its sensor (the conventions
+allow additional fields at every level):
 
 .. code-block:: json
 
     {
+        "id": "4c1f0e2a-7b3d-4e5f-9a8b-1c2d3e4f5a6b",
         "external_id": "water.north.level",
         "name": "Water level north",
         "sensor": {
             "manufacturer": "Acme",
             "calibration": {"date": "2026-03-01", "offset": 0.02}
         },
-        "comments": [
-            {"content": "Gauge maintenance"},
-            {"content": "Sensor replaced"}
-        ],
-        "value_dimensions": [{"column": "value", "unit": "cm"}],
-        "inherited": {"latitude": 51.43, "operator.name": "Ruhrverband"}
+        "value_dimensions": [{"column": "value", "unit": "cm", "measurement": "level"}],
+        "inherited": {"latitude": 51.43}
     }
 
 We can retrieve the nested information with the following code
 
 .. code-block:: python
 
-    from glom import Path
     from hdhelpers.metadata import get_series_info
 
     def main(*, series):
@@ -139,13 +191,6 @@ We can retrieve the nested information with the following code
         latitude = get_series_info(series, "inherited.latitude")  # 51.43, never the metric's own
         firmware = get_series_info(series, "sensor.firmware")  # None, not provided
 
-        # any other glom spec, e.g. the content of each comment
-        comments = get_series_info(series, ("comments", ["content"]))
-        # ["Gauge maintenance", "Sensor replaced"]
-
-        # a key which itself contains dots requires a glom Path
-        operator = get_series_info(series, Path("operator.name"))  # "Ruhrverband"
-
         ...
 
 For a MULTITSFRAME, ``get_metric_info(multitsframe, "sensor.manufacturer")`` provides the
@@ -153,16 +198,9 @@ manufacturer keyed by metric accordingly.
 
 The fallbacks described above apply to the whole path, e.g. ``"sensor.manufacturer"`` is looked
 up in the metric first, then in its value dimension ``"value"`` and so on. A path which is not
-present yields None instead of an error. Note that a plain string like ``"operator.name"`` is
-always split at its dots, so it does not find the inherited property ``"operator.name"``.
-
-A spec may also transform the information, e.g. ``("name", str.upper)``. Since information
-provided as null counts as missing, such a spec may receive null: on the metric itself and, if
-the metric does not provide the information, on the levels it falls back to. Errors raised by
-the spec are not caught. So either let it handle None, or rather transform the information
-after retrieving it.
-
-.. _glom: https://glom.readthedocs.io/
+present yields None instead of an error. Paths cannot address list items or keys which contain
+dots themselves. Such information, e.g. the comments of a metric, is available via the models:
+``read_metadata(series).metric().comments``.
 
 Which time zone to compute in?
 ==============================

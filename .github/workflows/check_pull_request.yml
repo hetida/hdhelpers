@@ -46,6 +46,62 @@ jobs:
           ./run test
 
 
+  test_without_plotly:
+    name: Core installation without Plotly (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.15"]
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv and set the Python version
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          version: ">=0.13.4"
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install the core package without extras or development dependencies
+        run: uv sync --locked --no-dev --no-editable
+
+      - name: Check core functionality and optional plotting exports
+        run: |
+          uv run --no-sync python -I - <<'PY'
+          import importlib.util
+
+          assert importlib.util.find_spec("plotly") is None, "Plotly must not be installed"
+
+          import pandas as pd
+          import hdhelpers
+          from hdhelpers.metadata import attach_metadata, attrs_to_json, get_series_unit, read_metadata
+          from hdhelpers.metadata.conventions import SERIES_METADATA_EXAMPLE
+
+          series = pd.Series([1.0], index=pd.to_datetime(["2026-01-01T00:00:00Z"]))
+          series.attrs = SERIES_METADATA_EXAMPLE
+          meta = attach_metadata(series)
+          assert meta is not None
+          assert read_metadata(series) is meta
+          assert get_series_unit(series) == "m"
+          assert attrs_to_json(series.attrs)["metrics"][0]["value_dimensions"][0]["unit"] == "m"
+          converted = hdhelpers.modify_timezone(series, to_timezone="Europe/Berlin")
+          assert str(converted.index.tz) == "Europe/Berlin"
+          assert read_metadata(converted) is meta
+
+          # Repeat every export to catch modules cached by an earlier failed import.
+          names = (
+              "plotting", "FUSEKI_COLOR_CYCLE", "resolve_color",
+              "set_agnostic_theme", "TICKFORMATSTOPS", "set_dt_ticks",
+          )
+          for name in names * 2:
+              try:
+                  getattr(hdhelpers, name)
+              except ImportError as error:
+                  assert "hdhelpers[plotting]" in str(error), (name, error)
+              else:
+                  raise AssertionError(f"hdhelpers.{name} is available without Plotly")
+          PY
+
   check_lint_format_mypy:
     runs-on: ubuntu-latest
     steps:

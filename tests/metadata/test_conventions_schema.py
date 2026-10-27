@@ -29,7 +29,8 @@ def test_json_schemas_match_snapshot() -> None:
     schemas = convention_schemas()
     if os.environ.get("UPDATE_SCHEMA_SNAPSHOT"):
         SNAPSHOT.write_text(
-            json.dumps(schemas, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+            json.dumps(schemas, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
+            encoding="utf-8",
         )
 
-    assert schemas == json.loads(SNAPSHOT.read_text())
+    assert schemas == json.loads(SNAPSHOT.read_text(encoding="utf-8"))
