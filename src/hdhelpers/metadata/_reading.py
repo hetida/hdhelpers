@@ -28,6 +28,7 @@ import datetime
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
+from functools import cached_property
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 from pydantic import BaseModel
@@ -158,13 +159,12 @@ class MetadataReading:
         metrics: tuple[MetricMetadata, ...]
         value_dimensions_shared: tuple[SharedValueDimensionMetadata, ...] | None
         _data_type: ClassVar[Literal["SERIES", "SINGLETSFRAME", "MULTITSFRAME"]]
-        _by_id: dict[str, MetricMetadata] | None
 
     # metrics
 
     def metric_ids(self) -> list[str]:
         """The ids of the metrics, i.e. their values of the field named by the metric key"""
-        return list(self._metrics_by_id())
+        return list(self._metrics_by_id)
 
     def metric(self, metric_id: str | None = None) -> "MetricMetadata":
         """The metadata of a metric, KeyError if there is none"""
@@ -173,18 +173,22 @@ class MetadataReading:
             raise KeyError(metric_id)
         return metric
 
+    @cached_property
     def _metrics_by_id(self) -> "dict[str, MetricMetadata]":
-        if self._by_id is None:
-            metric_key = self.dataset_metadata.metric_key
-            self._by_id = {lookup(metric, metric_key): metric for metric in self.metrics}
-        return self._by_id
+        """The metrics by id, built on first use
+
+        Cached in __dict__ apart from the fields, which pydantic ignores when comparing models:
+        Reading must not change the equality, since pandas keeps only equal attrs, e.g. on concat.
+        """
+        metric_key = self.dataset_metadata.metric_key
+        return {lookup(metric, metric_key): metric for metric in self.metrics}
 
     def _metric_or_none(self, metric_id: str | None) -> "MetricMetadata | None":
         if metric_id is None:
             if self._data_type == "MULTITSFRAME":
                 raise TypeError("The metric_id is required for MULTITSFRAME metadata.")
             return self.metrics[0]
-        return self._metrics_by_id().get(metric_id)
+        return self._metrics_by_id.get(metric_id)
 
     def _shared_by_column(self) -> "dict[str, SharedValueDimensionMetadata]":
         return _by_column(self.value_dimensions_shared or ())
@@ -222,7 +226,7 @@ class MetadataReading:
         fields = _fields(fields)
         shared = self._shared_by_column()
         result = {}
-        for metric_id, metric in self._metrics_by_id().items():
+        for metric_id, metric in self._metrics_by_id.items():
             value_dimensions = _by_column(metric.value_dimensions)
             columns = dict.fromkeys([*shared, "value", *value_dimensions])
             result[metric_id] = {
@@ -324,7 +328,7 @@ class MetadataReading:
         shared = self._shared_by_column()
         return {
             metric_id: self._metric_info(field, metric, shared, include_inherited)
-            for metric_id, metric in self._metrics_by_id().items()
+            for metric_id, metric in self._metrics_by_id.items()
         }
 
     @staticmethod
@@ -352,7 +356,7 @@ class MetadataReading:
         return own or dataset_default_timezone(self)
 
     def default_timezones(self) -> dict[str, str | None]:
-        return {metric_id: self.default_timezone(metric_id) for metric_id in self._metrics_by_id()}
+        return {metric_id: self.default_timezone(metric_id) for metric_id in self._metrics_by_id}
 
     def recording(self, metric_id: str | None = None) -> Recording:
         """How the values of the metric are recorded
@@ -374,7 +378,7 @@ class MetadataReading:
         )
 
     def recordings(self) -> dict[str, Recording]:
-        return {metric_id: self.recording(metric_id) for metric_id in self._metrics_by_id()}
+        return {metric_id: self.recording(metric_id) for metric_id in self._metrics_by_id}
 
     def default_aggregation_method(self, metric_id: str | None = None) -> str:
         """The default aggregation method of the metric, see the module docstring"""
@@ -401,7 +405,7 @@ class MetadataReading:
     def default_aggregation_methods(self) -> dict[str, str]:
         return {
             metric_id: self.default_aggregation_method(metric_id)
-            for metric_id in self._metrics_by_id()
+            for metric_id in self._metrics_by_id
         }
 
     def queried_interval(self) -> tuple[datetime.datetime | None, datetime.datetime | None]:

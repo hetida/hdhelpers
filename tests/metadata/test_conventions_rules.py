@@ -39,8 +39,15 @@ def first_metric(attrs: dict[str, Any]) -> dict[str, Any]:
     return attrs["metrics"][0]
 
 
+def unhashable_metric_ids(attrs: dict[str, Any]) -> None:
+    attrs["dataset_metadata"]["metric_key"] = "custom_key"
+    for metric in attrs["metrics"]:
+        metric["custom_key"] = [metric["external_id"]]
+
+
 # (data type, change of its example, location of the error)
 RULE_VIOLATIONS = [
+    ("MULTITSFRAME", unhashable_metric_ids, "metrics[0]"),
     (
         "MULTITSFRAME",
         lambda a: first_metric(a).pop("external_id"),

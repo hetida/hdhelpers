@@ -404,6 +404,18 @@ class TestConversions:
         assert meta.metric("plant.f").id == "f"
         assert meta.dataset_metadata.single_metric == "plant.f"
 
+    def test_conversions_keep_extra_fields(self) -> None:
+        extra = {"custom_root": {"source": "adapter"}}
+        meta = SingleTSFrameMetadata.model_validate(self.singletsframe().model_dump() | extra)
+
+        series_meta = meta.as_series("pressure")
+        multitsframe_meta = meta.as_multitsframe()
+
+        assert series_meta.model_extra == extra
+        assert series_meta.as_singletsframe().model_extra == extra
+        assert multitsframe_meta.model_extra == extra
+        assert multitsframe_meta.narrowed_to("f").model_extra == extra
+
 
 def test_enum_members_are_given_as_values() -> None:
     meta = series({"recording_mode": "irregular", "default_aggregation_method": "MAX"})

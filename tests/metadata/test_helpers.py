@@ -246,6 +246,15 @@ def test_metadata_not_following_the_conventions_gives_no_information() -> None:
     assert get_units(frame(attrs))[SIGNAL_ID]["value"] is None
 
 
+def test_metric_ids_which_are_no_strings_give_no_information() -> None:
+    attrs = deepcopy(platform_series_attrs)
+    attrs["dataset_metadata"]["metric_key"] = "custom_key"
+    attrs["metrics"][0]["custom_key"] = [SIGNAL_ID]
+
+    assert get_series_unit(series(attrs)) is None
+    assert get_units(frame(attrs))[SIGNAL_ID]["value"] is None
+
+
 @pytest.mark.parametrize(
     "attrs", [{}, {"dataset_metadata": {"metric_key": "id"}}, {"metrics": None}]
 )

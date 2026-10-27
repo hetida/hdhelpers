@@ -39,7 +39,6 @@ from pydantic import (
     Field,
     GetJsonSchemaHandler,
     ModelWrapValidatorHandler,
-    PrivateAttr,
     StrictBool,
     StrictFloat,
     StrictInt,
@@ -699,8 +698,6 @@ class _TimeseriesMetadataBase(MetadataReading, ConventionModel):
     """
 
     _data_type: ClassVar[TimeseriesDataType]
-    # the metrics by id, built on first use
-    _by_id: dict[str, MetricMetadata] | None = PrivateAttr(default=None)
 
     value_dimensions_shared: tuple[SharedValueDimensionMetadata, ...] | None = optional(
         description="Metadata of value dimensions that have the same meaning for all metrics."
@@ -727,8 +724,12 @@ class _TimeseriesMetadataBase(MetadataReading, ConventionModel):
 
     def model_copy(self, *, update: Mapping[str, Any] | None = None, deep: bool = False) -> Self:
         copied = super().model_copy(update=update, deep=deep)
-        copied._by_id = None  # the metrics may differ
+        copied.__dict__.pop("_metrics_by_id", None)  # the metrics may differ
         return copied
+
+    def _converted[T: "_TimeseriesMetadataBase"](self, model: type[T], **fields: Any) -> T:
+        """The metadata as model with the given fields, keeping the extra fields"""
+        return model.model_validate(self.__pydantic_extra__ | fields)
 
     def with_metric(self, metric_id: str | None = None, /, **changes: Any) -> Self:
         """A version with fields of a metric changed, the other metrics are shared
@@ -920,12 +921,11 @@ class SeriesMetadata(_TimeseriesMetadataBase):
 
         Renames the value dimension "value" of the metric and the shared one to column.
         """
-        return SingleTSFrameMetadata.model_validate(
-            {
-                "dataset_metadata": self.dataset_metadata,
-                "metrics": (_with_value_column(self.metric(), "value", column),),
-                "value_dimensions_shared": _renamed(self.value_dimensions_shared, "value", column),
-            }
+        return self._converted(
+            SingleTSFrameMetadata,
+            dataset_metadata=self.dataset_metadata,
+            metrics=(_with_value_column(self.metric(), "value", column),),
+            value_dimensions_shared=_renamed(self.value_dimensions_shared, "value", column),
         )
 
 
@@ -960,12 +960,11 @@ class SingleTSFrameMetadata(_TimeseriesMetadataBase):
         """
         if column not in {vd.column for vd in self.metric().value_dimensions}:
             raise KeyError(column)
-        return SeriesMetadata.model_validate(
-            {
-                "dataset_metadata": self.dataset_metadata,
-                "metrics": (_with_value_column(self.metric(), column, "value"),),
-                "value_dimensions_shared": _renamed(self.value_dimensions_shared, column, "value"),
-            }
+        return self._converted(
+            SeriesMetadata,
+            dataset_metadata=self.dataset_metadata,
+            metrics=(_with_value_column(self.metric(), column, "value"),),
+            value_dimensions_shared=_renamed(self.value_dimensions_shared, column, "value"),
         )
 
     def as_multitsframe(self, metric_id: str | None = None) -> "MultiTSFrameMetadata":
@@ -983,13 +982,12 @@ class SingleTSFrameMetadata(_TimeseriesMetadataBase):
                 metric_key = dataset_metadata["metric_key"] = _METRIC_NAME_FIELD
             metric = type(metric).model_validate(metric.model_dump() | {metric_key: metric_id})
         metric_id = lookup(metric, dataset_metadata["metric_key"])
-        return MultiTSFrameMetadata.model_validate(
-            {
-                "dataset_metadata": dataset_metadata
-                | {"single_metric": metric_id, "queried_metrics": [metric_id]},
-                "metrics": (metric,),
-                "value_dimensions_shared": self.value_dimensions_shared,
-            }
+        return self._converted(
+            MultiTSFrameMetadata,
+            dataset_metadata=dataset_metadata
+            | {"single_metric": metric_id, "queried_metrics": [metric_id]},
+            metrics=(metric,),
+            value_dimensions_shared=self.value_dimensions_shared,
         )
 
 
@@ -1022,13 +1020,12 @@ class MultiTSFrameMetadata(_TimeseriesMetadataBase):
 
         The metric is shared, not copied. It becomes the single and only queried metric.
         """
-        return SingleTSFrameMetadata.model_validate(
-            {
-                "dataset_metadata": self.dataset_metadata.model_dump()
-                | {"single_metric": metric_id, "queried_metrics": [metric_id]},
-                "metrics": (self.metric(metric_id),),
-                "value_dimensions_shared": self.value_dimensions_shared,
-            }
+        return self._converted(
+            SingleTSFrameMetadata,
+            dataset_metadata=self.dataset_metadata.model_dump()
+            | {"single_metric": metric_id, "queried_metrics": [metric_id]},
+            metrics=(self.metric(metric_id),),
+            value_dimensions_shared=self.value_dimensions_shared,
         )
 
 
@@ -1595,7 +1592,12 @@ def _check_metrics_of_data(
     """Check that the metrics of the data and the queried metrics are described"""
     issues: list[MetadataConventionIssue] = []
     dataset_metadata = attrs["dataset_metadata"]
-    metric_ids = {metric.get(dataset_metadata["metric_key"]) for metric in attrs["metrics"]}
+    # metrics without a string id are reported by _check_consistency
+    metric_ids = {
+        metric_id
+        for metric in attrs["metrics"]
+        if isinstance(metric_id := metric.get(dataset_metadata["metric_key"]), str)
+    }
     data_metrics: list[str] = []
     if data_type == "MULTITSFRAME" and isinstance(data, pd.DataFrame) and "metric" in data.columns:
         data_metrics = [str(metric) for metric in data["metric"].unique()]

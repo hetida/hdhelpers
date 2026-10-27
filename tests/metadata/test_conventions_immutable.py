@@ -146,8 +146,7 @@ def test_pickle_round_trip() -> None:
     assert isinstance(unpickled.metrics[0].inherited.asset, FrozenDict)
 
 
-def test_pandas_operations_share_the_model() -> None:
-    meta = multitsframe_metadata()
+def multitsframe(meta: MultiTSFrameMetadata) -> pd.DataFrame:
     df = pd.DataFrame(
         {
             "timestamp": pd.date_range("2026-01-01", periods=4, freq="h", tz="UTC"),
@@ -156,6 +155,12 @@ def test_pandas_operations_share_the_model() -> None:
         }
     )
     df.attrs = {"hd_metadata": meta}
+    return df
+
+
+def test_pandas_operations_share_the_model() -> None:
+    meta = multitsframe_metadata()
+    df = multitsframe(meta)
 
     derived = [
         df[df["value"] > 0],
@@ -169,3 +174,15 @@ def test_pandas_operations_share_the_model() -> None:
 
     assert all(obj.attrs["hd_metadata"] is meta for obj in derived)
     assert all(obj.attrs is not df.attrs for obj in derived)
+
+
+def test_reading_does_not_change_the_equality() -> None:
+    meta = multitsframe_metadata()
+    other = multitsframe_metadata()
+
+    meta.unit("plant_a.pressure")
+
+    assert meta == other
+    assert meta != meta.with_metric("plant_a.pressure", name="changed")
+    # pandas keeps attrs only if they are equal
+    assert pd.concat([multitsframe(meta), multitsframe(other)]).attrs["hd_metadata"] is meta
