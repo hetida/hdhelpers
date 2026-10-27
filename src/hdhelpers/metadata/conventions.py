@@ -50,7 +50,7 @@ from pydantic import (
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import CoreSchema, PydanticCustomError
 
-from hdhelpers.metadata._reading import MetadataReading, lookup
+from hdhelpers.metadata._reading import MetadataReading, id_of
 
 TimeseriesDataType = Literal["SERIES", "SINGLETSFRAME", "MULTITSFRAME"]
 
@@ -183,7 +183,7 @@ _TIMEZONE_PURPOSE = (
 )
 
 
-def _immutable(self: Any, *args: Any, **kwargs: Any) -> NoReturn:
+def _immutable(self: Any, *_args: Any, **_kwargs: Any) -> NoReturn:
     raise TypeError(f"{type(self).__name__} is immutable")
 
 
@@ -290,7 +290,12 @@ class ConventionModel(BaseModel):
     def __deepcopy__(self, memo: dict[int, Any] | None = None) -> Self:
         return self
 
-    def model_copy(self, *, update: Mapping[str, Any] | None = None, deep: bool = False) -> Self:
+    def model_copy(
+        self,
+        *,
+        update: Mapping[str, Any] | None = None,
+        deep: bool = False,  # noqa: ARG002
+    ) -> Self:
         """Copy with the given fields replaced, without validating them
 
         Always shallow, since the model is immutable. A deep copy would apply the update to the
@@ -739,8 +744,8 @@ class _TimeseriesMetadataBase(MetadataReading, ConventionModel):
         old = self.metric(metric_id)
         new = type(old).model_validate(old.model_dump() | changes)
         errors = _metric_rule_errors(self, new)
-        new_id = lookup(new, self.dataset_metadata.metric_key)
-        if new_id != lookup(old, self.dataset_metadata.metric_key) and new_id in self.metric_ids():
+        new_id = id_of(new, self.dataset_metadata.metric_key)
+        if new_id != id_of(old, self.dataset_metadata.metric_key) and new_id in self.metric_ids():
             errors.append(_error("metrics", f'Metric "{new_id}" occurs more than once.'))
         if len(errors) > 0:
             raise MetadataConventionError(errors)
@@ -978,10 +983,10 @@ class SingleTSFrameMetadata(_TimeseriesMetadataBase):
         dataset_metadata = self.dataset_metadata.model_dump()
         if metric_id is not None and metric_id != self.metric_ids()[0]:
             metric_key = dataset_metadata["metric_key"]
-            if lookup(metric, metric_key) is not None:
+            if id_of(metric, metric_key) is not None:
                 metric_key = dataset_metadata["metric_key"] = _METRIC_NAME_FIELD
             metric = type(metric).model_validate(metric.model_dump() | {metric_key: metric_id})
-        metric_id = lookup(metric, dataset_metadata["metric_key"])
+        metric_id = id_of(metric, dataset_metadata["metric_key"])
         return self._converted(
             MultiTSFrameMetadata,
             dataset_metadata=dataset_metadata

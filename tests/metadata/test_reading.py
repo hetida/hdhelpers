@@ -71,6 +71,29 @@ class TestMetrics:
 
         assert meta.metric_ids() == ["plant.temperature"]
 
+    def test_metric_key_with_dots_names_a_field(self) -> None:
+        meta = MultiTSFrameMetadata.model_validate(
+            {
+                "dataset_metadata": dataset_metadata(metric_key="custom.id"),
+                "metrics": [
+                    metric(
+                        "m1", value_dimensions=[value_dimension(unit="m")], **{"custom.id": "a"}
+                    ),
+                    metric(
+                        "m2", value_dimensions=[value_dimension(unit="s")], **{"custom.id": "b"}
+                    ),
+                ],
+            }
+        )
+
+        assert meta.metric_ids() == ["a", "b"]
+        assert meta.units() == {"a": {"value": "m"}, "b": {"value": "s"}}
+        assert meta.with_metric("a", **{"custom.id": "c"}).metric_ids() == ["c", "b"]
+        with pytest.raises(MetadataConventionError, match="more than once"):
+            meta.with_metric("a", **{"custom.id": "b"})
+        assert meta.narrowed_to("b").as_multitsframe().metric_ids() == ["b"]
+        assert meta.narrowed_to("b").as_multitsframe("x").metric_ids() == ["x"]
+
     def test_unknown_metric(self) -> None:
         meta = multitsframe(metric("a"))
 

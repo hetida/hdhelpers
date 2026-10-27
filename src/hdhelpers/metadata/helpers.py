@@ -389,7 +389,7 @@ def get_singlets_metric_info(
         lambda meta, metric: meta.metric_info(
             metric_info, metric, include_inherited=include_inherited
         ),
-        lambda meta: None,
+        lambda _meta: None,
         empty=None,
     )
 
@@ -541,7 +541,7 @@ def get_series_default_aggregation_method(series: pd.Series) -> str:
         series,
         "SERIES",
         lambda meta, metric: meta.default_aggregation_method(metric),
-        lambda meta: _DEFAULT_AGGREGATION_METHOD,
+        lambda _meta: _DEFAULT_AGGREGATION_METHOD,
         empty=_DEFAULT_AGGREGATION_METHOD,
     )
 
@@ -553,7 +553,7 @@ def get_singlets_default_aggregation_method(singletsframe: pd.DataFrame) -> str:
         singletsframe,
         "SINGLETSFRAME",
         lambda meta, metric: meta.default_aggregation_method(metric),
-        lambda meta: _DEFAULT_AGGREGATION_METHOD,
+        lambda _meta: _DEFAULT_AGGREGATION_METHOD,
         empty=_DEFAULT_AGGREGATION_METHOD,
     )
 

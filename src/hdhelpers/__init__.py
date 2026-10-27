@@ -20,29 +20,25 @@ __version__ = "0.0.10"
 
 # The plotting helpers need plotly, which comes with the optional extra hdhelpers[plotting]. They
 # are imported on first access, so that everything else works without plotly.
-_PLOTTING_ATTRIBUTES: dict[str, tuple[str, str | None]] = {
-    "plotting": ("hdhelpers.plotting", None),
-    "FUSEKI_COLOR_CYCLE": ("hdhelpers.plotting.color", "FUSEKI_COLOR_CYCLE"),
-    "resolve_color": ("hdhelpers.plotting.color", "resolve_color"),
-    "set_agnostic_theme": ("hdhelpers.plotting.plotly_theme", "set_agnostic_theme"),
-    "TICKFORMATSTOPS": ("hdhelpers.plotting.timestamp_ticks", "TICKFORMATSTOPS"),
-    "set_dt_ticks": ("hdhelpers.plotting.timestamp_ticks", "set_dt_ticks"),
-}
+_PLOTTING_NAMES = frozenset(
+    {"FUSEKI_COLOR_CYCLE", "resolve_color", "set_agnostic_theme", "TICKFORMATSTOPS", "set_dt_ticks"}
+)
 
 
 def __getattr__(name: str) -> Any:
-    if name not in _PLOTTING_ATTRIBUTES:
+    if name != "plotting" and name not in _PLOTTING_NAMES:
         raise AttributeError(f"module 'hdhelpers' has no attribute {name!r}")
-    module_name, attribute = _PLOTTING_ATTRIBUTES[name]
+    # always via the package, which needs plotly: A failed import of the package keeps the
+    # submodules imported until then, e.g. hdhelpers.plotting.color, which does not need plotly.
     try:
-        module = importlib.import_module(module_name)
+        plotting = importlib.import_module("hdhelpers.plotting")
     except ImportError as e:
         if (e.name or "").partition(".")[0] != "plotly":
             raise
         raise ImportError(
             f"hdhelpers.{name} needs plotly, which is installed with the extra hdhelpers[plotting]"
         ) from e
-    value = module if attribute is None else getattr(module, attribute)
+    value = plotting if name == "plotting" else getattr(plotting, name)
     globals()[name] = value
     return value
 

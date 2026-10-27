@@ -86,17 +86,26 @@ def lookup(obj: Any, path: str) -> Any:
     the JSON form of the metadata.
     """
     for key in path.split("."):
-        if isinstance(obj, BaseModel):
-            # __dict__ holds the fields, without warning about deprecated ones like getattr
-            value = obj.__dict__.get(key, _MISSING)
-            obj = (obj.__pydantic_extra__ or {}).get(key) if value is _MISSING else value
-        elif isinstance(obj, Mapping):
-            obj = obj.get(key)
-        else:
-            return None
+        obj = _field(obj, key)
         if obj is None:
             return None
     return _plain(obj)
+
+
+def id_of(metric: "MetricMetadata", metric_key: str) -> Any:
+    """The id of a metric: its field named metric_key, which may contain dots, None if missing"""
+    return _plain(_field(metric, metric_key))
+
+
+def _field(obj: Any, key: str) -> Any:
+    """A field or extra field of a model or a key of a mapping, None if missing"""
+    if isinstance(obj, BaseModel):
+        # __dict__ holds the fields, without warning about deprecated ones like getattr
+        value = obj.__dict__.get(key, _MISSING)
+        return (obj.__pydantic_extra__ or {}).get(key) if value is _MISSING else value
+    if isinstance(obj, Mapping):
+        return obj.get(key)
+    return None
 
 
 def _plain(value: Any) -> Any:
@@ -181,7 +190,7 @@ class MetadataReading:
         Reading must not change the equality, since pandas keeps only equal attrs, e.g. on concat.
         """
         metric_key = self.dataset_metadata.metric_key
-        return {lookup(metric, metric_key): metric for metric in self.metrics}
+        return {id_of(metric, metric_key): metric for metric in self.metrics}
 
     def _metric_or_none(self, metric_id: str | None) -> "MetricMetadata | None":
         if metric_id is None:

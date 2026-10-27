@@ -101,7 +101,7 @@ def get_plot_target_settings() -> PlotTargetSettings:
         )
 
         plot_target_settings_in_context: BaseModel = get_runtime_exec_context().plot_target_settings
-        # Ensure that plot_target_settings is compatible with hdhelpers version of PlotTargetSettings
+        # Ensure that plot_target_settings is compatible with the PlotTargetSettings of hdhelpers
         plot_target_settings_as_dict = plot_target_settings_in_context.model_dump(mode="json")
         plot_target_settings = PlotTargetSettings(**plot_target_settings_as_dict)
         return plot_target_settings

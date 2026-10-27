@@ -13,14 +13,14 @@ TICKFORMATSTOPS = [
     # language agnostic, isoformat inspired, plotl x axis timestamp formatting
     # defined for multiple zoom levels
     # always showing a tick with the current day somewhere for reference
-    dict(dtickrange=[None, 1000], value="%H:%M:%S.%L\n%Y-%m-%d"),
-    dict(dtickrange=[1000, 60000], value="%H:%M:%S\n%Y-%m-%d"),
-    dict(dtickrange=[60000, 3600000], value="%H:%M\n%Y-%m-%d"),
-    dict(dtickrange=[3600000, 86400000], value="%H:%M\n%Y-%m-%d"),
-    dict(dtickrange=[86400000, 604800000], value="%H:%M\n%Y-%m-%d"),
-    dict(dtickrange=[604800000, "M1"], value="%Y-%m-%d"),
-    dict(dtickrange=["M1", "M12"], value="%Y-%m"),
-    dict(dtickrange=["M12", None], value="%Y"),
+    {"dtickrange": [None, 1000], "value": "%H:%M:%S.%L\n%Y-%m-%d"},
+    {"dtickrange": [1000, 60000], "value": "%H:%M:%S\n%Y-%m-%d"},
+    {"dtickrange": [60000, 3600000], "value": "%H:%M\n%Y-%m-%d"},
+    {"dtickrange": [3600000, 86400000], "value": "%H:%M\n%Y-%m-%d"},
+    {"dtickrange": [86400000, 604800000], "value": "%H:%M\n%Y-%m-%d"},
+    {"dtickrange": [604800000, "M1"], "value": "%Y-%m-%d"},
+    {"dtickrange": ["M1", "M12"], "value": "%Y-%m"},
+    {"dtickrange": ["M12", None], "value": "%Y"},
 ]
 
 

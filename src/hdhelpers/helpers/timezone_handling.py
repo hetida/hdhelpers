@@ -12,7 +12,7 @@ logger = logging.getLogger("hdhelpers")
 
 
 @singledispatch
-def _convert_to_optional_timezone(object_to_convert, to_timezone: str | None):
+def _convert_to_optional_timezone(object_to_convert, to_timezone: str | None):  # noqa: ARG001
     """Convert object_to_convert to to_timezone if not None,
     or to its own timezone if aware
     or to UTC otherwise"""
@@ -77,13 +77,14 @@ def modify_timezone[T: (pd.Timestamp, datetime.datetime, pd.Series, pd.DataFrame
         >>> modified_timezone = modify_timezone(pd.to_datetime("2025-01-01T01:00:00+05:00"), to_timezone="Europe/Berlin")
         >>> int(modified_timezone.utcoffset().total_seconds())
         3600
-    """
+    """  # noqa: E501
 
     if not isinstance(
         object_to_convert, pd.Timestamp | pd.Series | pd.DataFrame | datetime.datetime
     ):
         raise TypeError(
-            f"object_to_convert is {type(object_to_convert)} not pd.Timestamp | pd.Series | pd.DataFrame | datetime.datetime"
+            f"object_to_convert is {type(object_to_convert)} not pd.Timestamp | pd.Series |"
+            " pd.DataFrame | datetime.datetime"
         )
     if column_names is None:
         column_names = []

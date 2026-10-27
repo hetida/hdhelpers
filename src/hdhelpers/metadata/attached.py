@@ -43,7 +43,7 @@ AnyMetadata = SeriesMetadata | SingleTSFrameMetadata | MultiTSFrameMetadata
 
 
 def infer_data_type(obj: pd.Series | pd.DataFrame) -> TimeseriesDataType:
-    """SERIES for a Series, MULTITSFRAME for a DataFrame with a "metric" column, else SINGLETSFRAME"""
+    """SERIES for a Series, MULTITSFRAME for a frame with a "metric" column, else SINGLETSFRAME"""
     if isinstance(obj, pd.Series):
         return "SERIES"
     return "MULTITSFRAME" if "metric" in obj.columns else "SINGLETSFRAME"
@@ -166,7 +166,6 @@ def _no_metadata(required: bool, message: str) -> None:
                 )
             ]
         )
-    return None
 
 
 def set_metadata(obj: pd.Series | pd.DataFrame, meta: AnyMetadata) -> None:

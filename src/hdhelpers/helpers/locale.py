@@ -24,7 +24,7 @@ def get_locale(explicit_locale: str | None = None) -> str | None:
         >>> print(get_locale())         # returns locale from plot target settings of execution or None
         None
 
-    """
+    """  # noqa: E501
     if explicit_locale:
         return explicit_locale.replace("_", "-")
 

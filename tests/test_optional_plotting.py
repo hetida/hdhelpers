@@ -32,6 +32,22 @@ def test_plotting_names_need_the_plotting_extra() -> None:
     assert "hdhelpers[plotting]" in result.stderr
 
 
+def test_plotting_names_need_the_plotting_extra_on_every_access() -> None:
+    # twice, since a failed import keeps the modules imported until then, e.g. the colors
+    result = run_without_plotly(
+        "import hdhelpers\n"
+        "for name in sorted(hdhelpers._PLOTTING_NAMES | {'plotting'}) * 2:\n"
+        "    try:\n"
+        "        getattr(hdhelpers, name)\n"
+        "    except ImportError as e:\n"
+        "        assert 'hdhelpers[plotting]' in str(e), e\n"
+        "    else:\n"
+        "        raise SystemExit(f'hdhelpers.{name} is available without plotly')\n"
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
 def test_plotting_names_are_available_with_plotly() -> None:
     import hdhelpers  # noqa: PLC0415
     from hdhelpers.plotting.timestamp_ticks import set_dt_ticks  # noqa: PLC0415
