@@ -17,13 +17,6 @@ import pandas as pd
 from glom import Coalesce, Spec, glom
 
 import hdhelpers.metadata._specs as _specs
-from hdhelpers.metadata._recording import (
-    Recording,
-    default_aggregation_method_by_metric,
-    recording_by_metric,
-    single_metric_default_aggregation_method,
-    single_metric_recording,
-)
 from hdhelpers.metadata._helpers import (
     check_dataframe,
     check_series,
@@ -33,12 +26,19 @@ from hdhelpers.metadata._helpers import (
     get_value_dimension_info,
     metric_info_by_metric,
     series_value_info,
+    single_metric_default_timezone,
     singlets_metric_info,
     singlets_value_dimension_info,
-    single_metric_default_timezone,
     singlets_value_dimension_info_with_fallbacks,
     spec_not_none,
     value_dimension_info_with_fallbacks,
+)
+from hdhelpers.metadata._recording import (
+    Recording,
+    default_aggregation_method_by_metric,
+    recording_by_metric,
+    single_metric_default_aggregation_method,
+    single_metric_recording,
 )
 
 
