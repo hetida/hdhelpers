@@ -110,17 +110,20 @@ install_editable_package(){
 }
 
 build_package(){
+    local package_version
     uv sync --frozen
     rm -f -r dist
-    uv version $@
-    sed -i "s/^__version__ = .*/__version__ = \"$@\"/" src/hdhelpers/__init__.py
+    uv version "$@"
+    package_version="$(uv version --short)"
+    sed -i "s/^__version__ = .*/__version__ = \"$package_version\"/" src/hdhelpers/__init__.py
     uv build --no-sources
 }
 
 test-py-versions() {
-    echo "Py 3.12" && uv run --python=3.12 --all-extras pytest tests -c pytest.ini --cov=. --cov-report=term-missing --cov-fail-under=80 &&
-    echo "Py 3.13" && uv run --python=3.13 --all-extras pytest tests -c pytest.ini --cov=. --cov-report=term-missing --cov-fail-under=80 &&
-    echo "Py 3.14" && uv run --python=3.14 --all-extras pytest tests -c pytest.ini --cov=. --cov-report=term-missing --cov-fail-under=80
+    echo "Py 3.12" && uv run --python '>=3.12.16,<3.13' --all-extras pytest tests -c pytest.ini --cov=. --cov-report=term-missing --cov-fail-under=80 &&
+    echo "Py 3.13" && uv run --python '>=3.13.18,<3.14' --all-extras pytest tests -c pytest.ini --cov=. --cov-report=term-missing --cov-fail-under=80 &&
+    echo "Py 3.14" && uv run --python '>=3.14.10,<3.15' --all-extras pytest tests -c pytest.ini --cov=. --cov-report=term-missing --cov-fail-under=80 &&
+    echo "Py 3.15" && uv run --python '>=3.15.2,<3.16' --all-extras pytest tests -c pytest.ini --cov=. --cov-report=term-missing --cov-fail-under=80
 }
 
 #----- Execution -----#

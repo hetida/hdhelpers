@@ -2,7 +2,7 @@
 
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/hetida/hdhelpers/graphs/commit-activity)
 [![build](https://github.com/hetida/hdhelpers/actions/workflows/check_pull_request.yml/badge.svg)](https://github.com/hetida/hdhelpers/actions/workflows/check_pull_request.yml)
-![python](https://img.shields.io/badge/python-%203.12%20|%203.13|%203.14%20-blue)
+![python](https://img.shields.io/badge/python-%203.12%20|%203.13|%203.14%20|%203.15%20-blue)
 [![PyPI version](https://badge.fury.io/py/hdhelpers.svg)](https://badge.fury.io/py/hdhelpers)
 ![PyPI - License](https://img.shields.io/pypi/l/hdhelpers)
 [![Downloads](https://pepy.tech/badge/hdhelpers)](https://pepy.tech/project/hdhelpers)
@@ -100,12 +100,7 @@ To **publish** the build from the `dist` subdirectory to PyPI,
 
 3) verifiy that package can be installed by using:
 ```bash
-uv run --with 'hdhelpers==<version>'
-     --refresh-package hdhelpers
-     --default-index https://test.pypi.org/simple/
-     --index https://test.pypi.org/simple/
-     --no-project
-     -- python -c "import hdhelpers; print(hdhelpers.__version__)"
+uv run --with 'hdhelpers==0.0.9' --refresh-package hdhelpers --default-index https://test.pypi.org/simple/ --index https://test.pypi.org/simple/ --no-project -- python -c "import hdhelpers; print(hdhelpers.__version__)"
 ```
 
 4) use `uv publish dist/*` to upload the package on [hdhelpers PyPI project](https://pypi.org/project/hdhelpers/).
