@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Installation &#8212; hdhelpers - documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=14e077c0" />
+    <link rel="stylesheet" type="text/css" href="_static/stylesheet.css?v=55595bb5" />
+
+    <script src="_static/documentation_options.js?v=b1628c55"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="First steps" href="first_steps.html" />
+    <link rel="prev" title="hdhelpers" href="index.html" />
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="first_steps.html" title="First steps"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="hdhelpers"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">hdhelpers - documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Installation</a></li>
+      </ul>
+    </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+
+  <section id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h1>
+<p>hdhelpers requires Python 3.12 or newer and is included in the hetida designer runtime.
+To use it in your own Python project, run the following commands in your project’s
+Python environment.</p>
+<section id="core-package">
+<h2>Core package<a class="headerlink" href="#core-package" title="Link to this heading">¶</a></h2>
+<p>Install the metadata and time zone helpers:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m pip install hdhelpers</span>
+</pre></div>
+</div>
+<p>For a project managed with uv, use <code class="docutils literal notranslate"><span class="pre">uv</span> <span class="pre">add</span> <span class="pre">hdhelpers</span></code> instead.
+The core package works without Plotly.</p>
+</section>
+<section id="plotting-helpers">
+<h2>Plotting helpers<a class="headerlink" href="#plotting-helpers" title="Link to this heading">¶</a></h2>
+<p>Install the optional <code class="docutils literal notranslate"><span class="pre">plotting</span></code> extra to use <code class="docutils literal notranslate"><span class="pre">hdhelpers.plotting</span></code> and the
+plotting functions exported by <code class="docutils literal notranslate"><span class="pre">hdhelpers</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m pip install "hdhelpers[plotting]"</span>
+</pre></div>
+</div>
+<p>With uv, use <code class="docutils literal notranslate"><span class="pre">uv</span> <span class="pre">add</span> <span class="pre">&quot;hdhelpers[plotting]&quot;</span></code>. This also enables
+<code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">hdhelpers</span> <span class="pre">import</span> <span class="pre">*</span></code>, which includes plotting exports.</p>
+</section>
+<section id="verify-the-installation">
+<h2>Verify the installation<a class="headerlink" href="#verify-the-installation" title="Link to this heading">¶</a></h2>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -c "import hdhelpers; print(hdhelpers.__version__)"</span>
+</pre></div>
+</div>
+<p>Continue with <a class="reference internal" href="first_steps.html"><span class="doc">First steps</span></a> for component examples or <a class="reference internal" href="metadata_examples.html"><span class="doc">Metadata examples</span></a>
+for sample pandas data to use in a Python session.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#" title="Installation">Installation</a><ul>
+<li><a class="reference internal" href="#core-package" title="Core package">Core package</a></li>
+<li><a class="reference internal" href="#plotting-helpers" title="Plotting helpers">Plotting helpers</a></li>
+<li><a class="reference internal" href="#verify-the-installation" title="Verify the installation">Verify the installation</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="index.html"
+                          title="previous chapter">hdhelpers</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="first_steps.html"
+                          title="next chapter">First steps</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/installation.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="first_steps.html" title="First steps"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="hdhelpers"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">hdhelpers - documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Installation</a></li>
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2026, Steffen Wittkamp, Jenny Kupzig.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+    </div>
+  </body>
+</html>

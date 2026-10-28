@@ -14,12 +14,13 @@ hdhelpers is a package designed for and included in the standard installation of
 
 It contains functions that streamline plotting components, especially those that are used in the `hetida platform`_, by
 
-* accessing series metadata that complies with the hetida platform metadata scheme,
+* accessing metadata of series, singletsframes and multitsframes that complies with the `hetida designer metadata conventions`_,
 * aditional helper functions like adjusting the timezone of timestamps, series, and dataframes,
 * accessing metadata that the hetida platform writes into the hetida designer's *plot_target_settings* context variable (tbd),
 * providing toggleable standardized styling options and json serialization for plotly plots (tbd).
 
 .. _hetida designer: https://github.com/hetida/hetida-designer
+.. _hetida designer metadata conventions: https://hetida.github.io/hetida-designer/user_guide/attached_metadata/
 .. _hetida platform: https://hetida.io/
 
 Further Information
@@ -28,13 +29,20 @@ Further Information
 .. toctree::
    :maxdepth: 2
 
+   installation
    first_steps
+   metadata_examples
+   metadata_models
 
 Functions
 =========
 
 metadata
 -----------------
+
+The examples below use :ref:`metadata-example-data`. See :doc:`metadata_examples`
+for the return shapes and shared examples of the related getters.
+See :ref:`metadata-lookup-basics` for metric selection and missing-field behavior.
 
 .. automodule:: hdhelpers.metadata
    :members:
@@ -61,6 +69,9 @@ plotting
 
 exceptions
 -------------------
+
+For metadata validation errors, see :class:`hdhelpers.metadata.MetadataConventionError`
+in the metadata API. Its ``issues`` attribute contains the individual validation issues.
 
 .. automodule:: hdhelpers.exceptions
    :members:

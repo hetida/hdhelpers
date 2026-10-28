@@ -1,31 +1,61 @@
-"""Collection of functions to access metadata information from timeseries objects.
-Metadata information can follow varying conventions as the package glom is used to
-extract the requested information."""
+"""Access to the metadata of SERIES, SINGLETSFRAMEs and MULTITSFRAMEs
 
+The metadata follows the hetida designer metadata conventions, see
+hdhelpers.metadata.conventions for its models. read_metadata gives the metadata of an object as
+model, whose methods resolve the fallbacks of the conventions. The get_* functions are thin
+wrappers over these methods.
+"""
+
+from hdhelpers.metadata.attached import (
+    META_KEY,
+    attach_metadata,
+    attrs_to_json,
+    read_metadata,
+    set_metadata,
+)
+from hdhelpers.metadata.conventions import MetadataConventionError, check_metadata_conventions
 from hdhelpers.metadata.helpers import (
+    Recording,
+    copy_without_metadata,
+    get_default_aggregation_methods,
+    get_default_timezones,
     get_display_names,
     get_measurements,
     get_metric_info,
     get_names,
     get_queried_interval,
+    get_recordings,
+    get_series_default_aggregation_method,
+    get_series_default_timezone,
     get_series_display_name,
     get_series_info,
     get_series_measurement,
     get_series_name,
+    get_series_recording,
     get_series_short_display_name,
     get_series_unit,
     get_short_display_names,
+    get_singlets_default_aggregation_method,
+    get_singlets_default_timezone,
     get_singlets_display_names,
     get_singlets_info,
     get_singlets_measurements,
     get_singlets_metric_info,
     get_singlets_names,
+    get_singlets_recording,
     get_singlets_short_display_names,
     get_singlets_units,
     get_units,
 )
 
 __all__ = [
+    "META_KEY",
+    "MetadataConventionError",
+    "attach_metadata",
+    "attrs_to_json",
+    "check_metadata_conventions",
+    "read_metadata",
+    "set_metadata",
     "get_queried_interval",
     "get_series_display_name",
     "get_series_measurement",
@@ -46,4 +76,15 @@ __all__ = [
     "get_singlets_measurements",
     "get_singlets_metric_info",
     "get_singlets_units",
+    "get_default_timezones",
+    "get_series_default_timezone",
+    "get_singlets_default_timezone",
+    "Recording",
+    "get_recordings",
+    "get_series_recording",
+    "get_singlets_recording",
+    "get_default_aggregation_methods",
+    "get_series_default_aggregation_method",
+    "get_singlets_default_aggregation_method",
+    "copy_without_metadata",
 ]

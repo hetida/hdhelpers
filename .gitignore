@@ -28,3 +28,4 @@ todo
 untracked
 Dockerfile
 docker-compose.yaml
+docs/build

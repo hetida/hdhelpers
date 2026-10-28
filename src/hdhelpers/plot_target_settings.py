@@ -28,6 +28,8 @@ class StatusColors(BaseModel):
 
 
 class PlotTargetStyle(BaseModel):
+    """Display colors for plot backgrounds, axes, grids, traces and status indicators."""
+
     axes_label_color: str | None = Field(
         None, description="Color of the tick labels of all axes as a hex code"
     )
@@ -50,15 +52,10 @@ class PlotTargetStyle(BaseModel):
 
 
 class PlotTargetSettings(BaseModel):
-    """Settings that plot components can/should use
+    """Display preferences for plot components: time zone, locale, colors and datetime axes.
 
-    Some Plotly settings like locale or the timezone of timestamps must be set
-    by Python and cannot easily be set by plotly.js in a frontend.
-
-    They can be provided to execution endpoints as part of the ExecByIdBase payload,
-    are made accessible to components using the execution context.
-
-    hdhelpers provides helper functions to access them at runtime.
+    Provided through the execution context and read with ``get_plot_target_settings``.
+    Components use the settings when preparing plots for the target frontend.
     """
 
     plot_target_timezone: str | None = Field(
@@ -101,7 +98,7 @@ def get_plot_target_settings() -> PlotTargetSettings:
         )
 
         plot_target_settings_in_context: BaseModel = get_runtime_exec_context().plot_target_settings
-        # Ensure that plot_target_settings is compatible with hdhelpers version of PlotTargetSettings
+        # Ensure that plot_target_settings is compatible with the PlotTargetSettings of hdhelpers
         plot_target_settings_as_dict = plot_target_settings_in_context.model_dump(mode="json")
         plot_target_settings = PlotTargetSettings(**plot_target_settings_as_dict)
         return plot_target_settings

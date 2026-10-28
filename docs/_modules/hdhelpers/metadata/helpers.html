@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>hdhelpers.metadata.helpers &#8212; hdhelpers - documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/classic.css?v=14e077c0" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/stylesheet.css?v=55595bb5" />
+
+    <script src="../../../_static/documentation_options.js?v=b1628c55"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+
+    <link rel="icon" href="../../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">hdhelpers - documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">hdhelpers.metadata.helpers</a></li>
+      </ul>
+    </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+
+  <h1>Source code for hdhelpers.metadata.helpers</h1><div class="highlight"><pre>
+<span></span><span class="linenos">  1</span><span class="sd">"""Functions accessing the metadata of SERIES, SINGLETSFRAMEs and MULTITSFRAMEs</span>
+<span class="linenos">  2</span>
+<span class="linenos">  3</span><span class="sd">The functions are thin wrappers over the methods of the models of the metadata conventions,</span>
+<span class="linenos">  4</span><span class="sd">see read_metadata. The methods resolve the fallbacks of the conventions, e.g. a missing display</span>
+<span class="linenos">  5</span><span class="sd">name falls back to the name, see hdhelpers.metadata._reading.</span>
+<span class="linenos">  6</span>
+<span class="linenos">  7</span><span class="sd">The metadata is the model attached to the object (see attach_metadata), whatever data type it</span>
+<span class="linenos">  8</span><span class="sd">belongs to, e.g. the metadata of a SINGLETSFRAME on a Series taken from it. Otherwise the</span>
+<span class="linenos">  9</span><span class="sd">metadata in attrs is parsed as the data type of the function. Metadata which does not follow</span>
+<span class="linenos"> 10</span><span class="sd">the conventions gives no information: None or empty defaultdicts. For a SERIES or SINGLETSFRAME,</span>
+<span class="linenos"> 11</span><span class="sd">the single metric is the one named by dataset_metadata.single_metric, otherwise the only one.</span>
+<span class="linenos"> 12</span>
+<span class="linenos"> 13</span><span class="sd">Fields of the functions taking one can be dotted paths, e.g. "inherited.site".</span>
+<span class="linenos"> 14</span><span class="sd">"""</span>
+<span class="linenos"> 15</span>
+<span class="linenos"> 16</span><span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="linenos"> 17</span><span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="linenos"> 18</span><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="linenos"> 19</span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+<span class="linenos"> 20</span>
+<span class="linenos"> 21</span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="linenos"> 22</span>
+<span class="linenos"> 23</span><span class="kn">from</span><span class="w"> </span><span class="nn">hdhelpers.metadata._reading</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="linenos"> 24</span>    <span class="n">DISPLAY_NAME_FIELDS</span><span class="p">,</span>
+<span class="linenos"> 25</span>    <span class="n">SHORT_DISPLAY_NAME_FIELDS</span><span class="p">,</span>
+<span class="linenos"> 26</span>    <span class="n">Recording</span><span class="p">,</span>
+<span class="linenos"> 27</span>    <span class="n">dataset_default_timezone</span><span class="p">,</span>
+<span class="linenos"> 28</span>    <span class="n">dataset_recording</span><span class="p">,</span>
+<span class="linenos"> 29</span><span class="p">)</span>
+<span class="linenos"> 30</span><span class="kn">from</span><span class="w"> </span><span class="nn">hdhelpers.metadata.attached</span><span class="w"> </span><span class="kn">import</span> <span class="n">META_KEY</span><span class="p">,</span> <span class="n">AnyMetadata</span><span class="p">,</span> <span class="n">infer_data_type</span><span class="p">,</span> <span class="n">read_metadata</span>
+<span class="linenos"> 31</span><span class="kn">from</span><span class="w"> </span><span class="nn">hdhelpers.metadata.conventions</span><span class="w"> </span><span class="kn">import</span> <span class="n">TimeseriesDataType</span><span class="p">,</span> <span class="n">_TimeseriesMetadataBase</span>
+<span class="linenos"> 32</span>
+<span class="linenos"> 33</span><span class="n">_DEFAULT_AGGREGATION_METHOD</span> <span class="o">=</span> <span class="s2">"MEAN"</span>
+<span class="linenos"> 34</span>
+<span class="linenos"> 35</span>
+<span class="linenos"> 36</span><span class="k">def</span><span class="w"> </span><span class="nf">check_dataframe</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos"> 37</span>    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+<span class="linenos"> 38</span>        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"Input is not a pd.DataFrame"</span><span class="p">)</span>
+<span class="linenos"> 39</span>
+<span class="linenos"> 40</span>
+<span class="linenos"> 41</span><span class="k">def</span><span class="w"> </span><span class="nf">check_series</span><span class="p">(</span><span class="n">series</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos"> 42</span>    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+<span class="linenos"> 43</span>        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"Input is not a pd.Series."</span><span class="p">)</span>
+<span class="linenos"> 44</span>
+<span class="linenos"> 45</span>
+<span class="linenos"> 46</span><span class="k">def</span><span class="w"> </span><span class="nf">check_series_or_dataframe</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos"> 47</span>    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+<span class="linenos"> 48</span>        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"Input is not a pd.Series or pd.DataFrame."</span><span class="p">)</span>
+<span class="linenos"> 49</span>
+<span class="linenos"> 50</span>
+<span class="linenos"> 51</span><span class="k">def</span><span class="w"> </span><span class="nf">_metadata</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">data_type</span><span class="p">:</span> <span class="n">TimeseriesDataType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnyMetadata</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos"> 52</span><span class="w">    </span><span class="sd">"""The attached metadata of any data type, otherwise the attrs parsed as data_type"""</span>
+<span class="linenos"> 53</span>    <span class="n">attached</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">META_KEY</span><span class="p">)</span>
+<span class="linenos"> 54</span>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attached</span><span class="p">,</span> <span class="n">_TimeseriesMetadataBase</span><span class="p">):</span>
+<span class="linenos"> 55</span>        <span class="k">return</span> <span class="n">attached</span>  <span class="c1"># type: ignore[return-value]</span>
+<span class="linenos"> 56</span>    <span class="k">return</span> <span class="n">read_metadata</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">data_type</span><span class="p">)</span>
+<span class="linenos"> 57</span>
+<span class="linenos"> 58</span>
+<span class="linenos"> 59</span><span class="k">def</span><span class="w"> </span><span class="nf">_single_metric</span><span class="p">(</span><span class="n">meta</span><span class="p">:</span> <span class="n">AnyMetadata</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos"> 60</span><span class="w">    </span><span class="sd">"""The single metric: dataset_metadata.single_metric if described, otherwise the only one"""</span>
+<span class="linenos"> 61</span>    <span class="k">if</span> <span class="n">meta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos"> 62</span>        <span class="k">return</span> <span class="kc">None</span>
+<span class="linenos"> 63</span>    <span class="n">metric_ids</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">metric_ids</span><span class="p">()</span>
+<span class="linenos"> 64</span>    <span class="n">single_metric</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">dataset_metadata</span><span class="o">.</span><span class="n">single_metric</span>
+<span class="linenos"> 65</span>    <span class="k">if</span> <span class="n">single_metric</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos"> 66</span>        <span class="k">return</span> <span class="n">single_metric</span> <span class="k">if</span> <span class="n">single_metric</span> <span class="ow">in</span> <span class="n">metric_ids</span> <span class="k">else</span> <span class="kc">None</span>
+<span class="linenos"> 67</span>    <span class="k">return</span> <span class="n">metric_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">metric_ids</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span>
+<span class="linenos"> 68</span>
+<span class="linenos"> 69</span>
+<span class="linenos"> 70</span><span class="k">def</span><span class="w"> </span><span class="nf">_by_metric_by_column</span><span class="p">(</span>
+<span class="linenos"> 71</span>    <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">fields</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">include_inherited</span><span class="p">:</span> <span class="nb">bool</span>
+<span class="linenos"> 72</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="linenos"> 73</span>    <span class="n">check_dataframe</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="linenos"> 74</span>    <span class="n">meta</span> <span class="o">=</span> <span class="n">_metadata</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">"MULTITSFRAME"</span><span class="p">)</span>
+<span class="linenos"> 75</span>    <span class="n">infos</span> <span class="o">=</span> <span class="p">(</span>
+<span class="linenos"> 76</span>        <span class="p">{}</span>
+<span class="linenos"> 77</span>        <span class="k">if</span> <span class="n">meta</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="linenos"> 78</span>        <span class="k">else</span> <span class="n">meta</span><span class="o">.</span><span class="n">value_dimension_infos</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="n">include_inherited</span><span class="o">=</span><span class="n">include_inherited</span><span class="p">)</span>
+<span class="linenos"> 79</span>    <span class="p">)</span>
+<span class="linenos"> 80</span>    <span class="k">return</span> <span class="n">defaultdict</span><span class="p">(</span>
+<span class="linenos"> 81</span>        <span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="kc">None</span><span class="p">),</span>
+<span class="linenos"> 82</span>        <span class="p">{</span><span class="n">metric</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="n">info</span><span class="p">)</span> <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">infos</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+<span class="linenos"> 83</span>    <span class="p">)</span>
+<span class="linenos"> 84</span>
+<span class="linenos"> 85</span>
+<span class="linenos"> 86</span><span class="k">def</span><span class="w"> </span><span class="nf">_single_metric_by_column</span><span class="p">(</span>
+<span class="linenos"> 87</span>    <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">fields</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">include_inherited</span><span class="p">:</span> <span class="nb">bool</span>
+<span class="linenos"> 88</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="linenos"> 89</span>    <span class="n">check_dataframe</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="linenos"> 90</span>    <span class="n">meta</span> <span class="o">=</span> <span class="n">_metadata</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">"SINGLETSFRAME"</span><span class="p">)</span>
+<span class="linenos"> 91</span>    <span class="n">metric</span> <span class="o">=</span> <span class="n">_single_metric</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="linenos"> 92</span>    <span class="k">if</span> <span class="n">meta</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">metric</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos"> 93</span>        <span class="k">return</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="kc">None</span><span class="p">)</span>
+<span class="linenos"> 94</span>    <span class="k">return</span> <span class="n">defaultdict</span><span class="p">(</span>
+<span class="linenos"> 95</span>        <span class="k">lambda</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+<span class="linenos"> 96</span>        <span class="n">meta</span><span class="o">.</span><span class="n">value_dimension_infos</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="n">include_inherited</span><span class="o">=</span><span class="n">include_inherited</span><span class="p">)[</span><span class="n">metric</span><span class="p">],</span>
+<span class="linenos"> 97</span>    <span class="p">)</span>
+<span class="linenos"> 98</span>
+<span class="linenos"> 99</span>
+<span class="linenos">100</span><span class="k">def</span><span class="w"> </span><span class="nf">_series_value</span><span class="p">(</span><span class="n">series</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">fields</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">include_inherited</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="linenos">101</span>    <span class="n">check_series</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+<span class="linenos">102</span>    <span class="n">meta</span> <span class="o">=</span> <span class="n">_metadata</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="s2">"SERIES"</span><span class="p">)</span>
+<span class="linenos">103</span>    <span class="n">metric</span> <span class="o">=</span> <span class="n">_single_metric</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="linenos">104</span>    <span class="k">if</span> <span class="n">meta</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">metric</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">105</span>        <span class="k">return</span> <span class="kc">None</span>
+<span class="linenos">106</span>    <span class="k">return</span> <span class="n">meta</span><span class="o">.</span><span class="n">value_dimension_info</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">,</span> <span class="n">include_inherited</span><span class="o">=</span><span class="n">include_inherited</span><span class="p">)</span>
+<span class="linenos">107</span>
+<span class="linenos">108</span>
+<span class="linenos">109</span><span class="k">def</span><span class="w"> </span><span class="nf">_single_metric_or_dataset</span><span class="p">(</span>
+<span class="linenos">110</span>    <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+<span class="linenos">111</span>    <span class="n">data_type</span><span class="p">:</span> <span class="n">TimeseriesDataType</span><span class="p">,</span>
+<span class="linenos">112</span>    <span class="n">of_metric</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">AnyMetadata</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">Any</span><span class="p">],</span>
+<span class="linenos">113</span>    <span class="n">of_dataset</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">AnyMetadata</span><span class="p">],</span> <span class="n">Any</span><span class="p">],</span>
+<span class="linenos">114</span>    <span class="n">empty</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="linenos">115</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="linenos">116</span><span class="w">    </span><span class="sd">"""Information of the single metric, of the dataset metadata if the metric is not found"""</span>
+<span class="linenos">117</span>    <span class="n">meta</span> <span class="o">=</span> <span class="n">_metadata</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">data_type</span><span class="p">)</span>
+<span class="linenos">118</span>    <span class="k">if</span> <span class="n">meta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">119</span>        <span class="k">return</span> <span class="n">empty</span>
+<span class="linenos">120</span>    <span class="n">metric</span> <span class="o">=</span> <span class="n">_single_metric</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="linenos">121</span>    <span class="k">return</span> <span class="n">of_dataset</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span> <span class="k">if</span> <span class="n">metric</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">of_metric</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">metric</span><span class="p">)</span>
+<span class="linenos">122</span>
+<span class="linenos">123</span>
+<span class="linenos">124</span><span class="c1"># value dimensions of MULTITSFRAMEs</span>
+<span class="linenos">125</span>
+<span class="linenos">126</span>
+<div class="viewcode-block" id="get_units">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_units">[docs]</a>
+<span class="linenos">127</span><span class="k">def</span><span class="w"> </span><span class="nf">get_units</span><span class="p">(</span>
+<span class="linenos">128</span>    <span class="n">multitsframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="linenos">129</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]]:</span>
+<span class="linenos">130</span><span class="w">    </span><span class="sd">"""Read units for each metric and value column.</span>
+<span class="linenos">131</span>
+<span class="linenos">132</span><span class="sd">    Args:</span>
+<span class="linenos">133</span><span class="sd">        multitsframe: DataFrame with per-metric metadata in attrs.</span>
+<span class="linenos">134</span><span class="sd">        include_inherited: Use inherited fields last, only for the "value" column.</span>
+<span class="linenos">135</span>
+<span class="linenos">136</span><span class="sd">    Returns:</span>
+<span class="linenos">137</span><span class="sd">        defaultdict[str, defaultdict[str, str | None]]:</span>
+<span class="linenos">138</span><span class="sd">            Units as result[metric_id][column]; unavailable units are None.</span>
+<span class="linenos">139</span>
+<span class="linenos">140</span><span class="sd">    Code example:</span>
+<span class="linenos">141</span>
+<span class="linenos">142</span><span class="sd">    .. doctest:: metadata.get_units</span>
+<span class="linenos">143</span>
+<span class="linenos">144</span><span class="sd">        &gt;&gt;&gt; from hdhelpers.metadata.conventions import MULTITSFRAME_METADATA_EXAMPLE</span>
+<span class="linenos">145</span><span class="sd">        &gt;&gt;&gt; multitsframe.attrs = MULTITSFRAME_METADATA_EXAMPLE</span>
+<span class="linenos">146</span><span class="sd">        &gt;&gt;&gt; units = md.get_units(multitsframe)</span>
+<span class="linenos">147</span><span class="sd">        &gt;&gt;&gt; units["plant_a.temperature"]["value"]</span>
+<span class="linenos">148</span><span class="sd">        '°C'</span>
+<span class="linenos">149</span><span class="sd">        &gt;&gt;&gt; units["unknown metric"]["value"] is None</span>
+<span class="linenos">150</span><span class="sd">        True</span>
+<span class="linenos">151</span>
+<span class="linenos">152</span><span class="sd">    See :ref:`metadata-getter-values` for shared examples and return shapes.</span>
+<span class="linenos">153</span><span class="sd">    """</span>  <span class="c1"># noqa: E501</span>
+<span class="linenos">154</span>    <span class="k">return</span> <span class="n">_by_metric_by_column</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">,</span> <span class="s2">"unit"</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">)</span></div>
+
+<span class="linenos">155</span>
+<span class="linenos">156</span>
+<div class="viewcode-block" id="get_names">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_names">[docs]</a>
+<span class="linenos">157</span><span class="k">def</span><span class="w"> </span><span class="nf">get_names</span><span class="p">(</span>
+<span class="linenos">158</span>    <span class="n">multitsframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="linenos">159</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]]:</span>
+<span class="linenos">160</span><span class="w">    </span><span class="sd">"""Read metadata names for each metric and value column.</span>
+<span class="linenos">161</span>
+<span class="linenos">162</span><span class="sd">    For the "value" column, try the metric's name after the column's own name.</span>
+<span class="linenos">163</span>
+<span class="linenos">164</span><span class="sd">    Args:</span>
+<span class="linenos">165</span><span class="sd">        multitsframe: DataFrame with per-metric metadata in attrs.</span>
+<span class="linenos">166</span><span class="sd">        include_inherited: Use inherited fields last, only for the "value" column.</span>
+<span class="linenos">167</span>
+<span class="linenos">168</span><span class="sd">    Returns:</span>
+<span class="linenos">169</span><span class="sd">        defaultdict[str, defaultdict[str, str | None]]:</span>
+<span class="linenos">170</span><span class="sd">            Names as result[metric_id][column]; unavailable names are None.</span>
+<span class="linenos">171</span>
+<span class="linenos">172</span><span class="sd">    Code example:</span>
+<span class="linenos">173</span>
+<span class="linenos">174</span><span class="sd">    .. doctest:: metadata.get_names</span>
+<span class="linenos">175</span>
+<span class="linenos">176</span><span class="sd">        &gt;&gt;&gt; from hdhelpers.metadata.conventions import MULTITSFRAME_METADATA_EXAMPLE</span>
+<span class="linenos">177</span><span class="sd">        &gt;&gt;&gt; multitsframe.attrs = MULTITSFRAME_METADATA_EXAMPLE</span>
+<span class="linenos">178</span><span class="sd">        &gt;&gt;&gt; md.get_names(multitsframe)["plant_a.pressure"]["value"]</span>
+<span class="linenos">179</span><span class="sd">        'Plant A pressure'</span>
+<span class="linenos">180</span>
+<span class="linenos">181</span><span class="sd">    See :ref:`metadata-getter-names` for shared examples and return shapes.</span>
+<span class="linenos">182</span><span class="sd">    """</span>
+<span class="linenos">183</span>    <span class="k">return</span> <span class="n">_by_metric_by_column</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">)</span></div>
+
+<span class="linenos">184</span>
+<span class="linenos">185</span>
+<div class="viewcode-block" id="get_display_names">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_display_names">[docs]</a>
+<span class="linenos">186</span><span class="k">def</span><span class="w"> </span><span class="nf">get_display_names</span><span class="p">(</span>
+<span class="linenos">187</span>    <span class="n">multitsframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="linenos">188</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]]:</span>
+<span class="linenos">189</span><span class="w">    </span><span class="sd">"""Read display labels for each metric and value column.</span>
+<span class="linenos">190</span>
+<span class="linenos">191</span><span class="sd">    Use display_name, then name.</span>
+<span class="linenos">192</span>
+<span class="linenos">193</span><span class="sd">    Args:</span>
+<span class="linenos">194</span><span class="sd">        multitsframe: DataFrame with per-metric metadata in attrs.</span>
+<span class="linenos">195</span><span class="sd">        include_inherited: Use inherited fields last, only for the "value" column.</span>
+<span class="linenos">196</span>
+<span class="linenos">197</span><span class="sd">    Returns:</span>
+<span class="linenos">198</span><span class="sd">        defaultdict[str, defaultdict[str, str | None]]:</span>
+<span class="linenos">199</span><span class="sd">            Labels as result[metric_id][column]; unavailable labels are None.</span>
+<span class="linenos">200</span>
+<span class="linenos">201</span><span class="sd">    See :ref:`metadata-getter-names` for shared examples and return shapes.</span>
+<span class="linenos">202</span><span class="sd">    """</span>
+<span class="linenos">203</span>    <span class="k">return</span> <span class="n">_by_metric_by_column</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">,</span> <span class="n">DISPLAY_NAME_FIELDS</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">)</span></div>
+
+<span class="linenos">204</span>
+<span class="linenos">205</span>
+<div class="viewcode-block" id="get_short_display_names">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_short_display_names">[docs]</a>
+<span class="linenos">206</span><span class="k">def</span><span class="w"> </span><span class="nf">get_short_display_names</span><span class="p">(</span>
+<span class="linenos">207</span>    <span class="n">multitsframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="linenos">208</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]]:</span>
+<span class="linenos">209</span><span class="w">    </span><span class="sd">"""Read short display labels for each metric and value column.</span>
+<span class="linenos">210</span>
+<span class="linenos">211</span><span class="sd">    Use short_display_name, then display_name, then name.</span>
+<span class="linenos">212</span>
+<span class="linenos">213</span><span class="sd">    Args:</span>
+<span class="linenos">214</span><span class="sd">        multitsframe: DataFrame with per-metric metadata in attrs.</span>
+<span class="linenos">215</span><span class="sd">        include_inherited: Use inherited fields last, only for the "value" column.</span>
+<span class="linenos">216</span>
+<span class="linenos">217</span><span class="sd">    Returns:</span>
+<span class="linenos">218</span><span class="sd">        defaultdict[str, defaultdict[str, str | None]]:</span>
+<span class="linenos">219</span><span class="sd">            Labels as result[metric_id][column]; unavailable labels are None.</span>
+<span class="linenos">220</span>
+<span class="linenos">221</span><span class="sd">    See :ref:`metadata-getter-names` for shared examples and return shapes.</span>
+<span class="linenos">222</span><span class="sd">    """</span>
+<span class="linenos">223</span>    <span class="k">return</span> <span class="n">_by_metric_by_column</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">,</span> <span class="n">SHORT_DISPLAY_NAME_FIELDS</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">)</span></div>
+
+<span class="linenos">224</span>
+<span class="linenos">225</span>
+<div class="viewcode-block" id="get_measurements">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_measurements">[docs]</a>
+<span class="linenos">226</span><span class="k">def</span><span class="w"> </span><span class="nf">get_measurements</span><span class="p">(</span>
+<span class="linenos">227</span>    <span class="n">multitsframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="linenos">228</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]]:</span>
+<span class="linenos">229</span><span class="w">    </span><span class="sd">"""Read physical quantities for each metric and value column.</span>
+<span class="linenos">230</span>
+<span class="linenos">231</span><span class="sd">    For example, "temperature" is a measurement and "°C" is its unit.</span>
+<span class="linenos">232</span>
+<span class="linenos">233</span><span class="sd">    Args:</span>
+<span class="linenos">234</span><span class="sd">        multitsframe: DataFrame with per-metric metadata in attrs.</span>
+<span class="linenos">235</span><span class="sd">        include_inherited: Use inherited fields last, only for the "value" column.</span>
+<span class="linenos">236</span>
+<span class="linenos">237</span><span class="sd">    Returns:</span>
+<span class="linenos">238</span><span class="sd">        defaultdict[str, defaultdict[str, str | None]]:</span>
+<span class="linenos">239</span><span class="sd">            Quantities as result[metric_id][column]; unavailable quantities are None.</span>
+<span class="linenos">240</span>
+<span class="linenos">241</span><span class="sd">    See :ref:`metadata-getter-values` for shared examples and return shapes.</span>
+<span class="linenos">242</span><span class="sd">    """</span>
+<span class="linenos">243</span>    <span class="k">return</span> <span class="n">_by_metric_by_column</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">,</span> <span class="s2">"measurement"</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">)</span></div>
+
+<span class="linenos">244</span>
+<span class="linenos">245</span>
+<div class="viewcode-block" id="get_metric_info">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_metric_info">[docs]</a>
+<span class="linenos">246</span><span class="k">def</span><span class="w"> </span><span class="nf">get_metric_info</span><span class="p">(</span>
+<span class="linenos">247</span>    <span class="n">multitsframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">metric_info</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="linenos">248</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="linenos">249</span><span class="w">    </span><span class="sd">"""Read a metadata field for each metric.</span>
+<span class="linenos">250</span>
+<span class="linenos">251</span><span class="sd">    Search the metric, its "value" column, shared "value" metadata, then inherited fields</span>
+<span class="linenos">252</span><span class="sd">    (if enabled).</span>
+<span class="linenos">253</span>
+<span class="linenos">254</span><span class="sd">    Args:</span>
+<span class="linenos">255</span><span class="sd">        multitsframe: DataFrame with per-metric metadata in attrs.</span>
+<span class="linenos">256</span><span class="sd">        metric_info: Field name or dotted path, e.g. "sensor.model".</span>
+<span class="linenos">257</span><span class="sd">        include_inherited: Use inherited fields as a last fallback.</span>
+<span class="linenos">258</span>
+<span class="linenos">259</span><span class="sd">    Returns:</span>
+<span class="linenos">260</span><span class="sd">        defaultdict[str, Any]: Field values by metric ID; unresolved fields are None.</span>
+<span class="linenos">261</span>
+<span class="linenos">262</span><span class="sd">    Code example:</span>
+<span class="linenos">263</span>
+<span class="linenos">264</span><span class="sd">    .. doctest:: metadata.get_metric_info</span>
+<span class="linenos">265</span>
+<span class="linenos">266</span><span class="sd">        &gt;&gt;&gt; from hdhelpers.metadata.conventions import MULTITSFRAME_METADATA_EXAMPLE</span>
+<span class="linenos">267</span><span class="sd">        &gt;&gt;&gt; multitsframe.attrs = MULTITSFRAME_METADATA_EXAMPLE</span>
+<span class="linenos">268</span><span class="sd">        &gt;&gt;&gt; md.get_metric_info(multitsframe, "recording_mode")["plant_a.temperature"]</span>
+<span class="linenos">269</span><span class="sd">        'on_change'</span>
+<span class="linenos">270</span>
+<span class="linenos">271</span><span class="sd">    See :ref:`metadata-getter-fields` for shared examples and return shapes.</span>
+<span class="linenos">272</span><span class="sd">    """</span>
+<span class="linenos">273</span>    <span class="n">check_dataframe</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">)</span>
+<span class="linenos">274</span>    <span class="n">meta</span> <span class="o">=</span> <span class="n">_metadata</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">,</span> <span class="s2">"MULTITSFRAME"</span><span class="p">)</span>
+<span class="linenos">275</span>    <span class="n">infos</span> <span class="o">=</span> <span class="p">(</span>
+<span class="linenos">276</span>        <span class="p">{}</span> <span class="k">if</span> <span class="n">meta</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">meta</span><span class="o">.</span><span class="n">metric_infos</span><span class="p">(</span><span class="n">metric_info</span><span class="p">,</span> <span class="n">include_inherited</span><span class="o">=</span><span class="n">include_inherited</span><span class="p">)</span>
+<span class="linenos">277</span>    <span class="p">)</span>
+<span class="linenos">278</span>    <span class="k">return</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="n">infos</span><span class="p">)</span></div>
+
+<span class="linenos">279</span>
+<span class="linenos">280</span>
+<span class="linenos">281</span><span class="c1"># the value dimension "value" of SERIES</span>
+<span class="linenos">282</span>
+<span class="linenos">283</span>
+<div class="viewcode-block" id="get_series_info">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_series_info">[docs]</a>
+<span class="linenos">284</span><span class="k">def</span><span class="w"> </span><span class="nf">get_series_info</span><span class="p">(</span>
+<span class="linenos">285</span>    <span class="n">series</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">value_dim_info</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="linenos">286</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="linenos">287</span><span class="w">    </span><span class="sd">"""Read a metadata field for this Series.</span>
+<span class="linenos">288</span>
+<span class="linenos">289</span><span class="sd">    Search the "value" column, the metric, shared "value" metadata, then inherited fields</span>
+<span class="linenos">290</span><span class="sd">    (if enabled).</span>
+<span class="linenos">291</span>
+<span class="linenos">292</span><span class="sd">    Args:</span>
+<span class="linenos">293</span><span class="sd">        series: Series with metadata in attrs.</span>
+<span class="linenos">294</span><span class="sd">        value_dim_info: Field name or dotted path, e.g. "sensor.model".</span>
+<span class="linenos">295</span><span class="sd">        include_inherited: Use inherited fields as a last fallback.</span>
+<span class="linenos">296</span>
+<span class="linenos">297</span><span class="sd">    Returns:</span>
+<span class="linenos">298</span><span class="sd">        Any: Field value, or None when unavailable.</span>
+<span class="linenos">299</span>
+<span class="linenos">300</span><span class="sd">    Code example:</span>
+<span class="linenos">301</span>
+<span class="linenos">302</span><span class="sd">    .. doctest:: metadata.get_series_info</span>
+<span class="linenos">303</span>
+<span class="linenos">304</span><span class="sd">        &gt;&gt;&gt; from hdhelpers.metadata.conventions import SERIES_METADATA_EXAMPLE</span>
+<span class="linenos">305</span><span class="sd">        &gt;&gt;&gt; series.attrs = SERIES_METADATA_EXAMPLE</span>
+<span class="linenos">306</span><span class="sd">        &gt;&gt;&gt; md.get_series_info(series, "decimals")</span>
+<span class="linenos">307</span><span class="sd">        2</span>
+<span class="linenos">308</span>
+<span class="linenos">309</span><span class="sd">    See :ref:`metadata-getter-fields` for shared examples and return shapes.</span>
+<span class="linenos">310</span><span class="sd">    """</span>
+<span class="linenos">311</span>    <span class="k">return</span> <span class="n">_series_value</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">value_dim_info</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">)</span></div>
+
+<span class="linenos">312</span>
+<span class="linenos">313</span>
+<div class="viewcode-block" id="get_series_unit">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_series_unit">[docs]</a>
+<span class="linenos">314</span><span class="k">def</span><span class="w"> </span><span class="nf">get_series_unit</span><span class="p">(</span><span class="n">series</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">315</span><span class="w">    </span><span class="sd">"""Read this Series' unit from metadata.</span>
+<span class="linenos">316</span>
+<span class="linenos">317</span><span class="sd">    Args:</span>
+<span class="linenos">318</span><span class="sd">        series: Series with metadata in attrs.</span>
+<span class="linenos">319</span><span class="sd">        include_inherited: Use inherited fields as a last fallback.</span>
+<span class="linenos">320</span>
+<span class="linenos">321</span><span class="sd">    Returns:</span>
+<span class="linenos">322</span><span class="sd">        str | None: Unit string; "" means dimensionless and None means unavailable.</span>
+<span class="linenos">323</span>
+<span class="linenos">324</span><span class="sd">    Code example:</span>
+<span class="linenos">325</span>
+<span class="linenos">326</span><span class="sd">    .. doctest:: metadata.get_series_unit</span>
+<span class="linenos">327</span>
+<span class="linenos">328</span><span class="sd">        &gt;&gt;&gt; from hdhelpers.metadata.conventions import SERIES_METADATA_EXAMPLE</span>
+<span class="linenos">329</span><span class="sd">        &gt;&gt;&gt; series.attrs = SERIES_METADATA_EXAMPLE</span>
+<span class="linenos">330</span><span class="sd">        &gt;&gt;&gt; md.get_series_unit(series)</span>
+<span class="linenos">331</span><span class="sd">        'm'</span>
+<span class="linenos">332</span>
+<span class="linenos">333</span><span class="sd">    See :ref:`metadata-getter-values` for shared examples and return shapes.</span>
+<span class="linenos">334</span><span class="sd">    """</span>
+<span class="linenos">335</span>    <span class="k">return</span> <span class="n">_series_value</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="s2">"unit"</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">)</span>  <span class="c1"># type: ignore[no-any-return]</span></div>
+
+<span class="linenos">336</span>
+<span class="linenos">337</span>
+<div class="viewcode-block" id="get_series_name">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_series_name">[docs]</a>
+<span class="linenos">338</span><span class="k">def</span><span class="w"> </span><span class="nf">get_series_name</span><span class="p">(</span><span class="n">series</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">339</span><span class="w">    </span><span class="sd">"""Read this Series' name from metadata.</span>
+<span class="linenos">340</span>
+<span class="linenos">341</span><span class="sd">    Try the "value" column's name, then the metric's name.</span>
+<span class="linenos">342</span>
+<span class="linenos">343</span><span class="sd">    Args:</span>
+<span class="linenos">344</span><span class="sd">        series: Series with metadata in attrs.</span>
+<span class="linenos">345</span><span class="sd">        include_inherited: Use inherited fields as a last fallback.</span>
+<span class="linenos">346</span>
+<span class="linenos">347</span><span class="sd">    Returns:</span>
+<span class="linenos">348</span><span class="sd">        str | None: Resolved name, or None when unavailable.</span>
+<span class="linenos">349</span>
+<span class="linenos">350</span><span class="sd">    Code example:</span>
+<span class="linenos">351</span>
+<span class="linenos">352</span><span class="sd">    .. doctest:: metadata.get_series_name</span>
+<span class="linenos">353</span>
+<span class="linenos">354</span><span class="sd">        &gt;&gt;&gt; from hdhelpers.metadata.conventions import SERIES_METADATA_EXAMPLE</span>
+<span class="linenos">355</span><span class="sd">        &gt;&gt;&gt; series.attrs = SERIES_METADATA_EXAMPLE</span>
+<span class="linenos">356</span><span class="sd">        &gt;&gt;&gt; md.get_series_name(series)</span>
+<span class="linenos">357</span><span class="sd">        'Water level north'</span>
+<span class="linenos">358</span>
+<span class="linenos">359</span><span class="sd">    See :ref:`metadata-getter-names` for shared examples and return shapes.</span>
+<span class="linenos">360</span><span class="sd">    """</span>
+<span class="linenos">361</span>    <span class="k">return</span> <span class="n">_series_value</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">)</span>  <span class="c1"># type: ignore[no-any-return]</span></div>
+
+<span class="linenos">362</span>
+<span class="linenos">363</span>
+<div class="viewcode-block" id="get_series_display_name">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_series_display_name">[docs]</a>
+<span class="linenos">364</span><span class="k">def</span><span class="w"> </span><span class="nf">get_series_display_name</span><span class="p">(</span><span class="n">series</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">365</span><span class="w">    </span><span class="sd">"""Read the display label for this Series.</span>
+<span class="linenos">366</span>
+<span class="linenos">367</span><span class="sd">    Use display_name, then name.</span>
+<span class="linenos">368</span>
+<span class="linenos">369</span><span class="sd">    Args:</span>
+<span class="linenos">370</span><span class="sd">        series: Series with metadata in attrs.</span>
+<span class="linenos">371</span><span class="sd">        include_inherited: Use inherited fields as a last fallback.</span>
+<span class="linenos">372</span>
+<span class="linenos">373</span><span class="sd">    Returns:</span>
+<span class="linenos">374</span><span class="sd">        str | None: Resolved label, or None when unavailable.</span>
+<span class="linenos">375</span>
+<span class="linenos">376</span><span class="sd">    See :ref:`metadata-getter-names` for shared examples and return shapes.</span>
+<span class="linenos">377</span><span class="sd">    """</span>
+<span class="linenos">378</span>    <span class="k">return</span> <span class="n">_series_value</span><span class="p">(</span>  <span class="c1"># type: ignore[no-any-return]</span>
+<span class="linenos">379</span>        <span class="n">series</span><span class="p">,</span> <span class="n">DISPLAY_NAME_FIELDS</span><span class="p">,</span> <span class="n">include_inherited</span>
+<span class="linenos">380</span>    <span class="p">)</span></div>
+
+<span class="linenos">381</span>
+<span class="linenos">382</span>
+<div class="viewcode-block" id="get_series_short_display_name">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_series_short_display_name">[docs]</a>
+<span class="linenos">383</span><span class="k">def</span><span class="w"> </span><span class="nf">get_series_short_display_name</span><span class="p">(</span>
+<span class="linenos">384</span>    <span class="n">series</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="linenos">385</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">386</span><span class="w">    </span><span class="sd">"""Read the short display label for this Series.</span>
+<span class="linenos">387</span>
+<span class="linenos">388</span><span class="sd">    Use short_display_name, then display_name, then name.</span>
+<span class="linenos">389</span>
+<span class="linenos">390</span><span class="sd">    Args:</span>
+<span class="linenos">391</span><span class="sd">        series: Series with metadata in attrs.</span>
+<span class="linenos">392</span><span class="sd">        include_inherited: Use inherited fields as a last fallback.</span>
+<span class="linenos">393</span>
+<span class="linenos">394</span><span class="sd">    Returns:</span>
+<span class="linenos">395</span><span class="sd">        str | None: Resolved label, or None when unavailable.</span>
+<span class="linenos">396</span>
+<span class="linenos">397</span><span class="sd">    See :ref:`metadata-getter-names` for shared examples and return shapes.</span>
+<span class="linenos">398</span><span class="sd">    """</span>
+<span class="linenos">399</span>    <span class="k">return</span> <span class="n">_series_value</span><span class="p">(</span>  <span class="c1"># type: ignore[no-any-return]</span>
+<span class="linenos">400</span>        <span class="n">series</span><span class="p">,</span> <span class="n">SHORT_DISPLAY_NAME_FIELDS</span><span class="p">,</span> <span class="n">include_inherited</span>
+<span class="linenos">401</span>    <span class="p">)</span></div>
+
+<span class="linenos">402</span>
+<span class="linenos">403</span>
+<div class="viewcode-block" id="get_series_measurement">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_series_measurement">[docs]</a>
+<span class="linenos">404</span><span class="k">def</span><span class="w"> </span><span class="nf">get_series_measurement</span><span class="p">(</span><span class="n">series</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">405</span><span class="w">    </span><span class="sd">"""Read this Series' physical quantity from metadata.</span>
+<span class="linenos">406</span>
+<span class="linenos">407</span><span class="sd">    For example, "temperature" describes the quantity and "°C" describes its unit.</span>
+<span class="linenos">408</span>
+<span class="linenos">409</span><span class="sd">    Args:</span>
+<span class="linenos">410</span><span class="sd">        series: Series with metadata in attrs.</span>
+<span class="linenos">411</span><span class="sd">        include_inherited: Use inherited fields as a last fallback.</span>
+<span class="linenos">412</span>
+<span class="linenos">413</span><span class="sd">    Returns:</span>
+<span class="linenos">414</span><span class="sd">        str | None: Quantity name, or None when unavailable.</span>
+<span class="linenos">415</span>
+<span class="linenos">416</span><span class="sd">    See :ref:`metadata-getter-values` for shared examples and return shapes.</span>
+<span class="linenos">417</span><span class="sd">    """</span>
+<span class="linenos">418</span>    <span class="k">return</span> <span class="n">_series_value</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="s2">"measurement"</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">)</span>  <span class="c1"># type: ignore[no-any-return]</span></div>
+
+<span class="linenos">419</span>
+<span class="linenos">420</span>
+<span class="linenos">421</span><span class="c1"># value dimensions of SINGLETSFRAMEs</span>
+<span class="linenos">422</span>
+<span class="linenos">423</span>
+<div class="viewcode-block" id="get_singlets_info">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_singlets_info">[docs]</a>
+<span class="linenos">424</span><span class="k">def</span><span class="w"> </span><span class="nf">get_singlets_info</span><span class="p">(</span>
+<span class="linenos">425</span>    <span class="n">singletsframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">value_dim_info</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="linenos">426</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="linenos">427</span><span class="w">    </span><span class="sd">"""Read a metadata field for each value column of a single-metric frame.</span>
+<span class="linenos">428</span>
+<span class="linenos">429</span><span class="sd">    For "value", search column, metric, shared and inherited metadata (if enabled), in that</span>
+<span class="linenos">430</span><span class="sd">    order. Other columns use their own and shared metadata.</span>
+<span class="linenos">431</span>
+<span class="linenos">432</span><span class="sd">    Args:</span>
+<span class="linenos">433</span><span class="sd">        singletsframe: DataFrame with one metric's metadata in attrs.</span>
+<span class="linenos">434</span><span class="sd">        value_dim_info: Field name or dotted path, e.g. "sensor.model".</span>
+<span class="linenos">435</span><span class="sd">        include_inherited: Use inherited fields last, only for the "value" column.</span>
+<span class="linenos">436</span>
+<span class="linenos">437</span><span class="sd">    Returns:</span>
+<span class="linenos">438</span><span class="sd">        defaultdict[str, Any]: Field values as result[column]; unresolved fields are None.</span>
+<span class="linenos">439</span>
+<span class="linenos">440</span><span class="sd">    Code example:</span>
+<span class="linenos">441</span>
+<span class="linenos">442</span><span class="sd">    .. doctest:: metadata.get_singlets_info</span>
+<span class="linenos">443</span>
+<span class="linenos">444</span><span class="sd">        &gt;&gt;&gt; from hdhelpers.metadata.conventions import SINGLETSFRAME_METADATA_EXAMPLE</span>
+<span class="linenos">445</span><span class="sd">        &gt;&gt;&gt; dataframe.attrs = SINGLETSFRAME_METADATA_EXAMPLE</span>
+<span class="linenos">446</span><span class="sd">        &gt;&gt;&gt; md.get_singlets_info(dataframe, "name")["state"]</span>
+<span class="linenos">447</span><span class="sd">        'measurement state'</span>
+<span class="linenos">448</span>
+<span class="linenos">449</span><span class="sd">    See :ref:`metadata-getter-fields` for shared examples and return shapes.</span>
+<span class="linenos">450</span><span class="sd">    """</span>
+<span class="linenos">451</span>    <span class="k">return</span> <span class="n">_single_metric_by_column</span><span class="p">(</span><span class="n">singletsframe</span><span class="p">,</span> <span class="n">value_dim_info</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">)</span></div>
+
+<span class="linenos">452</span>
+<span class="linenos">453</span>
+<div class="viewcode-block" id="get_singlets_units">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_singlets_units">[docs]</a>
+<span class="linenos">454</span><span class="k">def</span><span class="w"> </span><span class="nf">get_singlets_units</span><span class="p">(</span>
+<span class="linenos">455</span>    <span class="n">singletsframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="linenos">456</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="linenos">457</span><span class="w">    </span><span class="sd">"""Read units for each value column of a single-metric frame.</span>
+<span class="linenos">458</span>
+<span class="linenos">459</span><span class="sd">    Args:</span>
+<span class="linenos">460</span><span class="sd">        singletsframe: DataFrame with one metric's metadata in attrs.</span>
+<span class="linenos">461</span><span class="sd">        include_inherited: Use inherited fields last, only for the "value" column.</span>
+<span class="linenos">462</span>
+<span class="linenos">463</span><span class="sd">    Returns:</span>
+<span class="linenos">464</span><span class="sd">        defaultdict[str, str | None]:</span>
+<span class="linenos">465</span><span class="sd">            Units as result[column]; "" means dimensionless and None means unavailable.</span>
+<span class="linenos">466</span>
+<span class="linenos">467</span><span class="sd">    Code example:</span>
+<span class="linenos">468</span>
+<span class="linenos">469</span><span class="sd">    .. doctest:: metadata.get_singlets_units</span>
+<span class="linenos">470</span>
+<span class="linenos">471</span><span class="sd">        &gt;&gt;&gt; from hdhelpers.metadata.conventions import SINGLETSFRAME_METADATA_EXAMPLE</span>
+<span class="linenos">472</span><span class="sd">        &gt;&gt;&gt; dataframe.attrs = SINGLETSFRAME_METADATA_EXAMPLE</span>
+<span class="linenos">473</span><span class="sd">        &gt;&gt;&gt; md.get_singlets_units(dataframe)["value"]</span>
+<span class="linenos">474</span><span class="sd">        '°C'</span>
+<span class="linenos">475</span>
+<span class="linenos">476</span><span class="sd">    See :ref:`metadata-getter-values` for shared examples and return shapes.</span>
+<span class="linenos">477</span><span class="sd">    """</span>
+<span class="linenos">478</span>    <span class="k">return</span> <span class="n">_single_metric_by_column</span><span class="p">(</span><span class="n">singletsframe</span><span class="p">,</span> <span class="s2">"unit"</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">)</span></div>
+
+<span class="linenos">479</span>
+<span class="linenos">480</span>
+<div class="viewcode-block" id="get_singlets_names">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_singlets_names">[docs]</a>
+<span class="linenos">481</span><span class="k">def</span><span class="w"> </span><span class="nf">get_singlets_names</span><span class="p">(</span>
+<span class="linenos">482</span>    <span class="n">singletsframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="linenos">483</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="linenos">484</span><span class="w">    </span><span class="sd">"""Read metadata names for each value column of a single-metric frame.</span>
+<span class="linenos">485</span>
+<span class="linenos">486</span><span class="sd">    For "value", try the metric's name after the column's own name.</span>
+<span class="linenos">487</span>
+<span class="linenos">488</span><span class="sd">    Args:</span>
+<span class="linenos">489</span><span class="sd">        singletsframe: DataFrame with one metric's metadata in attrs.</span>
+<span class="linenos">490</span><span class="sd">        include_inherited: Use inherited fields last, only for the "value" column.</span>
+<span class="linenos">491</span>
+<span class="linenos">492</span><span class="sd">    Returns:</span>
+<span class="linenos">493</span><span class="sd">        defaultdict[str, str | None]: Names as result[column]; unavailable names are None.</span>
+<span class="linenos">494</span>
+<span class="linenos">495</span><span class="sd">    See :ref:`metadata-getter-names` for shared examples and return shapes.</span>
+<span class="linenos">496</span><span class="sd">    """</span>
+<span class="linenos">497</span>    <span class="k">return</span> <span class="n">_single_metric_by_column</span><span class="p">(</span><span class="n">singletsframe</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">)</span></div>
+
+<span class="linenos">498</span>
+<span class="linenos">499</span>
+<div class="viewcode-block" id="get_singlets_display_names">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_singlets_display_names">[docs]</a>
+<span class="linenos">500</span><span class="k">def</span><span class="w"> </span><span class="nf">get_singlets_display_names</span><span class="p">(</span>
+<span class="linenos">501</span>    <span class="n">singletsframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="linenos">502</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="linenos">503</span><span class="w">    </span><span class="sd">"""Read display labels for each value column of a single-metric frame.</span>
+<span class="linenos">504</span>
+<span class="linenos">505</span><span class="sd">    Use display_name, then name.</span>
+<span class="linenos">506</span>
+<span class="linenos">507</span><span class="sd">    Args:</span>
+<span class="linenos">508</span><span class="sd">        singletsframe: DataFrame with one metric's metadata in attrs.</span>
+<span class="linenos">509</span><span class="sd">        include_inherited: Use inherited fields last, only for the "value" column.</span>
+<span class="linenos">510</span>
+<span class="linenos">511</span><span class="sd">    Returns:</span>
+<span class="linenos">512</span><span class="sd">        defaultdict[str, str | None]: Labels as result[column]; unavailable labels are None.</span>
+<span class="linenos">513</span>
+<span class="linenos">514</span><span class="sd">    See :ref:`metadata-getter-names` for shared examples and return shapes.</span>
+<span class="linenos">515</span><span class="sd">    """</span>
+<span class="linenos">516</span>    <span class="k">return</span> <span class="n">_single_metric_by_column</span><span class="p">(</span><span class="n">singletsframe</span><span class="p">,</span> <span class="n">DISPLAY_NAME_FIELDS</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">)</span></div>
+
+<span class="linenos">517</span>
+<span class="linenos">518</span>
+<div class="viewcode-block" id="get_singlets_short_display_names">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_singlets_short_display_names">[docs]</a>
+<span class="linenos">519</span><span class="k">def</span><span class="w"> </span><span class="nf">get_singlets_short_display_names</span><span class="p">(</span>
+<span class="linenos">520</span>    <span class="n">singletsframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="linenos">521</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="linenos">522</span><span class="w">    </span><span class="sd">"""Read short display labels for each value column of a single-metric frame.</span>
+<span class="linenos">523</span>
+<span class="linenos">524</span><span class="sd">    Use short_display_name, then display_name, then name.</span>
+<span class="linenos">525</span>
+<span class="linenos">526</span><span class="sd">    Args:</span>
+<span class="linenos">527</span><span class="sd">        singletsframe: DataFrame with one metric's metadata in attrs.</span>
+<span class="linenos">528</span><span class="sd">        include_inherited: Use inherited fields last, only for the "value" column.</span>
+<span class="linenos">529</span>
+<span class="linenos">530</span><span class="sd">    Returns:</span>
+<span class="linenos">531</span><span class="sd">        defaultdict[str, str | None]: Labels as result[column]; unavailable labels are None.</span>
+<span class="linenos">532</span>
+<span class="linenos">533</span><span class="sd">    See :ref:`metadata-getter-names` for shared examples and return shapes.</span>
+<span class="linenos">534</span><span class="sd">    """</span>
+<span class="linenos">535</span>    <span class="k">return</span> <span class="n">_single_metric_by_column</span><span class="p">(</span><span class="n">singletsframe</span><span class="p">,</span> <span class="n">SHORT_DISPLAY_NAME_FIELDS</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">)</span></div>
+
+<span class="linenos">536</span>
+<span class="linenos">537</span>
+<div class="viewcode-block" id="get_singlets_measurements">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_singlets_measurements">[docs]</a>
+<span class="linenos">538</span><span class="k">def</span><span class="w"> </span><span class="nf">get_singlets_measurements</span><span class="p">(</span>
+<span class="linenos">539</span>    <span class="n">singletsframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="linenos">540</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="linenos">541</span><span class="w">    </span><span class="sd">"""Read physical quantities for each value column of a single-metric frame.</span>
+<span class="linenos">542</span>
+<span class="linenos">543</span><span class="sd">    For example, "temperature" is a measurement and "°C" is its unit.</span>
+<span class="linenos">544</span>
+<span class="linenos">545</span><span class="sd">    Args:</span>
+<span class="linenos">546</span><span class="sd">        singletsframe: DataFrame with one metric's metadata in attrs.</span>
+<span class="linenos">547</span><span class="sd">        include_inherited: Use inherited fields last, only for the "value" column.</span>
+<span class="linenos">548</span>
+<span class="linenos">549</span><span class="sd">    Returns:</span>
+<span class="linenos">550</span><span class="sd">        defaultdict[str, str | None]:</span>
+<span class="linenos">551</span><span class="sd">            Quantities as result[column]; unavailable quantities are None.</span>
+<span class="linenos">552</span>
+<span class="linenos">553</span><span class="sd">    See :ref:`metadata-getter-values` for shared examples and return shapes.</span>
+<span class="linenos">554</span><span class="sd">    """</span>
+<span class="linenos">555</span>    <span class="k">return</span> <span class="n">_single_metric_by_column</span><span class="p">(</span><span class="n">singletsframe</span><span class="p">,</span> <span class="s2">"measurement"</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">)</span></div>
+
+<span class="linenos">556</span>
+<span class="linenos">557</span>
+<div class="viewcode-block" id="get_singlets_metric_info">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_singlets_metric_info">[docs]</a>
+<span class="linenos">558</span><span class="k">def</span><span class="w"> </span><span class="nf">get_singlets_metric_info</span><span class="p">(</span>
+<span class="linenos">559</span>    <span class="n">singletsframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">metric_info</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_inherited</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="linenos">560</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="linenos">561</span><span class="w">    </span><span class="sd">"""Read one metadata field for the frame's single metric.</span>
+<span class="linenos">562</span>
+<span class="linenos">563</span><span class="sd">    Search the metric, its "value" column, shared "value" metadata, then inherited fields</span>
+<span class="linenos">564</span><span class="sd">    (if enabled).</span>
+<span class="linenos">565</span>
+<span class="linenos">566</span><span class="sd">    Args:</span>
+<span class="linenos">567</span><span class="sd">        singletsframe: DataFrame with one metric's metadata in attrs.</span>
+<span class="linenos">568</span><span class="sd">        metric_info: Field name or dotted path, e.g. "sensor.model".</span>
+<span class="linenos">569</span><span class="sd">        include_inherited: Use inherited fields as a last fallback.</span>
+<span class="linenos">570</span>
+<span class="linenos">571</span><span class="sd">    Returns:</span>
+<span class="linenos">572</span><span class="sd">        Any: One field value, or None when unavailable.</span>
+<span class="linenos">573</span>
+<span class="linenos">574</span><span class="sd">    Code example:</span>
+<span class="linenos">575</span>
+<span class="linenos">576</span><span class="sd">    Using :ref:`metadata-example-data`, compare a field of the metric with fields of its value</span>
+<span class="linenos">577</span><span class="sd">    dimensions. See :ref:`metadata-getter-fields` for the related getters:</span>
+<span class="linenos">578</span>
+<span class="linenos">579</span><span class="sd">    .. doctest:: metadata.get_singlets_metric_info</span>
+<span class="linenos">580</span>
+<span class="linenos">581</span><span class="sd">        &gt;&gt;&gt; md.get_singlets_metric_info(dataframe, "name")</span>
+<span class="linenos">582</span><span class="sd">        'ABC temperature'</span>
+<span class="linenos">583</span><span class="sd">        &gt;&gt;&gt; md.get_singlets_info(dataframe, "name")["state"]</span>
+<span class="linenos">584</span><span class="sd">        'measurement state'</span>
+<span class="linenos">585</span><span class="sd">    """</span>
+<span class="linenos">586</span>    <span class="n">check_dataframe</span><span class="p">(</span><span class="n">singletsframe</span><span class="p">)</span>
+<span class="linenos">587</span>    <span class="k">return</span> <span class="n">_single_metric_or_dataset</span><span class="p">(</span>
+<span class="linenos">588</span>        <span class="n">singletsframe</span><span class="p">,</span>
+<span class="linenos">589</span>        <span class="s2">"SINGLETSFRAME"</span><span class="p">,</span>
+<span class="linenos">590</span>        <span class="k">lambda</span> <span class="n">meta</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">meta</span><span class="o">.</span><span class="n">metric_info</span><span class="p">(</span>
+<span class="linenos">591</span>            <span class="n">metric_info</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">include_inherited</span><span class="o">=</span><span class="n">include_inherited</span>
+<span class="linenos">592</span>        <span class="p">),</span>
+<span class="linenos">593</span>        <span class="k">lambda</span> <span class="n">_meta</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+<span class="linenos">594</span>        <span class="n">empty</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="linenos">595</span>    <span class="p">)</span></div>
+
+<span class="linenos">596</span>
+<span class="linenos">597</span>
+<span class="linenos">598</span><span class="c1"># queried interval, time zones, recording and aggregation</span>
+<span class="linenos">599</span>
+<span class="linenos">600</span>
+<div class="viewcode-block" id="get_queried_interval">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_queried_interval">[docs]</a>
+<span class="linenos">601</span><span class="k">def</span><span class="w"> </span><span class="nf">get_queried_interval</span><span class="p">(</span>
+<span class="linenos">602</span>    <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+<span class="linenos">603</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="linenos">604</span><span class="w">    </span><span class="sd">"""Read the requested UTC time interval from dataset metadata.</span>
+<span class="linenos">605</span>
+<span class="linenos">606</span><span class="sd">    Args:</span>
+<span class="linenos">607</span><span class="sd">        data: Series or DataFrame with dataset metadata in attrs.</span>
+<span class="linenos">608</span>
+<span class="linenos">609</span><span class="sd">    Returns:</span>
+<span class="linenos">610</span><span class="sd">        tuple[datetime.datetime | None, datetime.datetime | None]:</span>
+<span class="linenos">611</span><span class="sd">            (start, end) as timezone-aware datetimes, or (None, None) if unavailable.</span>
+<span class="linenos">612</span>
+<span class="linenos">613</span><span class="sd">    Code example:</span>
+<span class="linenos">614</span>
+<span class="linenos">615</span><span class="sd">    .. doctest:: metadata.get_queried_interval</span>
+<span class="linenos">616</span>
+<span class="linenos">617</span><span class="sd">        &gt;&gt;&gt; from hdhelpers.metadata.conventions import SERIES_METADATA_EXAMPLE</span>
+<span class="linenos">618</span><span class="sd">        &gt;&gt;&gt; series.attrs = SERIES_METADATA_EXAMPLE</span>
+<span class="linenos">619</span><span class="sd">        &gt;&gt;&gt; start, end = md.get_queried_interval(series)</span>
+<span class="linenos">620</span><span class="sd">        &gt;&gt;&gt; start.isoformat()</span>
+<span class="linenos">621</span><span class="sd">        '2026-01-01T00:00:00+00:00'</span>
+<span class="linenos">622</span>
+<span class="linenos">623</span><span class="sd">    See :ref:`metadata-getter-values` for shared examples and return shapes.</span>
+<span class="linenos">624</span><span class="sd">    """</span>
+<span class="linenos">625</span>    <span class="n">check_series_or_dataframe</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="linenos">626</span>    <span class="n">meta</span> <span class="o">=</span> <span class="n">_metadata</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">infer_data_type</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+<span class="linenos">627</span>    <span class="k">return</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">meta</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">meta</span><span class="o">.</span><span class="n">queried_interval</span><span class="p">()</span></div>
+
+<span class="linenos">628</span>
+<span class="linenos">629</span>
+<div class="viewcode-block" id="get_default_timezones">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_default_timezones">[docs]</a>
+<span class="linenos">630</span><span class="k">def</span><span class="w"> </span><span class="nf">get_default_timezones</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="linenos">631</span><span class="w">    </span><span class="sd">"""Read the time zone recommended for calculations on each metric.</span>
+<span class="linenos">632</span>
+<span class="linenos">633</span><span class="sd">    Use the metric's default_timezone, then the dataset's default_timezone.</span>
+<span class="linenos">634</span>
+<span class="linenos">635</span><span class="sd">    Args:</span>
+<span class="linenos">636</span><span class="sd">        multitsframe: DataFrame with per-metric metadata in attrs.</span>
+<span class="linenos">637</span>
+<span class="linenos">638</span><span class="sd">    Returns:</span>
+<span class="linenos">639</span><span class="sd">        defaultdict[str, str | None]:</span>
+<span class="linenos">640</span><span class="sd">            Zone names or UTC offsets by metric ID, or None for unresolved zones. Missing</span>
+<span class="linenos">641</span><span class="sd">            IDs use the dataset default.</span>
+<span class="linenos">642</span>
+<span class="linenos">643</span><span class="sd">    Code example:</span>
+<span class="linenos">644</span>
+<span class="linenos">645</span><span class="sd">    .. doctest:: metadata.get_default_timezones</span>
+<span class="linenos">646</span>
+<span class="linenos">647</span><span class="sd">        &gt;&gt;&gt; from hdhelpers.metadata.conventions import MULTITSFRAME_METADATA_EXAMPLE</span>
+<span class="linenos">648</span><span class="sd">        &gt;&gt;&gt; multitsframe.attrs = MULTITSFRAME_METADATA_EXAMPLE</span>
+<span class="linenos">649</span><span class="sd">        &gt;&gt;&gt; md.get_default_timezones(multitsframe)["plant_a.pressure"]</span>
+<span class="linenos">650</span><span class="sd">        'Europe/Berlin'</span>
+<span class="linenos">651</span>
+<span class="linenos">652</span><span class="sd">    See :ref:`metadata-getter-timezones` for shared examples and return shapes.</span>
+<span class="linenos">653</span><span class="sd">    """</span>
+<span class="linenos">654</span>    <span class="n">check_dataframe</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">)</span>
+<span class="linenos">655</span>    <span class="n">meta</span> <span class="o">=</span> <span class="n">_metadata</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">,</span> <span class="s2">"MULTITSFRAME"</span><span class="p">)</span>
+<span class="linenos">656</span>    <span class="k">if</span> <span class="n">meta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">657</span>        <span class="k">return</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="kc">None</span><span class="p">)</span>
+<span class="linenos">658</span>    <span class="n">dataset_timezone</span> <span class="o">=</span> <span class="n">dataset_default_timezone</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="linenos">659</span>    <span class="k">return</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">dataset_timezone</span><span class="p">,</span> <span class="n">meta</span><span class="o">.</span><span class="n">default_timezones</span><span class="p">())</span></div>
+
+<span class="linenos">660</span>
+<span class="linenos">661</span>
+<div class="viewcode-block" id="get_series_default_timezone">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_series_default_timezone">[docs]</a>
+<span class="linenos">662</span><span class="k">def</span><span class="w"> </span><span class="nf">get_series_default_timezone</span><span class="p">(</span><span class="n">series</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">663</span><span class="w">    </span><span class="sd">"""Read the time zone recommended for calculations on this Series.</span>
+<span class="linenos">664</span>
+<span class="linenos">665</span><span class="sd">    Use the metric's default_timezone, then the dataset's default_timezone.</span>
+<span class="linenos">666</span>
+<span class="linenos">667</span><span class="sd">    Args:</span>
+<span class="linenos">668</span><span class="sd">        series: Series with metadata in attrs.</span>
+<span class="linenos">669</span>
+<span class="linenos">670</span><span class="sd">    Returns:</span>
+<span class="linenos">671</span><span class="sd">        str | None: Zone name or UTC offset, or None when neither source provides one.</span>
+<span class="linenos">672</span>
+<span class="linenos">673</span><span class="sd">    See :ref:`metadata-getter-timezones` for shared examples and return shapes.</span>
+<span class="linenos">674</span><span class="sd">    """</span>
+<span class="linenos">675</span>    <span class="n">check_series</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+<span class="linenos">676</span>    <span class="k">return</span> <span class="n">_single_metric_or_dataset</span><span class="p">(</span>  <span class="c1"># type: ignore[no-any-return]</span>
+<span class="linenos">677</span>        <span class="n">series</span><span class="p">,</span>
+<span class="linenos">678</span>        <span class="s2">"SERIES"</span><span class="p">,</span>
+<span class="linenos">679</span>        <span class="k">lambda</span> <span class="n">meta</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">meta</span><span class="o">.</span><span class="n">default_timezone</span><span class="p">(</span><span class="n">metric</span><span class="p">),</span>
+<span class="linenos">680</span>        <span class="n">dataset_default_timezone</span><span class="p">,</span>
+<span class="linenos">681</span>        <span class="n">empty</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="linenos">682</span>    <span class="p">)</span></div>
+
+<span class="linenos">683</span>
+<span class="linenos">684</span>
+<div class="viewcode-block" id="get_singlets_default_timezone">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_singlets_default_timezone">[docs]</a>
+<span class="linenos">685</span><span class="k">def</span><span class="w"> </span><span class="nf">get_singlets_default_timezone</span><span class="p">(</span><span class="n">singletsframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">686</span><span class="w">    </span><span class="sd">"""Read the time zone recommended for calculations on a single-metric frame.</span>
+<span class="linenos">687</span>
+<span class="linenos">688</span><span class="sd">    Use the metric's default_timezone, then the dataset's default_timezone.</span>
+<span class="linenos">689</span>
+<span class="linenos">690</span><span class="sd">    Args:</span>
+<span class="linenos">691</span><span class="sd">        singletsframe: DataFrame with one metric's metadata in attrs.</span>
+<span class="linenos">692</span>
+<span class="linenos">693</span><span class="sd">    Returns:</span>
+<span class="linenos">694</span><span class="sd">        str | None: Zone name or UTC offset, or None when neither source provides one.</span>
+<span class="linenos">695</span>
+<span class="linenos">696</span><span class="sd">    See :ref:`metadata-getter-timezones` for shared examples and return shapes.</span>
+<span class="linenos">697</span><span class="sd">    """</span>
+<span class="linenos">698</span>    <span class="n">check_dataframe</span><span class="p">(</span><span class="n">singletsframe</span><span class="p">)</span>
+<span class="linenos">699</span>    <span class="k">return</span> <span class="n">_single_metric_or_dataset</span><span class="p">(</span>  <span class="c1"># type: ignore[no-any-return]</span>
+<span class="linenos">700</span>        <span class="n">singletsframe</span><span class="p">,</span>
+<span class="linenos">701</span>        <span class="s2">"SINGLETSFRAME"</span><span class="p">,</span>
+<span class="linenos">702</span>        <span class="k">lambda</span> <span class="n">meta</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">meta</span><span class="o">.</span><span class="n">default_timezone</span><span class="p">(</span><span class="n">metric</span><span class="p">),</span>
+<span class="linenos">703</span>        <span class="n">dataset_default_timezone</span><span class="p">,</span>
+<span class="linenos">704</span>        <span class="n">empty</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="linenos">705</span>    <span class="p">)</span></div>
+
+<span class="linenos">706</span>
+<span class="linenos">707</span>
+<div class="viewcode-block" id="get_recordings">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_recordings">[docs]</a>
+<span class="linenos">708</span><span class="k">def</span><span class="w"> </span><span class="nf">get_recordings</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Recording</span><span class="p">]:</span>
+<span class="linenos">709</span><span class="w">    </span><span class="sd">"""Read recording settings for each metric.</span>
+<span class="linenos">710</span>
+<span class="linenos">711</span><span class="sd">    Use the metric's frequency, offset and time zone together. If its frequency is missing,</span>
+<span class="linenos">712</span><span class="sd">    use the dataset's three fields instead.</span>
+<span class="linenos">713</span>
+<span class="linenos">714</span><span class="sd">    Args:</span>
+<span class="linenos">715</span><span class="sd">        multitsframe: DataFrame with per-metric metadata in attrs.</span>
+<span class="linenos">716</span>
+<span class="linenos">717</span><span class="sd">    Returns:</span>
+<span class="linenos">718</span><span class="sd">        defaultdict[str, Recording]:</span>
+<span class="linenos">719</span><span class="sd">            Settings by metric ID; missing IDs use dataset frequency settings.</span>
+<span class="linenos">720</span>
+<span class="linenos">721</span><span class="sd">    Code example:</span>
+<span class="linenos">722</span>
+<span class="linenos">723</span><span class="sd">    .. doctest:: metadata.get_recordings</span>
+<span class="linenos">724</span>
+<span class="linenos">725</span><span class="sd">        &gt;&gt;&gt; from hdhelpers.metadata.conventions import MULTITSFRAME_METADATA_EXAMPLE</span>
+<span class="linenos">726</span><span class="sd">        &gt;&gt;&gt; multitsframe.attrs = MULTITSFRAME_METADATA_EXAMPLE</span>
+<span class="linenos">727</span><span class="sd">        &gt;&gt;&gt; md.get_recordings(multitsframe)["plant_a.temperature"].recording_mode</span>
+<span class="linenos">728</span><span class="sd">        'on_change'</span>
+<span class="linenos">729</span>
+<span class="linenos">730</span><span class="sd">    See :ref:`metadata-getter-recordings` for shared examples and return shapes.</span>
+<span class="linenos">731</span><span class="sd">    """</span>
+<span class="linenos">732</span>    <span class="n">check_dataframe</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">)</span>
+<span class="linenos">733</span>    <span class="n">meta</span> <span class="o">=</span> <span class="n">_metadata</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">,</span> <span class="s2">"MULTITSFRAME"</span><span class="p">)</span>
+<span class="linenos">734</span>    <span class="k">if</span> <span class="n">meta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">735</span>        <span class="k">return</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">Recording</span><span class="p">)</span>
+<span class="linenos">736</span>    <span class="n">no_metadata</span> <span class="o">=</span> <span class="n">dataset_recording</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="linenos">737</span>    <span class="k">return</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">no_metadata</span><span class="p">,</span> <span class="n">meta</span><span class="o">.</span><span class="n">recordings</span><span class="p">())</span></div>
+
+<span class="linenos">738</span>
+<span class="linenos">739</span>
+<div class="viewcode-block" id="get_series_recording">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_series_recording">[docs]</a>
+<span class="linenos">740</span><span class="k">def</span><span class="w"> </span><span class="nf">get_series_recording</span><span class="p">(</span><span class="n">series</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Recording</span><span class="p">:</span>
+<span class="linenos">741</span><span class="w">    </span><span class="sd">"""Read recording settings for this Series.</span>
+<span class="linenos">742</span>
+<span class="linenos">743</span><span class="sd">    Use the metric's frequency, offset and time zone together. If its frequency is missing,</span>
+<span class="linenos">744</span><span class="sd">    use the dataset's three fields instead.</span>
+<span class="linenos">745</span>
+<span class="linenos">746</span><span class="sd">    Args:</span>
+<span class="linenos">747</span><span class="sd">        series: Series with metadata in attrs.</span>
+<span class="linenos">748</span>
+<span class="linenos">749</span><span class="sd">    Returns:</span>
+<span class="linenos">750</span><span class="sd">        Recording: Recording object; absent metadata yields its default field values.</span>
+<span class="linenos">751</span>
+<span class="linenos">752</span><span class="sd">    See :ref:`metadata-getter-recordings` for shared examples and return shapes.</span>
+<span class="linenos">753</span><span class="sd">    """</span>
+<span class="linenos">754</span>    <span class="n">check_series</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+<span class="linenos">755</span>    <span class="k">return</span> <span class="n">_single_metric_or_dataset</span><span class="p">(</span>  <span class="c1"># type: ignore[no-any-return]</span>
+<span class="linenos">756</span>        <span class="n">series</span><span class="p">,</span>
+<span class="linenos">757</span>        <span class="s2">"SERIES"</span><span class="p">,</span>
+<span class="linenos">758</span>        <span class="k">lambda</span> <span class="n">meta</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">meta</span><span class="o">.</span><span class="n">recording</span><span class="p">(</span><span class="n">metric</span><span class="p">),</span>
+<span class="linenos">759</span>        <span class="n">dataset_recording</span><span class="p">,</span>
+<span class="linenos">760</span>        <span class="n">empty</span><span class="o">=</span><span class="n">Recording</span><span class="p">(),</span>
+<span class="linenos">761</span>    <span class="p">)</span></div>
+
+<span class="linenos">762</span>
+<span class="linenos">763</span>
+<div class="viewcode-block" id="get_singlets_recording">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_singlets_recording">[docs]</a>
+<span class="linenos">764</span><span class="k">def</span><span class="w"> </span><span class="nf">get_singlets_recording</span><span class="p">(</span><span class="n">singletsframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Recording</span><span class="p">:</span>
+<span class="linenos">765</span><span class="w">    </span><span class="sd">"""Read recording settings for a single-metric frame.</span>
+<span class="linenos">766</span>
+<span class="linenos">767</span><span class="sd">    Use the metric's frequency, offset and time zone together. If its frequency is missing,</span>
+<span class="linenos">768</span><span class="sd">    use the dataset's three fields instead.</span>
+<span class="linenos">769</span>
+<span class="linenos">770</span><span class="sd">    Args:</span>
+<span class="linenos">771</span><span class="sd">        singletsframe: DataFrame with one metric's metadata in attrs.</span>
+<span class="linenos">772</span>
+<span class="linenos">773</span><span class="sd">    Returns:</span>
+<span class="linenos">774</span><span class="sd">        Recording: Recording object; absent metadata yields its default field values.</span>
+<span class="linenos">775</span>
+<span class="linenos">776</span><span class="sd">    See :ref:`metadata-getter-recordings` for shared examples and return shapes.</span>
+<span class="linenos">777</span><span class="sd">    """</span>
+<span class="linenos">778</span>    <span class="n">check_dataframe</span><span class="p">(</span><span class="n">singletsframe</span><span class="p">)</span>
+<span class="linenos">779</span>    <span class="k">return</span> <span class="n">_single_metric_or_dataset</span><span class="p">(</span>  <span class="c1"># type: ignore[no-any-return]</span>
+<span class="linenos">780</span>        <span class="n">singletsframe</span><span class="p">,</span>
+<span class="linenos">781</span>        <span class="s2">"SINGLETSFRAME"</span><span class="p">,</span>
+<span class="linenos">782</span>        <span class="k">lambda</span> <span class="n">meta</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">meta</span><span class="o">.</span><span class="n">recording</span><span class="p">(</span><span class="n">metric</span><span class="p">),</span>
+<span class="linenos">783</span>        <span class="n">dataset_recording</span><span class="p">,</span>
+<span class="linenos">784</span>        <span class="n">empty</span><span class="o">=</span><span class="n">Recording</span><span class="p">(),</span>
+<span class="linenos">785</span>    <span class="p">)</span></div>
+
+<span class="linenos">786</span>
+<span class="linenos">787</span>
+<div class="viewcode-block" id="get_default_aggregation_methods">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_default_aggregation_methods">[docs]</a>
+<span class="linenos">788</span><span class="k">def</span><span class="w"> </span><span class="nf">get_default_aggregation_methods</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="linenos">789</span><span class="w">    </span><span class="sd">"""Read the default aggregation method for each metric.</span>
+<span class="linenos">790</span>
+<span class="linenos">791</span><span class="sd">    Use explicit default_aggregation_method (AVG becomes MEAN). Otherwise, metadata</span>
+<span class="linenos">792</span><span class="sd">    value_data_type selects LAST for boolean/string and MEAN for other types.</span>
+<span class="linenos">793</span>
+<span class="linenos">794</span><span class="sd">    Args:</span>
+<span class="linenos">795</span><span class="sd">        multitsframe: DataFrame with per-metric metadata in attrs.</span>
+<span class="linenos">796</span>
+<span class="linenos">797</span><span class="sd">    Returns:</span>
+<span class="linenos">798</span><span class="sd">        defaultdict[str, str]: Method names by metric ID; missing IDs default to MEAN.</span>
+<span class="linenos">799</span>
+<span class="linenos">800</span><span class="sd">    Code example:</span>
+<span class="linenos">801</span>
+<span class="linenos">802</span><span class="sd">    .. doctest:: metadata.get_default_aggregation_methods</span>
+<span class="linenos">803</span>
+<span class="linenos">804</span><span class="sd">        &gt;&gt;&gt; from hdhelpers.metadata.conventions import MULTITSFRAME_METADATA_EXAMPLE</span>
+<span class="linenos">805</span><span class="sd">        &gt;&gt;&gt; multitsframe.attrs = MULTITSFRAME_METADATA_EXAMPLE</span>
+<span class="linenos">806</span><span class="sd">        &gt;&gt;&gt; methods = md.get_default_aggregation_methods(multitsframe)</span>
+<span class="linenos">807</span><span class="sd">        &gt;&gt;&gt; methods["plant_a.temperature"], methods["plant_a.pressure"]</span>
+<span class="linenos">808</span><span class="sd">        ('MAX', 'MEAN')</span>
+<span class="linenos">809</span>
+<span class="linenos">810</span><span class="sd">    See :ref:`metadata-getter-aggregation` for shared examples and return shapes.</span>
+<span class="linenos">811</span><span class="sd">    """</span>
+<span class="linenos">812</span>    <span class="n">check_dataframe</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">)</span>
+<span class="linenos">813</span>    <span class="n">meta</span> <span class="o">=</span> <span class="n">_metadata</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">,</span> <span class="s2">"MULTITSFRAME"</span><span class="p">)</span>
+<span class="linenos">814</span>    <span class="n">methods</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">meta</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">meta</span><span class="o">.</span><span class="n">default_aggregation_methods</span><span class="p">()</span>
+<span class="linenos">815</span>    <span class="k">return</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">_DEFAULT_AGGREGATION_METHOD</span><span class="p">,</span> <span class="n">methods</span><span class="p">)</span></div>
+
+<span class="linenos">816</span>
+<span class="linenos">817</span>
+<div class="viewcode-block" id="get_series_default_aggregation_method">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_series_default_aggregation_method">[docs]</a>
+<span class="linenos">818</span><span class="k">def</span><span class="w"> </span><span class="nf">get_series_default_aggregation_method</span><span class="p">(</span><span class="n">series</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="linenos">819</span><span class="w">    </span><span class="sd">"""Read the default aggregation method for this Series.</span>
+<span class="linenos">820</span>
+<span class="linenos">821</span><span class="sd">    Use explicit default_aggregation_method (AVG becomes MEAN). Otherwise, metadata</span>
+<span class="linenos">822</span><span class="sd">    value_data_type selects LAST for boolean/string and MEAN for other types.</span>
+<span class="linenos">823</span>
+<span class="linenos">824</span><span class="sd">    Args:</span>
+<span class="linenos">825</span><span class="sd">        series: Series with metadata in attrs.</span>
+<span class="linenos">826</span>
+<span class="linenos">827</span><span class="sd">    Returns:</span>
+<span class="linenos">828</span><span class="sd">        str: Method name; MEAN if metadata is unavailable.</span>
+<span class="linenos">829</span>
+<span class="linenos">830</span><span class="sd">    See :ref:`metadata-getter-aggregation` for shared examples and return shapes.</span>
+<span class="linenos">831</span><span class="sd">    """</span>
+<span class="linenos">832</span>    <span class="n">check_series</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+<span class="linenos">833</span>    <span class="k">return</span> <span class="n">_single_metric_or_dataset</span><span class="p">(</span>  <span class="c1"># type: ignore[no-any-return]</span>
+<span class="linenos">834</span>        <span class="n">series</span><span class="p">,</span>
+<span class="linenos">835</span>        <span class="s2">"SERIES"</span><span class="p">,</span>
+<span class="linenos">836</span>        <span class="k">lambda</span> <span class="n">meta</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">meta</span><span class="o">.</span><span class="n">default_aggregation_method</span><span class="p">(</span><span class="n">metric</span><span class="p">),</span>
+<span class="linenos">837</span>        <span class="k">lambda</span> <span class="n">_meta</span><span class="p">:</span> <span class="n">_DEFAULT_AGGREGATION_METHOD</span><span class="p">,</span>
+<span class="linenos">838</span>        <span class="n">empty</span><span class="o">=</span><span class="n">_DEFAULT_AGGREGATION_METHOD</span><span class="p">,</span>
+<span class="linenos">839</span>    <span class="p">)</span></div>
+
+<span class="linenos">840</span>
+<span class="linenos">841</span>
+<div class="viewcode-block" id="get_singlets_default_aggregation_method">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.get_singlets_default_aggregation_method">[docs]</a>
+<span class="linenos">842</span><span class="k">def</span><span class="w"> </span><span class="nf">get_singlets_default_aggregation_method</span><span class="p">(</span><span class="n">singletsframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="linenos">843</span><span class="w">    </span><span class="sd">"""Read the default aggregation method for a single-metric frame.</span>
+<span class="linenos">844</span>
+<span class="linenos">845</span><span class="sd">    Use explicit default_aggregation_method (AVG becomes MEAN). Otherwise, metadata</span>
+<span class="linenos">846</span><span class="sd">    value_data_type selects LAST for boolean/string and MEAN for other types.</span>
+<span class="linenos">847</span>
+<span class="linenos">848</span><span class="sd">    Args:</span>
+<span class="linenos">849</span><span class="sd">        singletsframe: DataFrame with one metric's metadata in attrs.</span>
+<span class="linenos">850</span>
+<span class="linenos">851</span><span class="sd">    Returns:</span>
+<span class="linenos">852</span><span class="sd">        str: Method name; MEAN if metadata is unavailable.</span>
+<span class="linenos">853</span>
+<span class="linenos">854</span><span class="sd">    See :ref:`metadata-getter-aggregation` for shared examples and return shapes.</span>
+<span class="linenos">855</span><span class="sd">    """</span>
+<span class="linenos">856</span>    <span class="n">check_dataframe</span><span class="p">(</span><span class="n">singletsframe</span><span class="p">)</span>
+<span class="linenos">857</span>    <span class="k">return</span> <span class="n">_single_metric_or_dataset</span><span class="p">(</span>  <span class="c1"># type: ignore[no-any-return]</span>
+<span class="linenos">858</span>        <span class="n">singletsframe</span><span class="p">,</span>
+<span class="linenos">859</span>        <span class="s2">"SINGLETSFRAME"</span><span class="p">,</span>
+<span class="linenos">860</span>        <span class="k">lambda</span> <span class="n">meta</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">meta</span><span class="o">.</span><span class="n">default_aggregation_method</span><span class="p">(</span><span class="n">metric</span><span class="p">),</span>
+<span class="linenos">861</span>        <span class="k">lambda</span> <span class="n">_meta</span><span class="p">:</span> <span class="n">_DEFAULT_AGGREGATION_METHOD</span><span class="p">,</span>
+<span class="linenos">862</span>        <span class="n">empty</span><span class="o">=</span><span class="n">_DEFAULT_AGGREGATION_METHOD</span><span class="p">,</span>
+<span class="linenos">863</span>    <span class="p">)</span></div>
+
+<span class="linenos">864</span>
+<span class="linenos">865</span>
+<div class="viewcode-block" id="copy_without_metadata">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.copy_without_metadata">[docs]</a>
+<span class="linenos">866</span><span class="k">def</span><span class="w"> </span><span class="nf">copy_without_metadata</span><span class="p">[</span><span class="n">T</span><span class="p">:</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)](</span><span class="n">data</span><span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="linenos">867</span><span class="w">    </span><span class="sd">"""Copy a Series or DataFrame with all attrs removed.</span>
+<span class="linenos">868</span>
+<span class="linenos">869</span><span class="sd">    Data is shared until either object is modified (pandas copy on write).</span>
+<span class="linenos">870</span>
+<span class="linenos">871</span><span class="sd">    Args:</span>
+<span class="linenos">872</span><span class="sd">        data (pd.Series | pd.DataFrame): Source object; left unchanged.</span>
+<span class="linenos">873</span>
+<span class="linenos">874</span><span class="sd">    Returns:</span>
+<span class="linenos">875</span><span class="sd">        pd.Series | pd.DataFrame: Copy with empty attrs.</span>
+<span class="linenos">876</span>
+<span class="linenos">877</span><span class="sd">    Code example:</span>
+<span class="linenos">878</span>
+<span class="linenos">879</span><span class="sd">    .. doctest:: metadata.copy_without_metadata</span>
+<span class="linenos">880</span>
+<span class="linenos">881</span><span class="sd">        &gt;&gt;&gt; multitsframe.attrs = {"dataset_metadata": {"metric_key": "id"}, "metrics": []}</span>
+<span class="linenos">882</span><span class="sd">        &gt;&gt;&gt; data = md.copy_without_metadata(multitsframe)</span>
+<span class="linenos">883</span><span class="sd">        &gt;&gt;&gt; data.attrs</span>
+<span class="linenos">884</span><span class="sd">        {}</span>
+<span class="linenos">885</span><span class="sd">        &gt;&gt;&gt; multitsframe.attrs</span>
+<span class="linenos">886</span><span class="sd">        {'dataset_metadata': {'metric_key': 'id'}, 'metrics': []}</span>
+<span class="linenos">887</span><span class="sd">    """</span>
+<span class="linenos">888</span>    <span class="n">check_series_or_dataframe</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="linenos">889</span>    <span class="c1"># The constructor does not copy attrs, in contrast to e.g. copy(deep=False)</span>
+<span class="linenos">890</span>    <span class="n">copy</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)(</span><span class="n">data</span><span class="p">)</span>
+<span class="linenos">891</span>    <span class="n">copy</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="linenos">892</span>    <span class="k">return</span> <span class="n">copy</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">hdhelpers - documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">hdhelpers.metadata.helpers</a></li>
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2026, Steffen Wittkamp, Jenny Kupzig.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+    </div>
+  </body>
+</html>

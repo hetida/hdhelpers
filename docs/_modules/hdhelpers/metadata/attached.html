@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>hdhelpers.metadata.attached &#8212; hdhelpers - documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/classic.css?v=14e077c0" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/stylesheet.css?v=55595bb5" />
+
+    <script src="../../../_static/documentation_options.js?v=b1628c55"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+
+    <link rel="icon" href="../../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">hdhelpers - documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">hdhelpers.metadata.attached</a></li>
+      </ul>
+    </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+
+  <h1>Source code for hdhelpers.metadata.attached</h1><div class="highlight"><pre>
+<span></span><span class="linenos">  1</span><span class="sd">"""Metadata of the conventions attached to pandas objects as model</span>
+<span class="linenos">  2</span>
+<span class="linenos">  3</span><span class="sd">The runtime of the hetida designer parses the metadata of each workflow input once and attaches</span>
+<span class="linenos">  4</span><span class="sd">the model under attrs["hd_metadata"] (META_KEY), in place of the keys of the conventions</span>
+<span class="linenos">  5</span><span class="sd">("dataset_metadata", "metrics", "value_dimensions_shared"). Other keys of attrs stay as they are.</span>
+<span class="linenos">  6</span>
+<span class="linenos">  7</span><span class="sd">pandas deep-copies attrs for (almost) every object derived from another one. The models are</span>
+<span class="linenos">  8</span><span class="sd">immutable and return themselves when copied, so that all derived objects share the model</span>
+<span class="linenos">  9</span><span class="sd">instead of copying the metadata.</span>
+<span class="linenos"> 10</span>
+<span class="linenos"> 11</span><span class="sd">Component code reads the metadata via read_metadata and attaches a changed version (see the</span>
+<span class="linenos"> 12</span><span class="sd">with_* methods of the models) to its own result via set_metadata. Everything serializing attrs</span>
+<span class="linenos"> 13</span><span class="sd">to JSON needs attrs_to_json, since the model is no JSON value.</span>
+<span class="linenos"> 14</span><span class="sd">"""</span>
+<span class="linenos"> 15</span>
+<span class="linenos"> 16</span><span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
+<span class="linenos"> 17</span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">overload</span>
+<span class="linenos"> 18</span>
+<span class="linenos"> 19</span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="linenos"> 20</span><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">ValidationError</span>
+<span class="linenos"> 21</span>
+<span class="linenos"> 22</span><span class="kn">from</span><span class="w"> </span><span class="nn">hdhelpers.metadata.conventions</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="linenos"> 23</span>    <span class="n">METADATA_MODELS</span><span class="p">,</span>
+<span class="linenos"> 24</span>    <span class="n">MetadataConventionError</span><span class="p">,</span>
+<span class="linenos"> 25</span>    <span class="n">MetadataConventionIssue</span><span class="p">,</span>
+<span class="linenos"> 26</span>    <span class="n">MetadataIssueSeverity</span><span class="p">,</span>
+<span class="linenos"> 27</span>    <span class="n">MultiTSFrameMetadata</span><span class="p">,</span>
+<span class="linenos"> 28</span>    <span class="n">SeriesMetadata</span><span class="p">,</span>
+<span class="linenos"> 29</span>    <span class="n">SingleTSFrameMetadata</span><span class="p">,</span>
+<span class="linenos"> 30</span>    <span class="n">TimeseriesDataType</span><span class="p">,</span>
+<span class="linenos"> 31</span>    <span class="n">_TimeseriesMetadataBase</span><span class="p">,</span>
+<span class="linenos"> 32</span>    <span class="n">check_metadata_conventions</span><span class="p">,</span>
+<span class="linenos"> 33</span><span class="p">)</span>
+<span class="linenos"> 34</span>
+<span class="linenos"> 35</span><span class="n">META_KEY</span> <span class="o">=</span> <span class="s2">"hd_metadata"</span>
+<span class="linenos"> 36</span>
+<span class="linenos"> 37</span><span class="c1"># the top-level keys of attrs which belong to the conventions, i.e. the fields of the models</span>
+<span class="linenos"> 38</span><span class="n">CONVENTION_KEYS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+<span class="linenos"> 39</span>    <span class="n">field</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">METADATA_MODELS</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">model_fields</span>
+<span class="linenos"> 40</span><span class="p">)</span>
+<span class="linenos"> 41</span>
+<span class="linenos"> 42</span><span class="n">AnyMetadata</span> <span class="o">=</span> <span class="n">SeriesMetadata</span> <span class="o">|</span> <span class="n">SingleTSFrameMetadata</span> <span class="o">|</span> <span class="n">MultiTSFrameMetadata</span>
+<span class="linenos"> 43</span>
+<span class="linenos"> 44</span>
+<span class="linenos"> 45</span><span class="k">def</span><span class="w"> </span><span class="nf">infer_data_type</span><span class="p">(</span><span class="n">obj</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TimeseriesDataType</span><span class="p">:</span>
+<span class="linenos"> 46</span><span class="w">    </span><span class="sd">"""SERIES for a Series, MULTITSFRAME for a frame with a "metric" column, else SINGLETSFRAME"""</span>
+<span class="linenos"> 47</span>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+<span class="linenos"> 48</span>        <span class="k">return</span> <span class="s2">"SERIES"</span>
+<span class="linenos"> 49</span>    <span class="k">return</span> <span class="s2">"MULTITSFRAME"</span> <span class="k">if</span> <span class="s2">"metric"</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">columns</span> <span class="k">else</span> <span class="s2">"SINGLETSFRAME"</span>
+<span class="linenos"> 50</span>
+<span class="linenos"> 51</span>
+<span class="linenos"> 52</span><span class="k">def</span><span class="w"> </span><span class="nf">_convention_attrs</span><span class="p">(</span><span class="n">attrs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="linenos"> 53</span>    <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">attrs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">CONVENTION_KEYS</span><span class="p">}</span>
+<span class="linenos"> 54</span>
+<span class="linenos"> 55</span>
+<div class="viewcode-block" id="attach_metadata">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.attach_metadata">[docs]</a>
+<span class="linenos"> 56</span><span class="k">def</span><span class="w"> </span><span class="nf">attach_metadata</span><span class="p">(</span>
+<span class="linenos"> 57</span>    <span class="n">obj</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">data_type</span><span class="p">:</span> <span class="n">TimeseriesDataType</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="linenos"> 58</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnyMetadata</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos"> 59</span><span class="w">    </span><span class="sd">"""Parse metadata in attrs and attach the resulting immutable model.</span>
+<span class="linenos"> 60</span>
+<span class="linenos"> 61</span><span class="sd">    Replace convention fields with attrs["hd_metadata"]; preserve other attrs. An already</span>
+<span class="linenos"> 62</span><span class="sd">    attached model is returned unchanged.</span>
+<span class="linenos"> 63</span>
+<span class="linenos"> 64</span><span class="sd">    Args:</span>
+<span class="linenos"> 65</span><span class="sd">        obj: Series or DataFrame to update in place.</span>
+<span class="linenos"> 66</span><span class="sd">        data_type:</span>
+<span class="linenos"> 67</span><span class="sd">            Convention for raw attrs, or None to infer it; see</span>
+<span class="linenos"> 68</span><span class="sd">            :ref:`metadata-type-selection`. Used only when no model is attached.</span>
+<span class="linenos"> 69</span>
+<span class="linenos"> 70</span><span class="sd">    Returns:</span>
+<span class="linenos"> 71</span><span class="sd">        SeriesMetadata | SingleTSFrameMetadata | MultiTSFrameMetadata | None:</span>
+<span class="linenos"> 72</span><span class="sd">            Attached model, or None for absent/invalid metadata. Failure leaves attrs</span>
+<span class="linenos"> 73</span><span class="sd">            unchanged.</span>
+<span class="linenos"> 74</span>
+<span class="linenos"> 75</span><span class="sd">    Code example:</span>
+<span class="linenos"> 76</span>
+<span class="linenos"> 77</span><span class="sd">    Using :ref:`metadata-example-data`, attach a model while preserving unrelated attrs:</span>
+<span class="linenos"> 78</span>
+<span class="linenos"> 79</span><span class="sd">    .. doctest:: metadata.attach_metadata</span>
+<span class="linenos"> 80</span>
+<span class="linenos"> 81</span><span class="sd">        &gt;&gt;&gt; data = series.copy()</span>
+<span class="linenos"> 82</span><span class="sd">        &gt;&gt;&gt; data.attrs["source"] = "example"</span>
+<span class="linenos"> 83</span><span class="sd">        &gt;&gt;&gt; meta = md.attach_metadata(data)</span>
+<span class="linenos"> 84</span><span class="sd">        &gt;&gt;&gt; meta.unit()</span>
+<span class="linenos"> 85</span><span class="sd">        'm'</span>
+<span class="linenos"> 86</span><span class="sd">        &gt;&gt;&gt; sorted(data.attrs)</span>
+<span class="linenos"> 87</span><span class="sd">        ['hd_metadata', 'source']</span>
+<span class="linenos"> 88</span><span class="sd">        &gt;&gt;&gt; md.read_metadata(data) is meta</span>
+<span class="linenos"> 89</span><span class="sd">        True</span>
+<span class="linenos"> 90</span><span class="sd">        &gt;&gt;&gt; md.attach_metadata(data) is meta</span>
+<span class="linenos"> 91</span><span class="sd">        True</span>
+<span class="linenos"> 92</span><span class="sd">        &gt;&gt;&gt; md.attach_metadata(pd.Series([1.0])) is None</span>
+<span class="linenos"> 93</span><span class="sd">        True</span>
+<span class="linenos"> 94</span><span class="sd">    """</span>
+<span class="linenos"> 95</span>    <span class="n">attached</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">META_KEY</span><span class="p">)</span>
+<span class="linenos"> 96</span>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attached</span><span class="p">,</span> <span class="n">_TimeseriesMetadataBase</span><span class="p">):</span>
+<span class="linenos"> 97</span>        <span class="k">return</span> <span class="n">attached</span>  <span class="c1"># type: ignore[return-value]</span>
+<span class="linenos"> 98</span>    <span class="n">convention_attrs</span> <span class="o">=</span> <span class="n">_convention_attrs</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+<span class="linenos"> 99</span>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">convention_attrs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<span class="linenos">100</span>        <span class="k">return</span> <span class="kc">None</span>
+<span class="linenos">101</span>    <span class="n">model</span> <span class="o">=</span> <span class="n">METADATA_MODELS</span><span class="p">[</span><span class="n">data_type</span> <span class="ow">or</span> <span class="n">infer_data_type</span><span class="p">(</span><span class="n">obj</span><span class="p">)]</span>
+<span class="linenos">102</span>    <span class="k">try</span><span class="p">:</span>
+<span class="linenos">103</span>        <span class="n">meta</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">convention_attrs</span><span class="p">)</span>
+<span class="linenos">104</span>    <span class="k">except</span> <span class="n">ValidationError</span><span class="p">:</span>
+<span class="linenos">105</span>        <span class="k">return</span> <span class="kc">None</span>
+<span class="linenos">106</span>    <span class="n">obj</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">CONVENTION_KEYS</span><span class="p">}</span> <span class="o">|</span> <span class="p">{</span>
+<span class="linenos">107</span>        <span class="n">META_KEY</span><span class="p">:</span> <span class="n">meta</span>
+<span class="linenos">108</span>    <span class="p">}</span>
+<span class="linenos">109</span>    <span class="k">return</span> <span class="n">meta</span>  <span class="c1"># type: ignore[return-value]</span></div>
+
+<span class="linenos">110</span>
+<span class="linenos">111</span>
+<span class="linenos">112</span><span class="nd">@overload</span>
+<span class="linenos">113</span><span class="k">def</span><span class="w"> </span><span class="nf">read_metadata</span><span class="p">(</span>
+<span class="linenos">114</span>    <span class="n">obj</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">data_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"SERIES"</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">required</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span>
+<span class="linenos">115</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SeriesMetadata</span><span class="p">:</span> <span class="o">...</span>
+<span class="linenos">116</span><span class="nd">@overload</span>
+<span class="linenos">117</span><span class="k">def</span><span class="w"> </span><span class="nf">read_metadata</span><span class="p">(</span>
+<span class="linenos">118</span>    <span class="n">obj</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">data_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"SERIES"</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">required</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="linenos">119</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SeriesMetadata</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+<span class="linenos">120</span><span class="nd">@overload</span>
+<span class="linenos">121</span><span class="k">def</span><span class="w"> </span><span class="nf">read_metadata</span><span class="p">(</span>
+<span class="linenos">122</span>    <span class="n">obj</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">data_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"SINGLETSFRAME"</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">required</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span>
+<span class="linenos">123</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SingleTSFrameMetadata</span><span class="p">:</span> <span class="o">...</span>
+<span class="linenos">124</span><span class="nd">@overload</span>
+<span class="linenos">125</span><span class="k">def</span><span class="w"> </span><span class="nf">read_metadata</span><span class="p">(</span>
+<span class="linenos">126</span>    <span class="n">obj</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">data_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"SINGLETSFRAME"</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">required</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="linenos">127</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SingleTSFrameMetadata</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+<span class="linenos">128</span><span class="nd">@overload</span>
+<span class="linenos">129</span><span class="k">def</span><span class="w"> </span><span class="nf">read_metadata</span><span class="p">(</span>
+<span class="linenos">130</span>    <span class="n">obj</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">data_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"MULTITSFRAME"</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">required</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span>
+<span class="linenos">131</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MultiTSFrameMetadata</span><span class="p">:</span> <span class="o">...</span>
+<span class="linenos">132</span><span class="nd">@overload</span>
+<span class="linenos">133</span><span class="k">def</span><span class="w"> </span><span class="nf">read_metadata</span><span class="p">(</span>
+<span class="linenos">134</span>    <span class="n">obj</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">data_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"MULTITSFRAME"</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">required</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="linenos">135</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MultiTSFrameMetadata</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+<span class="linenos">136</span><span class="nd">@overload</span>
+<span class="linenos">137</span><span class="k">def</span><span class="w"> </span><span class="nf">read_metadata</span><span class="p">(</span>
+<span class="linenos">138</span>    <span class="n">obj</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">data_type</span><span class="p">:</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">required</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span>
+<span class="linenos">139</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnyMetadata</span><span class="p">:</span> <span class="o">...</span>
+<span class="linenos">140</span><span class="nd">@overload</span>
+<span class="linenos">141</span><span class="k">def</span><span class="w"> </span><span class="nf">read_metadata</span><span class="p">(</span>
+<span class="linenos">142</span>    <span class="n">obj</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">data_type</span><span class="p">:</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">required</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="linenos">143</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnyMetadata</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+<div class="viewcode-block" id="read_metadata">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.read_metadata">[docs]</a>
+<span class="linenos">144</span><span class="k">def</span><span class="w"> </span><span class="nf">read_metadata</span><span class="p">(</span>
+<span class="linenos">145</span>    <span class="n">obj</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+<span class="linenos">146</span>    <span class="n">data_type</span><span class="p">:</span> <span class="n">TimeseriesDataType</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="linenos">147</span>    <span class="o">*</span><span class="p">,</span>
+<span class="linenos">148</span>    <span class="n">required</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="linenos">149</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnyMetadata</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">150</span><span class="w">    </span><span class="sd">"""Read metadata as a model without changing the input.</span>
+<span class="linenos">151</span>
+<span class="linenos">152</span><span class="sd">    Reuse an attached model; otherwise parse convention fields in attrs.</span>
+<span class="linenos">153</span>
+<span class="linenos">154</span><span class="sd">    Args:</span>
+<span class="linenos">155</span><span class="sd">        obj: Series or DataFrame to read.</span>
+<span class="linenos">156</span><span class="sd">        data_type:</span>
+<span class="linenos">157</span><span class="sd">            Expected convention. None keeps an attached model's type or infers it for raw</span>
+<span class="linenos">158</span><span class="sd">            attrs; see :ref:`metadata-type-selection`.</span>
+<span class="linenos">159</span><span class="sd">        required:</span>
+<span class="linenos">160</span><span class="sd">            If True, raise on missing, invalid or wrong-type metadata instead of returning</span>
+<span class="linenos">161</span><span class="sd">            None.</span>
+<span class="linenos">162</span>
+<span class="linenos">163</span><span class="sd">    Returns:</span>
+<span class="linenos">164</span><span class="sd">        SeriesMetadata | SingleTSFrameMetadata | MultiTSFrameMetadata | None:</span>
+<span class="linenos">165</span><span class="sd">            Attached or newly parsed model; None for missing, invalid or wrong-type</span>
+<span class="linenos">166</span><span class="sd">            metadata.</span>
+<span class="linenos">167</span>
+<span class="linenos">168</span><span class="sd">    Raises:</span>
+<span class="linenos">169</span><span class="sd">        MetadataConventionError: Metadata cannot be returned and required=True.</span>
+<span class="linenos">170</span>
+<span class="linenos">171</span><span class="sd">    Code example:</span>
+<span class="linenos">172</span>
+<span class="linenos">173</span><span class="sd">    Using :ref:`metadata-example-data`, read a model without changing the original attrs:</span>
+<span class="linenos">174</span>
+<span class="linenos">175</span><span class="sd">    .. doctest:: metadata.read_metadata</span>
+<span class="linenos">176</span>
+<span class="linenos">177</span><span class="sd">        &gt;&gt;&gt; meta = md.read_metadata(series, required=True)</span>
+<span class="linenos">178</span><span class="sd">        &gt;&gt;&gt; meta.unit()</span>
+<span class="linenos">179</span><span class="sd">        'm'</span>
+<span class="linenos">180</span><span class="sd">        &gt;&gt;&gt; "hd_metadata" in series.attrs</span>
+<span class="linenos">181</span><span class="sd">        False</span>
+<span class="linenos">182</span><span class="sd">        &gt;&gt;&gt; missing = pd.Series([1.0])</span>
+<span class="linenos">183</span><span class="sd">        &gt;&gt;&gt; md.read_metadata(missing) is None</span>
+<span class="linenos">184</span><span class="sd">        True</span>
+<span class="linenos">185</span><span class="sd">        &gt;&gt;&gt; try:</span>
+<span class="linenos">186</span><span class="sd">        ...     md.read_metadata(missing, required=True)</span>
+<span class="linenos">187</span><span class="sd">        ... except md.MetadataConventionError as error:</span>
+<span class="linenos">188</span><span class="sd">        ...     print(error.issues[0].message)</span>
+<span class="linenos">189</span><span class="sd">        No metadata in attrs.</span>
+<span class="linenos">190</span><span class="sd">    """</span>
+<span class="linenos">191</span>    <span class="n">attached</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">META_KEY</span><span class="p">)</span>
+<span class="linenos">192</span>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attached</span><span class="p">,</span> <span class="n">_TimeseriesMetadataBase</span><span class="p">):</span>
+<span class="linenos">193</span>        <span class="k">if</span> <span class="n">data_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">attached</span><span class="o">.</span><span class="n">_data_type</span> <span class="o">==</span> <span class="n">data_type</span><span class="p">:</span>
+<span class="linenos">194</span>            <span class="k">return</span> <span class="n">attached</span>  <span class="c1"># type: ignore[return-value]</span>
+<span class="linenos">195</span>        <span class="n">_no_metadata</span><span class="p">(</span>
+<span class="linenos">196</span>            <span class="n">required</span><span class="p">,</span>
+<span class="linenos">197</span>            <span class="sa">f</span><span class="s2">"The attached metadata is </span><span class="si">{</span><span class="n">attached</span><span class="o">.</span><span class="n">_data_type</span><span class="si">}</span><span class="s2"> metadata, not </span><span class="si">{</span><span class="n">data_type</span><span class="si">}</span><span class="s2"> metadata."</span><span class="p">,</span>
+<span class="linenos">198</span>        <span class="p">)</span>
+<span class="linenos">199</span>        <span class="k">return</span> <span class="kc">None</span>
+<span class="linenos">200</span>
+<span class="linenos">201</span>    <span class="n">convention_attrs</span> <span class="o">=</span> <span class="n">_convention_attrs</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+<span class="linenos">202</span>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">convention_attrs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<span class="linenos">203</span>        <span class="n">_no_metadata</span><span class="p">(</span><span class="n">required</span><span class="p">,</span> <span class="s2">"No metadata in attrs."</span><span class="p">)</span>
+<span class="linenos">204</span>        <span class="k">return</span> <span class="kc">None</span>
+<span class="linenos">205</span>    <span class="n">data_type</span> <span class="o">=</span> <span class="n">data_type</span> <span class="ow">or</span> <span class="n">infer_data_type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+<span class="linenos">206</span>    <span class="k">try</span><span class="p">:</span>
+<span class="linenos">207</span>        <span class="k">return</span> <span class="n">METADATA_MODELS</span><span class="p">[</span><span class="n">data_type</span><span class="p">]</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">convention_attrs</span><span class="p">)</span>  <span class="c1"># type: ignore[return-value]</span>
+<span class="linenos">208</span>    <span class="k">except</span> <span class="n">ValidationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="linenos">209</span>        <span class="k">if</span> <span class="ow">not</span> <span class="n">required</span><span class="p">:</span>
+<span class="linenos">210</span>            <span class="k">return</span> <span class="kc">None</span>
+<span class="linenos">211</span>        <span class="n">issues</span> <span class="o">=</span> <span class="p">[</span>
+<span class="linenos">212</span>            <span class="n">issue</span>
+<span class="linenos">213</span>            <span class="k">for</span> <span class="n">issue</span> <span class="ow">in</span> <span class="n">check_metadata_conventions</span><span class="p">(</span><span class="n">convention_attrs</span><span class="p">,</span> <span class="n">data_type</span><span class="p">)</span>
+<span class="linenos">214</span>            <span class="k">if</span> <span class="n">issue</span><span class="o">.</span><span class="n">severity</span> <span class="o">==</span> <span class="n">MetadataIssueSeverity</span><span class="o">.</span><span class="n">ERROR</span>
+<span class="linenos">215</span>        <span class="p">]</span>
+<span class="linenos">216</span>        <span class="k">raise</span> <span class="n">MetadataConventionError</span><span class="p">(</span><span class="n">issues</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span></div>
+
+<span class="linenos">217</span>
+<span class="linenos">218</span>
+<span class="linenos">219</span><span class="k">def</span><span class="w"> </span><span class="nf">_no_metadata</span><span class="p">(</span><span class="n">required</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">220</span><span class="w">    </span><span class="sd">"""None, or with required raise a MetadataConventionError"""</span>
+<span class="linenos">221</span>    <span class="k">if</span> <span class="n">required</span><span class="p">:</span>
+<span class="linenos">222</span>        <span class="k">raise</span> <span class="n">MetadataConventionError</span><span class="p">(</span>
+<span class="linenos">223</span>            <span class="p">[</span>
+<span class="linenos">224</span>                <span class="n">MetadataConventionIssue</span><span class="p">(</span>
+<span class="linenos">225</span>                    <span class="n">severity</span><span class="o">=</span><span class="n">MetadataIssueSeverity</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="n">message</span>
+<span class="linenos">226</span>                <span class="p">)</span>
+<span class="linenos">227</span>            <span class="p">]</span>
+<span class="linenos">228</span>        <span class="p">)</span>
+<span class="linenos">229</span>
+<span class="linenos">230</span>
+<div class="viewcode-block" id="set_metadata">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.set_metadata">[docs]</a>
+<span class="linenos">231</span><span class="k">def</span><span class="w"> </span><span class="nf">set_metadata</span><span class="p">(</span><span class="n">obj</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">meta</span><span class="p">:</span> <span class="n">AnyMetadata</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">232</span><span class="w">    </span><span class="sd">"""Attach the supplied metadata model to a result object.</span>
+<span class="linenos">233</span>
+<span class="linenos">234</span><span class="sd">    Store it under attrs["hd_metadata"], replacing convention fields and preserving</span>
+<span class="linenos">235</span><span class="sd">    unrelated attrs.</span>
+<span class="linenos">236</span>
+<span class="linenos">237</span><span class="sd">    Args:</span>
+<span class="linenos">238</span><span class="sd">        obj: Result Series or DataFrame created by your component; updated in place.</span>
+<span class="linenos">239</span><span class="sd">        meta: Validated metadata model; shared without copying or revalidation.</span>
+<span class="linenos">240</span>
+<span class="linenos">241</span><span class="sd">    Returns:</span>
+<span class="linenos">242</span><span class="sd">        None: Updates obj in place.</span>
+<span class="linenos">243</span>
+<span class="linenos">244</span><span class="sd">    Code example:</span>
+<span class="linenos">245</span>
+<span class="linenos">246</span><span class="sd">    Convert the metre values from :ref:`metadata-example-data` to centimetres and set matching</span>
+<span class="linenos">247</span><span class="sd">    metadata on the result. The original metadata stays unchanged:</span>
+<span class="linenos">248</span>
+<span class="linenos">249</span><span class="sd">    .. doctest:: metadata.set_metadata</span>
+<span class="linenos">250</span>
+<span class="linenos">251</span><span class="sd">        &gt;&gt;&gt; meta = md.read_metadata(series, required=True)</span>
+<span class="linenos">252</span><span class="sd">        &gt;&gt;&gt; result = series * 100</span>
+<span class="linenos">253</span><span class="sd">        &gt;&gt;&gt; changed = meta.with_value_dimension(None, "value", unit="cm")</span>
+<span class="linenos">254</span><span class="sd">        &gt;&gt;&gt; md.set_metadata(result, changed)</span>
+<span class="linenos">255</span><span class="sd">        &gt;&gt;&gt; md.get_series_unit(result), md.get_series_unit(series)</span>
+<span class="linenos">256</span><span class="sd">        ('cm', 'm')</span>
+<span class="linenos">257</span><span class="sd">        &gt;&gt;&gt; md.read_metadata(result) is changed</span>
+<span class="linenos">258</span><span class="sd">        True</span>
+<span class="linenos">259</span><span class="sd">    """</span>
+<span class="linenos">260</span>    <span class="n">obj</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">CONVENTION_KEYS</span><span class="p">}</span> <span class="o">|</span> <span class="p">{</span>
+<span class="linenos">261</span>        <span class="n">META_KEY</span><span class="p">:</span> <span class="n">meta</span>
+<span class="linenos">262</span>    <span class="p">}</span></div>
+
+<span class="linenos">263</span>
+<span class="linenos">264</span>
+<div class="viewcode-block" id="attrs_to_json">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.metadata.attrs_to_json">[docs]</a>
+<span class="linenos">265</span><span class="k">def</span><span class="w"> </span><span class="nf">attrs_to_json</span><span class="p">(</span><span class="n">attrs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="linenos">266</span><span class="w">    </span><span class="sd">"""Replace attached metadata with its JSON fields in a new attrs dictionary.</span>
+<span class="linenos">267</span>
+<span class="linenos">268</span><span class="sd">    Keep unrelated attrs as-is. Omit optional metadata fields set to None or their defaults.</span>
+<span class="linenos">269</span>
+<span class="linenos">270</span><span class="sd">    Args:</span>
+<span class="linenos">271</span><span class="sd">        attrs: Pandas attrs mapping; left unchanged.</span>
+<span class="linenos">272</span>
+<span class="linenos">273</span><span class="sd">    Returns:</span>
+<span class="linenos">274</span><span class="sd">        dict[Any, Any]:</span>
+<span class="linenos">275</span><span class="sd">            Dictionary for json.dumps or export. Unrelated attrs must also be</span>
+<span class="linenos">276</span><span class="sd">            JSON-compatible.</span>
+<span class="linenos">277</span>
+<span class="linenos">278</span><span class="sd">    Code example:</span>
+<span class="linenos">279</span>
+<span class="linenos">280</span><span class="sd">    Using :ref:`metadata-example-data`, convert attached models to JSON-compatible dictionaries.</span>
+<span class="linenos">281</span><span class="sd">    This function returns a dictionary; json.dumps produces the JSON string:</span>
+<span class="linenos">282</span>
+<span class="linenos">283</span><span class="sd">    .. doctest:: metadata.attrs_to_json</span>
+<span class="linenos">284</span>
+<span class="linenos">285</span><span class="sd">        &gt;&gt;&gt; import json</span>
+<span class="linenos">286</span><span class="sd">        &gt;&gt;&gt; data = series.copy()</span>
+<span class="linenos">287</span><span class="sd">        &gt;&gt;&gt; _ = md.attach_metadata(data)</span>
+<span class="linenos">288</span><span class="sd">        &gt;&gt;&gt; attrs = md.attrs_to_json(data.attrs)</span>
+<span class="linenos">289</span><span class="sd">        &gt;&gt;&gt; isinstance(attrs, dict), "hd_metadata" in attrs</span>
+<span class="linenos">290</span><span class="sd">        (True, False)</span>
+<span class="linenos">291</span><span class="sd">        &gt;&gt;&gt; encoded = json.dumps(attrs)</span>
+<span class="linenos">292</span><span class="sd">        &gt;&gt;&gt; json.loads(encoded)["metrics"][0]["value_dimensions"][0]["unit"]</span>
+<span class="linenos">293</span><span class="sd">        'm'</span>
+<span class="linenos">294</span><span class="sd">        &gt;&gt;&gt; export = data.copy()</span>
+<span class="linenos">295</span><span class="sd">        &gt;&gt;&gt; export.attrs = md.attrs_to_json(export.attrs)</span>
+<span class="linenos">296</span><span class="sd">        &gt;&gt;&gt; "hd_metadata" in data.attrs, "hd_metadata" in export.attrs</span>
+<span class="linenos">297</span><span class="sd">        (True, False)</span>
+<span class="linenos">298</span>
+<span class="linenos">299</span><span class="sd">    The export copy can now be written with ``export.to_frame().to_parquet("series.parquet")``</span>
+<span class="linenos">300</span><span class="sd">    if a pandas Parquet engine is installed. The original keeps its attached model.</span>
+<span class="linenos">301</span><span class="sd">    """</span>
+<span class="linenos">302</span>    <span class="n">attached</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">META_KEY</span><span class="p">)</span>
+<span class="linenos">303</span>    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attached</span><span class="p">,</span> <span class="n">_TimeseriesMetadataBase</span><span class="p">):</span>
+<span class="linenos">304</span>        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">attrs</span><span class="p">)</span>
+<span class="linenos">305</span>    <span class="n">rest</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">attrs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="n">META_KEY</span><span class="p">}</span>
+<span class="linenos">306</span>    <span class="k">return</span> <span class="n">rest</span> <span class="o">|</span> <span class="n">attached</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span><span class="p">)</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">hdhelpers - documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">hdhelpers.metadata.attached</a></li>
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2026, Steffen Wittkamp, Jenny Kupzig.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+    </div>
+  </body>
+</html>

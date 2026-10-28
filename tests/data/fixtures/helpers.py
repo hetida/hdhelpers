@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def series_winter() -> pd.Series:
     winter = pd.Series(
         [0, 1, 2, 3],
@@ -17,7 +17,7 @@ def series_winter() -> pd.Series:
     return winter
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def series_summer() -> pd.Series:
     summer = pd.Series(
         [0, 1, 2, 3],
@@ -31,7 +31,7 @@ def series_summer() -> pd.Series:
     return summer
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def dataframe() -> pd.DataFrame:
     values = [1.0, 1.2, 1.2]
     timestamps = pd.to_datetime(
@@ -49,7 +49,7 @@ def dataframe() -> pd.DataFrame:
     return ts_df
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def multicolumn_frame() -> pd.DataFrame:
     values = [1.0, 1.2, 1.2]
     index = pd.to_datetime(

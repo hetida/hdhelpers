@@ -12,7 +12,7 @@ logger = logging.getLogger("hdhelpers")
 
 
 @singledispatch
-def _convert_to_optional_timezone(object_to_convert, to_timezone: str | None):
+def _convert_to_optional_timezone(object_to_convert, to_timezone: str | None):  # noqa: ARG001
     """Convert object_to_convert to to_timezone if not None,
     or to its own timezone if aware
     or to UTC otherwise"""
@@ -50,24 +50,30 @@ def modify_timezone[T: (pd.Timestamp, datetime.datetime, pd.Series, pd.DataFrame
     column_names: list[str] | None = None,
     convert_index: bool = True,
 ) -> T:
-    """Converts time information of pandas objects to a certain timezone
-
-    This function is applicable to index and/or columns of pd.Series or pd.DataFrame as well as for single pd.Timestamp objects.
-    If time zone information is not defined in object to convert it is assumed that it is in UTC.
-    Please note that column_names and convert_index are not exclusive to enable modifying both at the same time.
-    To enable modifying the value of a series (not the index), please name the series and define the series' name in column_names.
+    """Convert aware timestamps or localize naive timestamps to the selected time zone.
 
     Args:
-        object_to_convert (pd.Timestamp | pd.Series | pd.DataFrame): Timestamp, Series or DataFrame where timezone is modified
-        to_timezone (str | None): Timezone to convert to, e.g. for German time use "Europe/Berlin". See possible timezone strings in pandas' `tz_convert` method or pytz all_timezones list. If to_timezone is not defined, the global timezone from plot_target_settings is used. .
-        column_names (str | None): List of column_names to modify. For pd.Series the default behaviour is modifying the index and for pd.DataFrame the default behaviour is modifying the column "timestamp". This option is not applicable in case object_to_convert is a pd.Timestamp.
-        convert_index (bool | None): Boolean that controls whether the index of pd.Dataframe or pd.Series should be transformed. Note that for a pd.Series setting this option to true results in the same output as using `column_names=None`. This option is not applicable in case `object_to_convert` is a pd.Timestamp.
+        object_to_convert (pd.Timestamp | datetime.datetime | pd.Series | pd.DataFrame):
+            Timestamp, datetime, Series or DataFrame to convert.
+        to_timezone:
+            Target zone, e.g. "Europe/Berlin". None uses the plot target setting; if unset,
+            naive values use UTC and aware values keep their zone.
+        column_names:
+            Columns to convert. None/[] selects the Series index or DataFrame "timestamp"
+            column. For Series values, pass [series.name]. Ignored for scalars.
+        convert_index:
+            Also convert the pandas index. With column_names=None/[], a Series index is
+            always converted. Ignored for scalars.
+
     Returns:
         pd.Timestamp | pd.Series | pd.DataFrame:
-            Returns the modified timezone object.
+            Timestamp for scalar inputs; converted copy for nonempty pandas inputs. Empty
+            pandas inputs are returned unchanged.
 
     Raises:
-        TypeError: If `object_to_convert` is not a pd.Series, pd.Timestamp, pd.DataFrame.
+        TypeError: Unsupported input or incompatible timestamp/index values.
+        ValueError: Unknown time zone or invalid datetime values.
+        KeyError: A requested column is absent.
 
     Code example:
 
@@ -77,13 +83,14 @@ def modify_timezone[T: (pd.Timestamp, datetime.datetime, pd.Series, pd.DataFrame
         >>> modified_timezone = modify_timezone(pd.to_datetime("2025-01-01T01:00:00+05:00"), to_timezone="Europe/Berlin")
         >>> int(modified_timezone.utcoffset().total_seconds())
         3600
-    """
+    """  # noqa: E501
 
     if not isinstance(
         object_to_convert, pd.Timestamp | pd.Series | pd.DataFrame | datetime.datetime
     ):
         raise TypeError(
-            f"object_to_convert is {type(object_to_convert)} not pd.Timestamp | pd.Series | pd.DataFrame | datetime.datetime"
+            f"object_to_convert is {type(object_to_convert)} not pd.Timestamp | pd.Series |"
+            " pd.DataFrame | datetime.datetime"
         )
     if column_names is None:
         column_names = []
