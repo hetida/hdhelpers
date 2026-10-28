@@ -1,15 +1,55 @@
 
-
-/* if content is to big in x or y direction specifiy scroll for overflow-y or overflow-x */
+/* Sidebar scrollable, no horizontal scrollbar */
 .sphinxsidebarwrapper {
     overflow-y: auto;
-    overflow-x: auto;
+    overflow-x: hidden;
 }
 
-div.sphinxsidebar {
-   width: 300px;
+/* Truncate long function names */
+.sphinxsidebarwrapper li > a {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-div.bodywrapper {
-   margin: 0 0 0 300px;
+/* Keep long signatures and code inside the content column. */
+div.documentwrapper {
+    min-width: 0;
+}
+
+div.body {
+    overflow-wrap: anywhere;
+}
+
+div.body .sig .pre {
+    white-space: normal;
+}
+
+/* On narrow screens, give the content the full width and move navigation below it. */
+@media (max-width: 900px) {
+    div.document {
+        flex-direction: column;
+    }
+
+    div.bodywrapper {
+        margin: 0;
+    }
+
+    div.sphinxsidebar {
+        float: none;
+        width: auto;
+        margin: 0;
+    }
+
+    div.body table.docutils {
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    div.body p, div.body dd, div.body li {
+        text-align: left;
+    }
 }

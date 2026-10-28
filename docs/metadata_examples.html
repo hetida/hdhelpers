@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Metadata examples &#8212; hdhelpers - documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=14e077c0" />
+    <link rel="stylesheet" type="text/css" href="_static/stylesheet.css?v=55595bb5" />
+
+    <script src="_static/documentation_options.js?v=b1628c55"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Metadata model reference" href="metadata_models.html" />
+    <link rel="prev" title="First steps" href="first_steps.html" />
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="metadata_models.html" title="Metadata model reference"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="first_steps.html" title="First steps"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">hdhelpers - documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Metadata examples</a></li>
+      </ul>
+    </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+
+  <section id="metadata-examples">
+<h1>Metadata examples<a class="headerlink" href="#metadata-examples" title="Link to this heading">¶</a></h1>
+<section id="shared-data-setup">
+<span id="metadata-example-data"></span><h2>Shared data setup<a class="headerlink" href="#shared-data-setup" title="Link to this heading">¶</a></h2>
+<p>The following examples use pandas objects with metadata. In hetida designer, these
+are supplied as component inputs. To try the examples in a Python session, create
+them using the shared data setup below.</p>
+<p>The setup creates three independent pandas objects with complete metadata following
+the current conventions. Use these objects for the API reference examples as well:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">series</span></code>: a SERIES with one value per timestamp, measured in metres.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dataframe</span></code>: a SINGLETSFRAME describing one metric with the value columns
+<code class="docutils literal notranslate"><span class="pre">value</span></code> (temperature) and <code class="docutils literal notranslate"><span class="pre">state</span></code> (measurement state).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">multitsframe</span></code>: a MULTITSFRAME with pressure and temperature metrics, whose
+identifiers are stored in the <code class="docutils literal notranslate"><span class="pre">metric</span></code> column.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">md</span></code> is the imported <code class="docutils literal notranslate"><span class="pre">hdhelpers.metadata</span></code> module. <code class="docutils literal notranslate"><span class="pre">deepcopy</span></code> keeps changes to
+the example metadata independent of the supplied templates. The same setup is run
+for each documentation test group. To start an example again with unchanged data,
+rerun the setup.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">hdhelpers</span><span class="w"> </span><span class="kn">import</span> <span class="n">metadata</span> <span class="k">as</span> <span class="n">md</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hdhelpers.metadata.conventions</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">MULTITSFRAME_METADATA_EXAMPLE</span><span class="p">,</span>
+    <span class="n">SERIES_METADATA_EXAMPLE</span><span class="p">,</span>
+    <span class="n">SINGLETSFRAME_METADATA_EXAMPLE</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">timestamps</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">([</span><span class="s2">"2026-01-01T00:00:00Z"</span><span class="p">,</span> <span class="s2">"2026-01-01T00:15:00Z"</span><span class="p">])</span>
+
+<span class="c1"># SERIES: one metric, with timestamps in the index; values are in metres.</span>
+<span class="n">series</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">timestamps</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"level"</span><span class="p">)</span>
+<span class="n">series</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">SERIES_METADATA_EXAMPLE</span><span class="p">)</span>
+
+<span class="c1"># SINGLETSFRAME: one metric with several value columns; "value" is in degrees Celsius.</span>
+<span class="n">dataframe</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="p">{</span><span class="s2">"timestamp"</span><span class="p">:</span> <span class="n">timestamps</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">:</span> <span class="p">[</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">21.0</span><span class="p">],</span> <span class="s2">"state"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"valid"</span><span class="p">,</span> <span class="s2">"valid"</span><span class="p">]}</span>
+<span class="p">)</span>
+<span class="n">dataframe</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">SINGLETSFRAME_METADATA_EXAMPLE</span><span class="p">)</span>
+
+<span class="c1"># MULTITSFRAME: several metrics, identified by the "metric" column.</span>
+<span class="n">multitsframe</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">"timestamp"</span><span class="p">:</span> <span class="n">timestamps</span><span class="p">,</span>
+        <span class="s2">"metric"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"plant_a.pressure"</span><span class="p">,</span> <span class="s2">"plant_a.temperature"</span><span class="p">],</span>
+        <span class="s2">"value"</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">20.0</span><span class="p">],</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="n">multitsframe</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">MULTITSFRAME_METADATA_EXAMPLE</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="first_steps.html"><span class="doc">First steps</span></a> for examples within components.</p>
+</section>
+<section id="metadata-lookup-basics">
+<span id="id1"></span><h2>Metadata lookup basics<a class="headerlink" href="#metadata-lookup-basics" title="Link to this heading">¶</a></h2>
+<p>A metric is one measured signal. A value column (called a <em>value dimension</em> in the
+schema) holds values or related information, such as measurement state. Metadata
+is stored in <code class="docutils literal notranslate"><span class="pre">attrs</span></code> as convention fields or as a model under <code class="docutils literal notranslate"><span class="pre">hd_metadata</span></code>.
+Shared metadata in <code class="docutils literal notranslate"><span class="pre">value_dimensions_shared</span></code> supplies defaults for matching
+columns across metrics.</p>
+<p>The metadata models are immutable and allow additional fields at every level.
+Metadata timestamps are UTC ISO strings with an explicit <code class="docutils literal notranslate"><span class="pre">Z</span></code> or <code class="docutils literal notranslate"><span class="pre">+00:00</span></code> offset.
+Adapters exchange convention fields; <a class="reference internal" href="index.html#hdhelpers.metadata.attrs_to_json" title="hdhelpers.metadata.attrs_to_json"><code class="xref py py-func docutils literal notranslate"><span class="pre">hdhelpers.metadata.attrs_to_json()</span></code></a> converts
+an attached model back to those fields for export.</p>
+<p>Series and SINGLETSFRAME getters select <code class="docutils literal notranslate"><span class="pre">dataset_metadata.single_metric</span></code>, or the
+only metric described if no identifier is set. They do not select by <code class="docutils literal notranslate"><span class="pre">Series.name</span></code>.
+Without a unique selection, metric-specific information is unavailable.
+Absent fields and fields set to None count as missing. Inherited properties are supplied
+by the source system for the metric or its parent assets. They are used as fallbacks when
+<code class="docutils literal notranslate"><span class="pre">include_inherited=True</span></code>. Explicit paths such as <code class="docutils literal notranslate"><span class="pre">&quot;inherited.site&quot;</span></code> access them directly,
+even when this fallback is disabled.
+Missing or invalid metadata gives empty mappings for mapping getters; missing-key
+lookups still use their documented defaults.</p>
+</section>
+<section id="automatic-metadata-type-selection">
+<span id="metadata-type-selection"></span><h2>Automatic metadata type selection<a class="headerlink" href="#automatic-metadata-type-selection" title="Link to this heading">¶</a></h2>
+<p>When parsing raw attrs, <code class="docutils literal notranslate"><span class="pre">read_metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">attach_metadata</span></code> and
+<code class="docutils literal notranslate"><span class="pre">check_metadata_conventions</span></code> infer the type as follows:</p>
+<ul class="simple">
+<li><p>A Series selects <code class="docutils literal notranslate"><span class="pre">SERIES</span></code>.</p></li>
+<li><p>A DataFrame with a <code class="docutils literal notranslate"><span class="pre">metric</span></code> column selects <code class="docutils literal notranslate"><span class="pre">MULTITSFRAME</span></code>.</p></li>
+<li><p>Other DataFrames select <code class="docutils literal notranslate"><span class="pre">SINGLETSFRAME</span></code>.</p></li>
+</ul>
+<p>An explicit <code class="docutils literal notranslate"><span class="pre">data_type</span></code> overrides this selection. <code class="docutils literal notranslate"><span class="pre">read_metadata</span></code> also checks
+the type of an attached model when requested; <code class="docutils literal notranslate"><span class="pre">attach_metadata</span></code> keeps an already
+attached model unchanged.</p>
+</section>
+<section id="units-measurements-and-return-shapes">
+<span id="metadata-getter-values"></span><h2>Units, measurements and return shapes<a class="headerlink" href="#units-measurements-and-return-shapes" title="Link to this heading">¶</a></h2>
+<p>SERIES getters return a single value. SINGLETSFRAME getters return information by
+value column; MULTITSFRAME getters return it by metric and value column. The
+measurement describes the physical quantity, whereas the unit describes its scale.</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_series_unit</span><span class="p">(</span><span class="n">series</span><span class="p">),</span> <span class="n">md</span><span class="o">.</span><span class="n">get_series_measurement</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+<span class="go">('m', 'level')</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">dict</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">get_singlets_units</span><span class="p">(</span><span class="n">dataframe</span><span class="p">))</span>
+<span class="go">{'value': '°C', 'state': None}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_singlets_measurements</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)[</span><span class="s2">"value"</span><span class="p">]</span>
+<span class="go">'temperature'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_units</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">)[</span><span class="s2">"plant_a.pressure"</span><span class="p">][</span><span class="s2">"value"</span><span class="p">]</span>
+<span class="go">'bar'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_measurements</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">)[</span><span class="s2">"plant_a.pressure"</span><span class="p">][</span><span class="s2">"value"</span><span class="p">]</span>
+<span class="go">'pressure'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_units</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">)[</span><span class="s2">"unknown metric"</span><span class="p">][</span><span class="s2">"value"</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">md</span><span class="o">.</span><span class="n">get_queried_interval</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span> <span class="n">end</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+<span class="go">('2026-01-01T00:00:00+00:00', '2026-01-02T00:00:00+00:00')</span>
+</pre></div>
+</div>
+</section>
+<section id="names-and-display-name-fallbacks">
+<span id="metadata-getter-names"></span><h2>Names and display-name fallbacks<a class="headerlink" href="#names-and-display-name-fallbacks" title="Link to this heading">¶</a></h2>
+<p>These getters use the same return shapes. A short display name falls back to the
+display name, which falls back to the name. The templates omit display names, so
+the examples show that fallback. See <a class="reference internal" href="first_steps.html"><span class="doc">First steps</span></a> for the lookup order and
+the optional <code class="docutils literal notranslate"><span class="pre">include_inherited=True</span></code> fallback to inherited properties.</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_series_name</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+<span class="go">'Water level north'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_series_display_name</span><span class="p">(</span><span class="n">series</span><span class="p">),</span> <span class="n">md</span><span class="o">.</span><span class="n">get_series_short_display_name</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+<span class="go">('Water level north', 'Water level north')</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_singlets_names</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)[</span><span class="s2">"state"</span><span class="p">]</span>
+<span class="go">'measurement state'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_singlets_display_names</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)[</span><span class="s2">"state"</span><span class="p">]</span>
+<span class="go">'measurement state'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_singlets_short_display_names</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)[</span><span class="s2">"state"</span><span class="p">]</span>
+<span class="go">'measurement state'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_names</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">)[</span><span class="s2">"plant_a.pressure"</span><span class="p">][</span><span class="s2">"value"</span><span class="p">]</span>
+<span class="go">'Plant A pressure'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_display_names</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">)[</span><span class="s2">"plant_a.pressure"</span><span class="p">][</span><span class="s2">"value"</span><span class="p">]</span>
+<span class="go">'Plant A pressure'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_short_display_names</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">)[</span><span class="s2">"plant_a.pressure"</span><span class="p">][</span><span class="s2">"value"</span><span class="p">]</span>
+<span class="go">'Plant A pressure'</span>
+</pre></div>
+</div>
+</section>
+<section id="metric-fields-and-value-dimension-fields">
+<span id="metadata-getter-fields"></span><h2>Metric fields and value-dimension fields<a class="headerlink" href="#metric-fields-and-value-dimension-fields" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">get_singlets_info</span></code> returns information for each value column, whereas
+<code class="docutils literal notranslate"><span class="pre">get_singlets_metric_info</span></code> returns one value for the metric. The Series variant
+looks up its single value dimension; <code class="docutils literal notranslate"><span class="pre">get_metric_info</span></code> returns values by metric.
+The field argument may also be a dotted path into nested metadata.</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_series_info</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="s2">"decimals"</span><span class="p">)</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_singlets_info</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">)[</span><span class="s2">"state"</span><span class="p">]</span>
+<span class="go">'measurement state'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_singlets_metric_info</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">)</span>
+<span class="go">'ABC temperature'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_metric_info</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">)[</span><span class="s2">"plant_a.pressure"</span><span class="p">]</span>
+<span class="go">'Plant A pressure'</span>
+</pre></div>
+</div>
+</section>
+<section id="recording-information">
+<span id="metadata-getter-recordings"></span><h2>Recording information<a class="headerlink" href="#recording-information" title="Link to this heading">¶</a></h2>
+<p>Single-metric getters return a <code class="docutils literal notranslate"><span class="pre">Recording</span></code> object; <code class="docutils literal notranslate"><span class="pre">get_recordings</span></code> returns
+these objects by metric. Access its fields to distinguish samples, periodic
+recording and recording on change. Frequency, offset and time zone fall back to
+the dataset metadata together, as described by <a class="reference internal" href="index.html#hdhelpers.metadata.get_recordings" title="hdhelpers.metadata.get_recordings"><code class="xref py py-func docutils literal notranslate"><span class="pre">hdhelpers.metadata.get_recordings()</span></code></a>.</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">recording</span> <span class="o">=</span> <span class="n">md</span><span class="o">.</span><span class="n">get_series_recording</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">recording</span><span class="o">.</span><span class="n">recording_mode</span><span class="p">,</span> <span class="n">recording</span><span class="o">.</span><span class="n">data_frequency</span>
+<span class="go">('periodic', '15min')</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_singlets_recording</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span><span class="o">.</span><span class="n">data_frequency</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_recordings</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">)[</span><span class="s2">"plant_a.temperature"</span><span class="p">]</span><span class="o">.</span><span class="n">recording_mode</span>
+<span class="go">'on_change'</span>
+</pre></div>
+</div>
+</section>
+<section id="default-time-zones">
+<span id="metadata-getter-timezones"></span><h2>Default time zones<a class="headerlink" href="#default-time-zones" title="Link to this heading">¶</a></h2>
+<p>A metric’s time zone falls back to the dataset’s default, otherwise to None.
+Use an explicit fallback such as <code class="docutils literal notranslate"><span class="pre">or</span> <span class="pre">&quot;UTC&quot;</span></code> when choosing a time zone for a
+computation. See <a class="reference internal" href="first_steps.html"><span class="doc">First steps</span></a> for a daily aggregation example and the
+distinction between computation and display time zones.</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_series_default_timezone</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+<span class="go">'Europe/Berlin'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_singlets_default_timezone</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_singlets_default_timezone</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"UTC"</span>
+<span class="go">'UTC'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_default_timezones</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">)[</span><span class="s2">"plant_a.pressure"</span><span class="p">]</span>
+<span class="go">'Europe/Berlin'</span>
+</pre></div>
+</div>
+</section>
+<section id="default-aggregation-methods">
+<span id="metadata-getter-aggregation"></span><h2>Default aggregation methods<a class="headerlink" href="#default-aggregation-methods" title="Link to this heading">¶</a></h2>
+<p>The getters return a method name, or method names by metric. An explicit method
+wins; <code class="docutils literal notranslate"><span class="pre">AVG</span></code> is normalized to <code class="docutils literal notranslate"><span class="pre">MEAN</span></code>. Otherwise, <code class="docutils literal notranslate"><span class="pre">value_data_type</span></code> in metadata
+selects <code class="docutils literal notranslate"><span class="pre">LAST</span></code> for boolean/string and <code class="docutils literal notranslate"><span class="pre">MEAN</span></code> for other types.</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_series_default_aggregation_method</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+<span class="go">'MEAN'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_singlets_default_aggregation_method</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
+<span class="go">'MEAN'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_default_aggregation_methods</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">)[</span><span class="s2">"plant_a.temperature"</span><span class="p">]</span>
+<span class="go">'MAX'</span>
+</pre></div>
+</div>
+<p>For the metadata lifecycle, start with <a class="reference internal" href="index.html#hdhelpers.metadata.check_metadata_conventions" title="hdhelpers.metadata.check_metadata_conventions"><code class="xref py py-func docutils literal notranslate"><span class="pre">hdhelpers.metadata.check_metadata_conventions()</span></code></a>,
+then <a class="reference internal" href="index.html#hdhelpers.metadata.read_metadata" title="hdhelpers.metadata.read_metadata"><code class="xref py py-func docutils literal notranslate"><span class="pre">hdhelpers.metadata.read_metadata()</span></code></a> or <a class="reference internal" href="index.html#hdhelpers.metadata.attach_metadata" title="hdhelpers.metadata.attach_metadata"><code class="xref py py-func docutils literal notranslate"><span class="pre">hdhelpers.metadata.attach_metadata()</span></code></a>.
+Use <a class="reference internal" href="index.html#hdhelpers.metadata.set_metadata" title="hdhelpers.metadata.set_metadata"><code class="xref py py-func docutils literal notranslate"><span class="pre">hdhelpers.metadata.set_metadata()</span></code></a> to attach changed metadata to a result
+and <a class="reference internal" href="index.html#hdhelpers.metadata.attrs_to_json" title="hdhelpers.metadata.attrs_to_json"><code class="xref py py-func docutils literal notranslate"><span class="pre">hdhelpers.metadata.attrs_to_json()</span></code></a> before serialization. Each function
+has an example using the shared data setup.</p>
+<p>See <a class="reference internal" href="metadata_models.html"><span class="doc">Metadata model reference</span></a> for the model classes and their reading, update and conversion methods.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#" title="Metadata examples">Metadata examples</a><ul>
+<li><a class="reference internal" href="#shared-data-setup" title="Shared data setup">Shared data setup</a></li>
+<li><a class="reference internal" href="#metadata-lookup-basics" title="Metadata lookup basics">Metadata lookup basics</a></li>
+<li><a class="reference internal" href="#automatic-metadata-type-selection" title="Automatic metadata type selection">Automatic metadata type selection</a></li>
+<li><a class="reference internal" href="#units-measurements-and-return-shapes" title="Units, measurements and return shapes">Units, measurements and return shapes</a></li>
+<li><a class="reference internal" href="#names-and-display-name-fallbacks" title="Names and display-name fallbacks">Names and display-name fallbacks</a></li>
+<li><a class="reference internal" href="#metric-fields-and-value-dimension-fields" title="Metric fields and value-dimension fields">Metric fields and value-dimension fields</a></li>
+<li><a class="reference internal" href="#recording-information" title="Recording information">Recording information</a></li>
+<li><a class="reference internal" href="#default-time-zones" title="Default time zones">Default time zones</a></li>
+<li><a class="reference internal" href="#default-aggregation-methods" title="Default aggregation methods">Default aggregation methods</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="first_steps.html"
+                          title="previous chapter">First steps</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="metadata_models.html"
+                          title="next chapter">Metadata model reference</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/metadata_examples.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="metadata_models.html" title="Metadata model reference"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="first_steps.html" title="First steps"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">hdhelpers - documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Metadata examples</a></li>
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2026, Steffen Wittkamp, Jenny Kupzig.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+    </div>
+  </body>
+</html>

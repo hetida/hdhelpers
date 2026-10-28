@@ -29,13 +29,20 @@ Further Information
 .. toctree::
    :maxdepth: 2
 
+   installation
    first_steps
+   metadata_examples
+   metadata_models
 
 Functions
 =========
 
 metadata
 -----------------
+
+The examples below use :ref:`metadata-example-data`. See :doc:`metadata_examples`
+for the return shapes and shared examples of the related getters.
+See :ref:`metadata-lookup-basics` for metric selection and missing-field behavior.
 
 .. automodule:: hdhelpers.metadata
    :members:
@@ -62,6 +69,9 @@ plotting
 
 exceptions
 -------------------
+
+For metadata validation errors, see :class:`hdhelpers.metadata.MetadataConventionError`
+in the metadata API. Its ``issues`` attribute contains the individual validation issues.
 
 .. automodule:: hdhelpers.exceptions
    :members:

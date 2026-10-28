@@ -25,20 +25,15 @@ TICKFORMATSTOPS = [
 
 
 def set_dt_ticks(fig: go.Figure) -> None:
-    """Set x datetime tick labels to language agnostic format
+    """Set zoom-dependent, locale-independent date/time labels on all x axes.
 
-    Sets the x axes tick format of the Plotly Figure to some isoformat inspired
-    timestamp format, adequately for multiple zoom levels.
-
-    Infers Plotly locale from plot target settings or returns explicit provided
-    locale.
+    Update tickformatstops; timestamps and time zones are unchanged.
 
     Args:
-        fig (plotly Figure object): Plotly figure object whose x axes will be modified.
+        fig: Figure to format.
 
     Returns:
-        None:
-            Returns None, since the figure object is modified in place
+        None: The supplied figure is updated in place.
 
     Code example:
 
@@ -47,6 +42,5 @@ def set_dt_ticks(fig: go.Figure) -> None:
         >>> import plotly.graph_objects as go
         >>> fig = go.Figure(data=go.Scatter(x=["2024-01-01", "2024-01-02"], y=[1, 4]))
         >>> set_dt_ticks(fig)
-
     """
     fig.update_xaxes(tickformatstops=TICKFORMATSTOPS)

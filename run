@@ -35,11 +35,18 @@ lint(){
     fi
 }
 
-build_docs(){
-    uv pip install .
-    uv run sphinx-build -M html sphinx/source sphinx/build
-    uv run sphinx-build -M doctest sphinx/source sphinx/build
-    cp -r sphinx/build/html/* docs/
+
+build_docs() {
+    uv run --locked --all-extras sphinx-build \
+        -M clean sphinx/source sphinx/build || return
+
+    uv run --locked --all-extras sphinx-build \
+        -M doctest sphinx/source sphinx/build -E -W || return
+
+    uv run --locked --all-extras sphinx-build \
+        -M html sphinx/source sphinx/build -E -a -W || return
+
+    uv run --locked --all-extras python sphinx/publish_docs.py
 }
 
 

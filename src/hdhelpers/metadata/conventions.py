@@ -4,6 +4,12 @@ The models in this module specify the hetida designer metadata conventions for t
 (attrs) of SERIES, SINGLETSFRAME and MULTITSFRAME objects, one model per data type. See the user
 guide page on attached metadata for an introduction.
 
+Raw metadata is stored as convention fields in pandas attrs. A parsed model can be attached
+under attrs["hd_metadata"]; read_metadata accepts both forms. Adapters exchange the raw form,
+e.g. in the Data-Attributes header of generic REST adapter timeseries endpoints or the
+__metadata__ field of the direct provisioning adapter's wrapped format. Use attrs_to_json
+to convert attached models back to raw fields for export.
+
 The conventions are strict: Metadata adhering to them provides the required fields, possibly as
 null if the information is unknown, e.g. the unit of a value dimension. Consumers like components
 should nevertheless cope with missing metadata, since validation of metadata received from
@@ -13,6 +19,7 @@ The models document the request body of the hetida designer backend endpoint for
 metadata. Hence they occur as JSON Schemas in the openapi.json of the backend, so that third party
 projects, e.g. adapters providing or receiving such metadata, can validate against them.
 Additional fields are allowed at every level. The models are immutable, see ConventionModel.
+Metadata timestamps are UTC ISO strings with an explicit Z or +00:00 offset.
 
 check_metadata_conventions additionally checks the rules which JSON Schema cannot express,
 optionally against the actual data.
@@ -110,9 +117,9 @@ UtcTimestamp = Annotated[
 
 
 class AggregationMethod(StrEnum):
-    """How a timeseries should be aggregated by default, e.g. in coarser intervals
+    """Method for aggregating timeseries values into coarser intervals.
 
-    AVG is an alias of MEAN.
+    Metadata lookups normalize AVG to MEAN; they are distinct enum values.
     """
 
     MEAN = "MEAN"
@@ -314,11 +321,10 @@ class ConventionModel(BaseModel):
 
 
 class SharedValueDimensionMetadata(ConventionModel):
-    """Metadata of a value dimension shared by all metrics
+    """Default metadata for a value column shared across metrics.
 
-    Every column of a MULTITSFRAME besides "timestamp" and "metric" and every column of a
-    SINGLETSFRAME besides "timestamp" defines a value dimension for each metric. A SERIES has
-    exactly one value dimension, which is "value".
+    Matched by column name ("value" for a SERIES) and used when the corresponding field
+    is missing from metric-specific metadata.
     """
 
     column: str = Field(
@@ -360,12 +366,11 @@ class SharedValueDimensionMetadata(ConventionModel):
 
 
 class ValueDimensionMetadata(SharedValueDimensionMetadata):
-    """Metadata of a value dimension of a metric
+    """Metadata for one metric's value column, such as its unit and measured quantity.
 
-    Every column of a MULTITSFRAME besides "timestamp" and "metric" and every column of a
-    SINGLETSFRAME besides "timestamp" defines a value dimension for each metric. A SERIES has
-    exactly one value dimension, which is "value". Each metric provides an entry for each of its
-    value dimensions.
+    Each metric describes its value columns; a SERIES uses "value". Non-null fields take
+    precedence over shared metadata for the same column. Unit and measurement are required
+    fields, but may be None if unknown.
     """
 
     unit: str | None = Field(
@@ -379,19 +384,16 @@ class ValueDimensionMetadata(SharedValueDimensionMetadata):
 
 
 class InheritedMetricMetadata(ConventionModel):
-    """Properties a metric inherits from objects higher up in a hierarchy
+    """Properties supplied by a source system for a metric and its parent assets.
 
-    Arbitrary fields, e.g. the latitude of the plant a sensor belongs to. Typically the deepest
-    occurrence in the hierarchy wins. Should not contain the fields the conventions define for
-    metrics and value dimensions, like "name", "id" or "unit": Consumers only use inherited
-    properties as last resort and not for information describing the metric itself, like its
-    unit or names.
+    Stores already-resolved values, e.g. a plant's latitude; the source system resolves the
+    hierarchy. Metadata lookups use these properties as fallbacks only with
+    ``include_inherited=True``. Convention-defined fields such as name, id and unit belong in
+    the metric or value-dimension metadata.
 
-    The values should have the JSON type matching their meaning: numbers as numbers, booleans as
-    booleans and points in time as UTC isoformat strings, not e.g. a number as string.
-
-    E.g. the hetida platform provides the effective property values of a signal here, keyed by
-    property label: its own values, otherwise the value of the nearest asset above it having one.
+    Use JSON types matching each value's meaning: numbers, booleans and UTC ISO timestamp
+    strings for points in time. For example, hetida platform supplies properties by label,
+    using a signal's own value or that of the nearest parent asset providing one.
     """
 
 
@@ -899,15 +901,10 @@ def _with_value_column(metric: MetricMetadata, column: str, new_column: str) -> 
 
 
 class SeriesMetadata(_TimeseriesMetadataBase):
-    """hetida designer metadata conventions for a SERIES
+    """Immutable metadata for a SERIES: one metric with a single "value" dimension.
 
-    Structure of the metadata in the attrs attribute of a SERIES during execution, which is also
-    exchanged with adapters, e.g. via the Data-Attributes header of the generic REST adapter
-    timeseries endpoint (for each timeseries) or via the __metadata__ field of the wrapped format
-    of the direct provisioning adapter.
-
-    The fields that are not required are optional. Additional fields are allowed at every level.
-    Timestamps are UTC isoformat strings with explicit offset (Z or +00:00).
+    Read from a pandas Series with read_metadata. See the module documentation for storage,
+    adapter exchange and common field rules.
     """
 
     model_config = ConfigDict(json_schema_extra={"examples": [SERIES_METADATA_EXAMPLE]})
@@ -935,15 +932,10 @@ class SeriesMetadata(_TimeseriesMetadataBase):
 
 
 class SingleTSFrameMetadata(_TimeseriesMetadataBase):
-    """hetida designer metadata conventions for a SINGLETSFRAME
+    """Immutable metadata for a SINGLETSFRAME: one metric with one or more value columns.
 
-    Structure of the metadata in the attrs attribute of a SINGLETSFRAME during execution, which
-    is also exchanged with adapters, e.g. via the Data-Attributes header of the generic REST
-    adapter singletsframe endpoint or via the __metadata__ field of the wrapped format of the
-    direct provisioning adapter.
-
-    The fields that are not required are optional. Additional fields are allowed at every level.
-    Timestamps are UTC isoformat strings with explicit offset (Z or +00:00).
+    Read from a pandas DataFrame with read_metadata. See the module documentation for storage,
+    adapter exchange and common field rules.
     """
 
     model_config = ConfigDict(json_schema_extra={"examples": [SINGLETSFRAME_METADATA_EXAMPLE]})
@@ -997,15 +989,11 @@ class SingleTSFrameMetadata(_TimeseriesMetadataBase):
 
 
 class MultiTSFrameMetadata(_TimeseriesMetadataBase):
-    """hetida designer metadata conventions for a MULTITSFRAME
+    """Immutable metadata for a MULTITSFRAME: multiple metrics identified by a metric column.
 
-    Structure of the metadata in the attrs attribute of a MULTITSFRAME during execution, which
-    is also exchanged with adapters, e.g. via the Data-Attributes header of the generic REST
-    adapter multitsframe endpoint or via the __metadata__ field of the wrapped format of the
-    direct provisioning adapter.
-
-    The fields that are not required are optional. Additional fields are allowed at every level.
-    Timestamps are UTC isoformat strings with explicit offset (Z or +00:00).
+    Each metric can have several value dimensions; a MULTITSFRAME may also hold one metric.
+    Read from a pandas DataFrame with read_metadata. See the module documentation for storage,
+    adapter exchange and common field rules.
     """
 
     model_config = ConfigDict(json_schema_extra={"examples": [MULTITSFRAME_METADATA_EXAMPLE]})
@@ -1053,7 +1041,14 @@ class MetadataIssueSeverity(StrEnum):
 
 
 class MetadataConventionIssue(BaseModel):
-    """Issue found when checking metadata against the metadata conventions"""
+    """A metadata validation problem, reported as an error or warning.
+
+    Attributes:
+        severity (MetadataIssueSeverity): Error for a violation; warning for a likely mistake.
+        location (str): Path to the affected field, e.g. "metrics[0].name"; empty for the
+            metadata as a whole.
+        message (str): Explanation of the problem.
+    """
 
     severity: MetadataIssueSeverity
     location: str = Field(
@@ -1065,7 +1060,12 @@ class MetadataConventionIssue(BaseModel):
 
 
 class MetadataConventionError(ValueError):
-    """Metadata violating the metadata conventions, with the issues found"""
+    """Raised when required metadata is missing, invalid or of the wrong type.
+
+    Attributes:
+        issues (list[MetadataConventionIssue]): Individual problems with severity, location
+            and message.
+    """
 
     def __init__(self, issues: list[MetadataConventionIssue]) -> None:
         self.issues = issues
@@ -1735,17 +1735,43 @@ def check_metadata_conventions(
     obj: pd.Series | pd.DataFrame | Mapping[str, Any],
     data_type: TimeseriesDataType | None = None,
 ) -> list[MetadataConventionIssue]:
-    """Check metadata against the metadata conventions of its data type
+    """Report metadata errors and warnings, optionally checking against pandas data.
 
-    obj is either a SERIES, SINGLETSFRAME or MULTITSFRAME, whose attrs are then also checked for
-    consistency with its data, or the metadata itself. For metadata, data_type is required. For
-    data it is inferred if not provided: A DataFrame with a "metric" column is considered to be a
-    MULTITSFRAME, otherwise a SINGLETSFRAME.
+    For pandas inputs, also check metric IDs, value columns and time bounds. An empty list
+    means no issues; warnings alone do not make metadata invalid.
 
-    The metadata is checked in its JSON representation, as it is exchanged with adapters.
-    Consistency is only checked if the structure is valid.
+    Args:
+        obj: Series/DataFrame to check, or a mapping containing metadata.
+        data_type:
+            Convention to check; required for mappings. None infers it from pandas input;
+            see :ref:`metadata-type-selection`.
 
-    Returns the found issues, i.e. an empty list if the metadata adheres to the conventions.
+    Returns:
+        list[MetadataConventionIssue]:
+            Issues with severity, location and message. Invalid metadata is reported as
+            issues.
+
+    Raises:
+        ValueError: A metadata mapping is provided without data_type.
+
+    Code example:
+
+    Using :ref:`metadata-example-data`, validate the data and its metadata together, or pass
+    plain metadata with an explicit data type. Issues describe the severity, location and cause:
+
+    .. doctest:: metadata.check_metadata_conventions
+
+        >>> md.check_metadata_conventions(series)
+        []
+        >>> md.check_metadata_conventions(series.attrs, "SERIES")
+        []
+        >>> invalid = series.copy()
+        >>> invalid.attrs["metrics"][0]["default_timezone"] = "Mars/Base"
+        >>> issues = md.check_metadata_conventions(invalid)
+        >>> [(issue.severity.value, issue.location) for issue in issues]
+        [('error', 'metrics[0].default_timezone')]
+        >>> print(issues[0].message)  # doctest: +ELLIPSIS
+        "Mars/Base" is neither an IANA time zone name like "Europe/Berlin" nor a UTC offset...
     """
     # imported here, since hdhelpers.metadata.attached imports this module
     from hdhelpers.metadata.attached import attrs_to_json  # noqa: PLC0415

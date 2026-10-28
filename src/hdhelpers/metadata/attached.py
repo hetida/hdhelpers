@@ -56,12 +56,41 @@ def _convention_attrs(attrs: Mapping[Any, Any]) -> dict[str, Any]:
 def attach_metadata(
     obj: pd.Series | pd.DataFrame, data_type: TimeseriesDataType | None = None
 ) -> AnyMetadata | None:
-    """Parse the metadata in obj.attrs and attach the model in place of the convention keys
+    """Parse metadata in attrs and attach the resulting immutable model.
 
-    For the runtime, once per workflow input. Returns the attached model, None if attrs do not
-    contain valid metadata of the data type, which then stay untouched. The data type is
-    inferred from obj if not given, see infer_data_type. Metadata which is already attached
-    stays as it is.
+    Replace convention fields with attrs["hd_metadata"]; preserve other attrs. An already
+    attached model is returned unchanged.
+
+    Args:
+        obj: Series or DataFrame to update in place.
+        data_type:
+            Convention for raw attrs, or None to infer it; see
+            :ref:`metadata-type-selection`. Used only when no model is attached.
+
+    Returns:
+        SeriesMetadata | SingleTSFrameMetadata | MultiTSFrameMetadata | None:
+            Attached model, or None for absent/invalid metadata. Failure leaves attrs
+            unchanged.
+
+    Code example:
+
+    Using :ref:`metadata-example-data`, attach a model while preserving unrelated attrs:
+
+    .. doctest:: metadata.attach_metadata
+
+        >>> data = series.copy()
+        >>> data.attrs["source"] = "example"
+        >>> meta = md.attach_metadata(data)
+        >>> meta.unit()
+        'm'
+        >>> sorted(data.attrs)
+        ['hd_metadata', 'source']
+        >>> md.read_metadata(data) is meta
+        True
+        >>> md.attach_metadata(data) is meta
+        True
+        >>> md.attach_metadata(pd.Series([1.0])) is None
+        True
     """
     attached = obj.attrs.get(META_KEY)
     if isinstance(attached, _TimeseriesMetadataBase):
@@ -118,15 +147,46 @@ def read_metadata(
     *,
     required: bool = False,
 ) -> AnyMetadata | None:
-    """The metadata of obj as model of the conventions
+    """Read metadata as a model without changing the input.
 
-    Returns the attached model. It may belong to another data type than obj, e.g. the metadata
-    of a SINGLETSFRAME on a Series taken from it, unless data_type requests a specific one.
-    Without attached metadata, the convention keys of attrs are parsed, as data_type or as the
-    type inferred from obj (see infer_data_type), without attaching the model.
+    Reuse an attached model; otherwise parse convention fields in attrs.
 
-    Returns None if there is no valid metadata of the data type. With required=True, raises a
-    MetadataConventionError with the issues found instead.
+    Args:
+        obj: Series or DataFrame to read.
+        data_type:
+            Expected convention. None keeps an attached model's type or infers it for raw
+            attrs; see :ref:`metadata-type-selection`.
+        required:
+            If True, raise on missing, invalid or wrong-type metadata instead of returning
+            None.
+
+    Returns:
+        SeriesMetadata | SingleTSFrameMetadata | MultiTSFrameMetadata | None:
+            Attached or newly parsed model; None for missing, invalid or wrong-type
+            metadata.
+
+    Raises:
+        MetadataConventionError: Metadata cannot be returned and required=True.
+
+    Code example:
+
+    Using :ref:`metadata-example-data`, read a model without changing the original attrs:
+
+    .. doctest:: metadata.read_metadata
+
+        >>> meta = md.read_metadata(series, required=True)
+        >>> meta.unit()
+        'm'
+        >>> "hd_metadata" in series.attrs
+        False
+        >>> missing = pd.Series([1.0])
+        >>> md.read_metadata(missing) is None
+        True
+        >>> try:
+        ...     md.read_metadata(missing, required=True)
+        ... except md.MetadataConventionError as error:
+        ...     print(error.issues[0].message)
+        No metadata in attrs.
     """
     attached = obj.attrs.get(META_KEY)
     if isinstance(attached, _TimeseriesMetadataBase):
@@ -169,10 +229,33 @@ def _no_metadata(required: bool, message: str) -> None:
 
 
 def set_metadata(obj: pd.Series | pd.DataFrame, meta: AnyMetadata) -> None:
-    """Attach meta to obj, e.g. a changed version to the result of a component
+    """Attach the supplied metadata model to a result object.
 
-    Replaces attached metadata and convention keys in obj.attrs. Only set metadata on objects
-    you created: The runtime passes the same input object to all components using it.
+    Store it under attrs["hd_metadata"], replacing convention fields and preserving
+    unrelated attrs.
+
+    Args:
+        obj: Result Series or DataFrame created by your component; updated in place.
+        meta: Validated metadata model; shared without copying or revalidation.
+
+    Returns:
+        None: Updates obj in place.
+
+    Code example:
+
+    Convert the metre values from :ref:`metadata-example-data` to centimetres and set matching
+    metadata on the result. The original metadata stays unchanged:
+
+    .. doctest:: metadata.set_metadata
+
+        >>> meta = md.read_metadata(series, required=True)
+        >>> result = series * 100
+        >>> changed = meta.with_value_dimension(None, "value", unit="cm")
+        >>> md.set_metadata(result, changed)
+        >>> md.get_series_unit(result), md.get_series_unit(series)
+        ('cm', 'm')
+        >>> md.read_metadata(result) is changed
+        True
     """
     obj.attrs = {key: value for key, value in obj.attrs.items() if key not in CONVENTION_KEYS} | {
         META_KEY: meta
@@ -180,9 +263,41 @@ def set_metadata(obj: pd.Series | pd.DataFrame, meta: AnyMetadata) -> None:
 
 
 def attrs_to_json(attrs: Mapping[Any, Any]) -> dict[Any, Any]:
-    """attrs with the attached model as convention keys, e.g. for json.dumps or to_parquet
+    """Replace attached metadata with its JSON fields in a new attrs dictionary.
 
-    Optional fields which are null or have their default value are left out.
+    Keep unrelated attrs as-is. Omit optional metadata fields set to None or their defaults.
+
+    Args:
+        attrs: Pandas attrs mapping; left unchanged.
+
+    Returns:
+        dict[Any, Any]:
+            Dictionary for json.dumps or export. Unrelated attrs must also be
+            JSON-compatible.
+
+    Code example:
+
+    Using :ref:`metadata-example-data`, convert attached models to JSON-compatible dictionaries.
+    This function returns a dictionary; json.dumps produces the JSON string:
+
+    .. doctest:: metadata.attrs_to_json
+
+        >>> import json
+        >>> data = series.copy()
+        >>> _ = md.attach_metadata(data)
+        >>> attrs = md.attrs_to_json(data.attrs)
+        >>> isinstance(attrs, dict), "hd_metadata" in attrs
+        (True, False)
+        >>> encoded = json.dumps(attrs)
+        >>> json.loads(encoded)["metrics"][0]["value_dimensions"][0]["unit"]
+        'm'
+        >>> export = data.copy()
+        >>> export.attrs = md.attrs_to_json(export.attrs)
+        >>> "hd_metadata" in data.attrs, "hd_metadata" in export.attrs
+        (True, False)
+
+    The export copy can now be written with ``export.to_frame().to_parquet("series.parquet")``
+    if a pandas Parquet engine is installed. The original keeps its attached model.
     """
     attached = attrs.get(META_KEY)
     if not isinstance(attached, _TimeseriesMetadataBase):

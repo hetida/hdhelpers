@@ -2,17 +2,14 @@ import hdhelpers
 
 
 def get_locale(explicit_locale: str | None = None) -> str | None:
-    """Extract (Plotly) locale
-
-    Infers Plotly locale from plot target settings or returns explicit provided
-    locale.
+    """Read the explicit locale or plot target locale, normalizing underscores to hyphens.
 
     Args:
-        explicit_locale (str | None): Defaults to None. Locale string like "de", "en-US" or similar. Will be returned instead of what is inferred from plot_target_settings if provided
+        explicit_locale:
+            Override locale, e.g. "de_DE". None or "" uses the plot target setting.
 
     Returns:
-        str | None:
-            Extracted locale (like "de_DE")
+        str | None: Locale such as "de-DE", or None if no locale is configured.
 
     Code example:
 
@@ -23,7 +20,6 @@ def get_locale(explicit_locale: str | None = None) -> str | None:
 
         >>> print(get_locale())         # returns locale from plot target settings of execution or None
         None
-
     """  # noqa: E501
     if explicit_locale:
         return explicit_locale.replace("_", "-")

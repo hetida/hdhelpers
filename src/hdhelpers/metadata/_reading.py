@@ -54,20 +54,31 @@ _MISSING = object()
 
 @dataclass(frozen=True)
 class Recording:
-    """How the values of a metric are recorded, as given in its metadata
+    """Immutable recording settings for a metric: mode, frequency and interval alignment.
 
-    The fields mean the following:
+    Metadata lookups use dataset frequency settings when the metric provides none.
+    Recording modes describe when values are recorded:
+
+    * ``periodic``: one value per interval, timestamped at its start. Missing values are gaps.
+    * ``on_change``: record changes exceeding the value dimension's deadband. A value holds
+      until the next one, provided the heartbeat interval is not exceeded.
+    * ``irregular``: values at arbitrary points in time.
 
     Attributes:
-        recording_mode (str | None): "periodic": one value per interval of data_frequency, timestamped with the start of the interval. A missing value is a gap. "on_change": a value is recorded when it changes by more than the deadband of its value dimension and holds until the next one. Missing timestamps are no gaps. "irregular": values at arbitrary points in time. None if unknown.
-        data_frequency (str | None): Frequency as Pandas date offset alias or timedelta string, e.g. "15min", "1D" or "1MS". For "on_change", the interval after which the value is recorded again at the latest, also without a change (heartbeat).
-        data_frequency_offset (str | None): Timedelta string by which the intervals of data_frequency are shifted, e.g. "5min". None means 0.
-        data_frequency_timezone (str | None): Time zone the intervals of data_frequency are aligned to, e.g. "Europe/Berlin". None means UTC.
-        recording_aggregation_method (str | None): Only for "periodic": the method each value aggregates its interval with, e.g. "MEAN" or "MAX". None if the values are samples, e.g. the value holding at the timestamp.
+        recording_mode (str | None): One of the modes above; None if unknown.
+        data_frequency (str | None): Pandas offset alias or timedelta string, e.g. "15min"
+            or "1MS". For on_change, the maximum time between recordings (heartbeat),
+            even without a change. None if unknown.
+        data_frequency_offset (str | None): Shift of the frequency intervals as a timedelta
+            string, e.g. "5min". None means zero when a frequency is set.
+        data_frequency_timezone (str | None): Time zone for aligning frequency intervals,
+            e.g. "Europe/Berlin". None means UTC when a frequency is set.
+        recording_aggregation_method (str | None): For periodic values, how each interval
+            is aggregated, e.g. "MEAN" or "MAX". None for samples taken at the timestamp.
 
     data_frequency_offset and data_frequency_timezone belong to data_frequency: They are None
     if no data_frequency applies.
-    """  # noqa: E501
+    """
 
     recording_mode: str | None = None
     data_frequency: str | None = None

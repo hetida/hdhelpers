@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>hdhelpers.exceptions &#8212; hdhelpers - documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/classic.css?v=14e077c0" />
+    <link rel="stylesheet" type="text/css" href="../../_static/stylesheet.css?v=55595bb5" />
+
+    <script src="../../_static/documentation_options.js?v=b1628c55"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+
+    <link rel="icon" href="../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">hdhelpers - documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">hdhelpers.exceptions</a></li>
+      </ul>
+    </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+
+  <h1>Source code for hdhelpers.exceptions</h1><div class="highlight"><pre>
+<span></span><span class="linenos"> 1</span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span>
+<div class="viewcode-block" id="HelperException">
+<a class="viewcode-back" href="../../index.html#hdhelpers.exceptions.HelperException">[docs]</a>
+<span class="linenos"> 4</span><span class="k">class</span><span class="w"> </span><span class="nc">HelperException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="linenos"> 5</span><span class="w">    </span><span class="sd">"""Exception for reporting errors to hetida designer.</span>
+<span class="linenos"> 6</span>
+<span class="linenos"> 7</span><span class="sd">    Attributes:</span>
+<span class="linenos"> 8</span><span class="sd">        error_code (int | str): Error identifier; an empty string if unspecified.</span>
+<span class="linenos"> 9</span><span class="sd">        extra_information (dict | None): Optional details for the error handler.</span>
+<span class="linenos">10</span><span class="sd">    """</span>
+<span class="linenos">11</span>
+<span class="linenos">12</span>    <span class="n">__is_hetida_designer_exception__</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="linenos">13</span>
+<span class="linenos">14</span>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+<span class="linenos">15</span>        <span class="bp">self</span><span class="p">,</span>
+<span class="linenos">16</span>        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="linenos">17</span>        <span class="n">error_code</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+<span class="linenos">18</span>        <span class="n">extra_information</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="linenos">19</span>        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="linenos">20</span>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">21</span>        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">error_code</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">):</span>
+<span class="linenos">22</span>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The HelperException.error_code must be int or string!"</span><span class="p">)</span>
+<span class="linenos">23</span>        <span class="bp">self</span><span class="o">.</span><span class="n">error_code</span> <span class="o">=</span> <span class="n">error_code</span>
+<span class="linenos">24</span>        <span class="bp">self</span><span class="o">.</span><span class="n">extra_information</span> <span class="o">=</span> <span class="n">extra_information</span>
+<span class="linenos">25</span>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<span class="linenos">26</span>
+<span class="linenos">27</span>
+<div class="viewcode-block" id="InsufficientPlottingData">
+<a class="viewcode-back" href="../../index.html#hdhelpers.exceptions.InsufficientPlottingData">[docs]</a>
+<span class="linenos">28</span><span class="k">class</span><span class="w"> </span><span class="nc">InsufficientPlottingData</span><span class="p">(</span><span class="n">HelperException</span><span class="p">):</span>
+<span class="linenos">29</span><span class="w">    </span><span class="sd">"""Raised when a plot component has insufficient data to produce a meaningful plot.</span>
+<span class="linenos">30</span>
+<span class="linenos">31</span><span class="sd">    Frontends can handle this by displaying a message instead of an empty plot.</span>
+<span class="linenos">32</span><span class="sd">    """</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">hdhelpers - documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">hdhelpers.exceptions</a></li>
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2026, Steffen Wittkamp, Jenny Kupzig.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+    </div>
+  </body>
+</html>

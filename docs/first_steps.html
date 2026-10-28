@@ -7,16 +7,18 @@
 
     <title>First steps &#8212; hdhelpers - documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
-    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=2bf1fcf8" />
-    <link rel="stylesheet" type="text/css" href="_static/stylesheet.css?v=9d93a8a4" />
-    
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=14e077c0" />
+    <link rel="stylesheet" type="text/css" href="_static/stylesheet.css?v=55595bb5" />
+
     <script src="_static/documentation_options.js?v=b1628c55"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-    
+
+    <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="hdhelpers" href="index.html" /> 
+    <link rel="next" title="Metadata examples" href="metadata_examples.html" />
+    <link rel="prev" title="Installation" href="installation.html" />
   </head><body>
     <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
@@ -28,20 +30,25 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="index.html" title="hdhelpers"
+          <a href="metadata_examples.html" title="Metadata examples"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="Installation"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">hdhelpers - documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">First steps</a></li> 
+        <li class="nav-item nav-item-this"><a href="">First steps</a></li>
       </ul>
-    </div>  
+    </div>
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body" role="main">
-            
+
   <section id="first-steps">
 <h1>First steps<a class="headerlink" href="#first-steps" title="Link to this heading">¶</a></h1>
+<p>See <a class="reference internal" href="metadata_examples.html#metadata-example-data"><span class="std std-ref">Shared data setup</span></a> for sample pandas inputs and examples of the
+related getters.</p>
 <section id="how-to-get-metadata-with-hdhelpers">
 <h2>How to get metadata with hdhelpers?<a class="headerlink" href="#how-to-get-metadata-with-hdhelpers" title="Link to this heading">¶</a></h2>
 <p>Let’s say we want to retrieve the metadata of a timeseries, which follows the
@@ -133,7 +140,7 @@ all unchanged parts, and set it on your result:</p>
     <span class="c1"># entrypoint function for this component</span>
     <span class="c1"># ***** DO NOT EDIT LINES ABOVE *****</span>
 
-    <span class="n">result</span> <span class="o">=</span> <span class="n">series</span> <span class="o">*</span> <span class="mi">100</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">series</span> <span class="o">/</span> <span class="mi">100</span>
     <span class="n">meta</span> <span class="o">=</span> <span class="n">read_metadata</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">set_metadata</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">meta</span><span class="o">.</span><span class="n">with_value_dimension</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"m"</span><span class="p">))</span>
 
@@ -212,11 +219,15 @@ allow additional fields at every level):</p>
 </div>
 <p>For a MULTITSFRAME, <code class="docutils literal notranslate"><span class="pre">get_metric_info(multitsframe,</span> <span class="pre">&quot;sensor.manufacturer&quot;)</span></code> provides the
 manufacturer keyed by metric accordingly.</p>
-<p>The fallbacks described above apply to the whole path, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;sensor.manufacturer&quot;</span></code> is looked
-up in the metric first, then in its value dimension <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code> and so on. A path which is not
-present yields None instead of an error. Paths cannot address list items or keys which contain
-dots themselves. Such information, e.g. the comments of a metric, is available via the models:
-<code class="docutils literal notranslate"><span class="pre">read_metadata(series).metric().comments</span></code>.</p>
+<p>The fallbacks described above apply to the whole path. <code class="docutils literal notranslate"><span class="pre">get_series_info</span></code> and
+<code class="docutils literal notranslate"><span class="pre">get_singlets_info</span></code> search the value dimension first, then the metric (only for
+<code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code>), then shared metadata. <code class="docutils literal notranslate"><span class="pre">get_metric_info</span></code> and <code class="docutils literal notranslate"><span class="pre">get_singlets_metric_info</span></code>
+search the metric first, then its <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code> dimension, then shared <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code> metadata.
+Each lookup can use inherited properties as a final fallback when enabled.</p>
+<p>A missing path yields None. An explicit path such as <code class="docutils literal notranslate"><span class="pre">&quot;inherited.latitude&quot;</span></code> accesses
+that property directly, even with <code class="docutils literal notranslate"><span class="pre">include_inherited=False</span></code>. Paths cannot address list
+items or keys containing dots. Access those through the models, e.g.
+<code class="docutils literal notranslate"><span class="pre">read_metadata(series,</span> <span class="pre">required=True).metric().comments</span></code>; see <a class="reference internal" href="metadata_models.html"><span class="doc">Metadata model reference</span></a>.</p>
 </section>
 <section id="which-time-zone-to-compute-in">
 <h2>Which time zone to compute in?<a class="headerlink" href="#which-time-zone-to-compute-in" title="Link to this heading">¶</a></h2>
@@ -327,13 +338,13 @@ For example, we want to:
   <div>
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
-<li><a class="reference internal" href="#">First steps</a><ul>
-<li><a class="reference internal" href="#how-to-get-metadata-with-hdhelpers">How to get metadata with hdhelpers?</a></li>
-<li><a class="reference internal" href="#metadata-as-model">Metadata as model</a></li>
-<li><a class="reference internal" href="#where-does-the-information-come-from">Where does the information come from?</a></li>
-<li><a class="reference internal" href="#how-to-query-nested-information">How to query nested information?</a></li>
-<li><a class="reference internal" href="#which-time-zone-to-compute-in">Which time zone to compute in?</a></li>
-<li><a class="reference internal" href="#how-to-use-hdhelpers-for-plotting-tbd">How to use hdhelpers for plotting? (tbd)</a></li>
+<li><a class="reference internal" href="#" title="First steps">First steps</a><ul>
+<li><a class="reference internal" href="#how-to-get-metadata-with-hdhelpers" title="How to get metadata with hdhelpers?">How to get metadata with hdhelpers?</a></li>
+<li><a class="reference internal" href="#metadata-as-model" title="Metadata as model">Metadata as model</a></li>
+<li><a class="reference internal" href="#where-does-the-information-come-from" title="Where does the information come from?">Where does the information come from?</a></li>
+<li><a class="reference internal" href="#how-to-query-nested-information" title="How to query nested information?">How to query nested information?</a></li>
+<li><a class="reference internal" href="#which-time-zone-to-compute-in" title="Which time zone to compute in?">Which time zone to compute in?</a></li>
+<li><a class="reference internal" href="#how-to-use-hdhelpers-for-plotting-tbd" title="How to use hdhelpers for plotting? (tbd)">How to use hdhelpers for plotting? (tbd)</a></li>
 </ul>
 </li>
 </ul>
@@ -341,8 +352,13 @@ For example, we want to:
   </div>
   <div>
     <h4>Previous topic</h4>
-    <p class="topless"><a href="index.html"
-                          title="previous chapter">hdhelpers</a></p>
+    <p class="topless"><a href="installation.html"
+                          title="previous chapter">Installation</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="metadata_examples.html"
+                          title="next chapter">Metadata examples</a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
@@ -375,10 +391,13 @@ For example, we want to:
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="index.html" title="hdhelpers"
+          <a href="metadata_examples.html" title="Metadata examples"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="Installation"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">hdhelpers - documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">First steps</a></li> 
+        <li class="nav-item nav-item-this"><a href="">First steps</a></li>
       </ul>
     </div>
     <div class="footer" role="contentinfo">

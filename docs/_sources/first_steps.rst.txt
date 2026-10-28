@@ -2,6 +2,9 @@
 First steps
 #######################
 
+See :ref:`metadata-example-data` for sample pandas inputs and examples of the
+related getters.
+
 How to get metadata with hdhelpers?
 ===================================
 
@@ -107,7 +110,7 @@ all unchanged parts, and set it on your result:
         # entrypoint function for this component
         # ***** DO NOT EDIT LINES ABOVE *****
 
-        result = series * 100
+        result = series / 100
         meta = read_metadata(series, required=True)
         set_metadata(result, meta.with_value_dimension(None, "value", unit="m"))
 
@@ -196,11 +199,16 @@ We can retrieve the nested information with the following code
 For a MULTITSFRAME, ``get_metric_info(multitsframe, "sensor.manufacturer")`` provides the
 manufacturer keyed by metric accordingly.
 
-The fallbacks described above apply to the whole path, e.g. ``"sensor.manufacturer"`` is looked
-up in the metric first, then in its value dimension ``"value"`` and so on. A path which is not
-present yields None instead of an error. Paths cannot address list items or keys which contain
-dots themselves. Such information, e.g. the comments of a metric, is available via the models:
-``read_metadata(series).metric().comments``.
+The fallbacks described above apply to the whole path. ``get_series_info`` and
+``get_singlets_info`` search the value dimension first, then the metric (only for
+``"value"``), then shared metadata. ``get_metric_info`` and ``get_singlets_metric_info``
+search the metric first, then its ``"value"`` dimension, then shared ``"value"`` metadata.
+Each lookup can use inherited properties as a final fallback when enabled.
+
+A missing path yields None. An explicit path such as ``"inherited.latitude"`` accesses
+that property directly, even with ``include_inherited=False``. Paths cannot address list
+items or keys containing dots. Access those through the models, e.g.
+``read_metadata(series, required=True).metric().comments``; see :doc:`metadata_models`.
 
 Which time zone to compute in?
 ==============================
