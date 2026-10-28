@@ -1,7 +1,7 @@
 {
   "$defs": {
     "AggregationMethod": {
-      "description": "How a timeseries should be aggregated by default, e.g. in coarser intervals\n\nAVG is an alias of MEAN.",
+      "description": "Method for aggregating timeseries values into coarser intervals.\n\nMetadata lookups normalize AVG to MEAN; they are distinct enum values.",
       "enum": [
         "MEAN",
         "AVG",
@@ -18,7 +18,7 @@
     },
     "InheritedMetricMetadata": {
       "additionalProperties": true,
-      "description": "Properties a metric inherits from objects higher up in a hierarchy\n\nArbitrary fields, e.g. the latitude of the plant a sensor belongs to. Typically the deepest\noccurrence in the hierarchy wins. Should not contain the fields the conventions define for\nmetrics and value dimensions, like \"name\", \"id\" or \"unit\": Consumers only use inherited\nproperties as last resort and not for information describing the metric itself, like its\nunit or names.\n\nThe values should have the JSON type matching their meaning: numbers as numbers, booleans as\nbooleans and points in time as UTC isoformat strings, not e.g. a number as string.\n\nE.g. the hetida platform provides the effective property values of a signal here, keyed by\nproperty label: its own values, otherwise the value of the nearest asset above it having one.",
+      "description": "Properties supplied by a source system for a metric and its parent assets.\n\nStores already-resolved values, e.g. a plant's latitude; the source system resolves the\nhierarchy. Metadata lookups use these properties as fallbacks only with\n``include_inherited=True``. Convention-defined fields such as name, id and unit belong in\nthe metric or value-dimension metadata.\n\nUse JSON types matching each value's meaning: numbers, booleans and UTC ISO timestamp\nstrings for points in time. For example, hetida platform supplies properties by label,\nusing a signal's own value or that of the nearest parent asset providing one.",
       "properties": {},
       "title": "InheritedMetricMetadata",
       "type": "object"
@@ -832,7 +832,7 @@
     },
     "MultiTSFrameMetadata": {
       "additionalProperties": true,
-      "description": "hetida designer metadata conventions for a MULTITSFRAME\n\nStructure of the metadata in the attrs attribute of a MULTITSFRAME during execution, which\nis also exchanged with adapters, e.g. via the Data-Attributes header of the generic REST\nadapter multitsframe endpoint or via the __metadata__ field of the wrapped format of the\ndirect provisioning adapter.\n\nThe fields that are not required are optional. Additional fields are allowed at every level.\nTimestamps are UTC isoformat strings with explicit offset (Z or +00:00).",
+      "description": "Immutable metadata for a MULTITSFRAME: multiple metrics identified by a metric column.\n\nEach metric can have several value dimensions; a MULTITSFRAME may also hold one metric.\nRead from a pandas DataFrame with read_metadata. See the module documentation for storage,\nadapter exchange and common field rules.",
       "examples": [
         {
           "dataset_metadata": {
@@ -928,7 +928,7 @@
     },
     "SeriesMetadata": {
       "additionalProperties": true,
-      "description": "hetida designer metadata conventions for a SERIES\n\nStructure of the metadata in the attrs attribute of a SERIES during execution, which is also\nexchanged with adapters, e.g. via the Data-Attributes header of the generic REST adapter\ntimeseries endpoint (for each timeseries) or via the __metadata__ field of the wrapped format\nof the direct provisioning adapter.\n\nThe fields that are not required are optional. Additional fields are allowed at every level.\nTimestamps are UTC isoformat strings with explicit offset (Z or +00:00).",
+      "description": "Immutable metadata for a SERIES: one metric with a single \"value\" dimension.\n\nRead from a pandas Series with read_metadata. See the module documentation for storage,\nadapter exchange and common field rules.",
       "examples": [
         {
           "dataset_metadata": {
@@ -1008,7 +1008,7 @@
     },
     "SharedValueDimensionMetadata": {
       "additionalProperties": true,
-      "description": "Metadata of a value dimension shared by all metrics\n\nEvery column of a MULTITSFRAME besides \"timestamp\" and \"metric\" and every column of a\nSINGLETSFRAME besides \"timestamp\" defines a value dimension for each metric. A SERIES has\nexactly one value dimension, which is \"value\".",
+      "description": "Default metadata for a value column shared across metrics.\n\nMatched by column name (\"value\" for a SERIES) and used when the corresponding field\nis missing from metric-specific metadata.",
       "properties": {
         "column": {
           "description": "The actual column name in the MULTITSFRAME or SINGLETSFRAME, connecting the value dimension to its column. \"value\" for a SERIES.",
@@ -1505,7 +1505,7 @@
     },
     "SingleTSFrameMetadata": {
       "additionalProperties": true,
-      "description": "hetida designer metadata conventions for a SINGLETSFRAME\n\nStructure of the metadata in the attrs attribute of a SINGLETSFRAME during execution, which\nis also exchanged with adapters, e.g. via the Data-Attributes header of the generic REST\nadapter singletsframe endpoint or via the __metadata__ field of the wrapped format of the\ndirect provisioning adapter.\n\nThe fields that are not required are optional. Additional fields are allowed at every level.\nTimestamps are UTC isoformat strings with explicit offset (Z or +00:00).",
+      "description": "Immutable metadata for a SINGLETSFRAME: one metric with one or more value columns.\n\nRead from a pandas DataFrame with read_metadata. See the module documentation for storage,\nadapter exchange and common field rules.",
       "examples": [
         {
           "dataset_metadata": {
@@ -1591,7 +1591,7 @@
     },
     "ValueDimensionMetadata": {
       "additionalProperties": true,
-      "description": "Metadata of a value dimension of a metric\n\nEvery column of a MULTITSFRAME besides \"timestamp\" and \"metric\" and every column of a\nSINGLETSFRAME besides \"timestamp\" defines a value dimension for each metric. A SERIES has\nexactly one value dimension, which is \"value\". Each metric provides an entry for each of its\nvalue dimensions.",
+      "description": "Metadata for one metric's value column, such as its unit and measured quantity.\n\nEach metric describes its value columns; a SERIES uses \"value\". Non-null fields take\nprecedence over shared metadata for the same column. Unit and measurement are required\nfields, but may be None if unknown.",
       "properties": {
         "column": {
           "description": "The actual column name in the MULTITSFRAME or SINGLETSFRAME, connecting the value dimension to its column. \"value\" for a SERIES.",

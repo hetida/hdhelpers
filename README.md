@@ -73,6 +73,34 @@ writing component code.
 ### Code Quality
 Once you are done writing your code, including unit tests, use `./run check` to see if your code quality is sufficient.
 
+#### Metadata schema snapshot
+`tests/metadata/test_conventions_schema.py` compares the generated metadata JSON schemas with
+`tests/data/convention_schemas.json`. Class docstrings become schema descriptions, so documentation
+changes can also require a snapshot update.
+
+After an intentional schema change, regenerate the snapshot in Bash/WSL:
+
+```bash
+UPDATE_SCHEMA_SNAPSHOT=1 uv run pytest tests/metadata/test_conventions_schema.py -q
+```
+
+Or in PowerShell:
+
+```powershell
+$env:UPDATE_SCHEMA_SNAPSHOT = "1"
+uv run pytest tests/metadata/test_conventions_schema.py -q
+Remove-Item Env:UPDATE_SCHEMA_SNAPSHOT
+```
+
+Review the diff for unintended changes and rerun the test without the update flag:
+
+```bash
+git diff -- tests/data/convention_schemas.json
+uv run pytest tests/metadata/test_conventions_schema.py -q
+```
+
+Commit the updated snapshot together with the corresponding model or docstring changes.
+
 ### Documentation
 For documentation we use the tool sphinx. Please apply `./run build_docs` to create the current state of documentation. It will be stored in **docs**. You can open the documentation by opening `docs/index.html`, e.g. with your browser.
 
