@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from hdhelpers.plotting.timestamp_ticks import TICKFORMATSTOPS, set_dt_ticks
 
 # do not edit line of __version__ as it is automatically modified by running ./run build_package
-__version__ = "0.0.10"
+__version__ = "0.1.0"
 
 # The plotting helpers need plotly, which comes with the optional extra hdhelpers[plotting]. They
 # are imported on first access, so that everything else works without plotly.

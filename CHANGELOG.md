@@ -1,11 +1,11 @@
-## [Unreleased]
-
-- Add validated, immutable metadata models with helpers to read, attach, update, and serialize them. Pandas operations share attached models instead of repeatedly copying metadata.
+## [0.1.0] - 2026-10-28
+- Expand documentation with installation instructions, a metadata model reference, shared examples, and clearer API descriptions
+- Add validated, immutable metadata models with helpers to read, attach, update, and serialize them. Pandas operations share attached models instead of repeatedly copying metadata. Attached models are stored under attrs["hd_metadata"]; use attrs_to_json before JSON export.
 - Improve metadata lookups with consistent fallbacks for missing values, display names, and inherited properties (`include_inherited=True` for dedicated unit/name helpers).
 - Add helpers for default time zones, recording information, default aggregation methods, and copying pandas objects without metadata (`copy_without_metadata`).
-- **Breaking:** Only the current metadata conventions are supported. Invalid metadata returns no information. Legacy formats and arbitrary glom specs are removed; queries accept field names and dotted paths.
-- Make Plotly optional: install `hdhelpers[plotting]` for plotting helpers. Core metadata and time zone functionality works without it.
-- Add Python 3.15 support and update Python/tooling requirements to address the CA certificate security issue.
+- **Breaking:** Only the current metadata conventions are supported. Metadata getters ignore invalid metadata and use their documented defaults. Legacy formats and arbitrary glom specs are removed; queries accept field names and dotted paths.
+- **Breaking:** Make Plotly optional: install `hdhelpers[plotting]` for plotting helpers. Core metadata and time zone functionality works without it.
+- Add Python 3.15 support and update development dependencies and test tooling to address the CA certificate issue.
 - Expand validation and regression tests, correct lint configuration, and add CI checks of actual installations without Plotly.
 
 ## [0.0.9] - 2026-09-10
