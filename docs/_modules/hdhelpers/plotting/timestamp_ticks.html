@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>hdhelpers.plotting.timestamp_ticks &#8212; hdhelpers - documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/classic.css?v=14e077c0" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/stylesheet.css?v=55595bb5" />
+
+    <script src="../../../_static/documentation_options.js?v=b1628c55"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+
+    <link rel="icon" href="../../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">hdhelpers - documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">hdhelpers.plotting.timestamp_ticks</a></li>
+      </ul>
+    </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+
+  <h1>Source code for hdhelpers.plotting.timestamp_ticks</h1><div class="highlight"><pre>
+<span></span><span class="linenos"> 1</span><span class="sd">"""Language agnostic multi-zoom-level x axis time range ticks for plotly</span>
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span><span class="sd">Usage:</span>
+<span class="linenos"> 4</span>
+<span class="linenos"> 5</span><span class="sd">    fig.update_xaxes(</span>
+<span class="linenos"> 6</span><span class="sd">        tickformatstops=TICKFORMATSTOPS</span>
+<span class="linenos"> 7</span><span class="sd">    )</span>
+<span class="linenos"> 8</span><span class="sd">"""</span>
+<span class="linenos"> 9</span>
+<span class="linenos">10</span><span class="kn">import</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">go</span>
+<span class="linenos">11</span>
+<span class="linenos">12</span><span class="n">TICKFORMATSTOPS</span> <span class="o">=</span> <span class="p">[</span>
+<span class="linenos">13</span>    <span class="c1"># language agnostic, isoformat inspired, plotl x axis timestamp formatting</span>
+<span class="linenos">14</span>    <span class="c1"># defined for multiple zoom levels</span>
+<span class="linenos">15</span>    <span class="c1"># always showing a tick with the current day somewhere for reference</span>
+<span class="linenos">16</span>    <span class="p">{</span><span class="s2">"dtickrange"</span><span class="p">:</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="mi">1000</span><span class="p">],</span> <span class="s2">"value"</span><span class="p">:</span> <span class="s2">"%H:%M:%S.%L</span><span class="se">\n</span><span class="s2">%Y-%m-</span><span class="si">%d</span><span class="s2">"</span><span class="p">},</span>
+<span class="linenos">17</span>    <span class="p">{</span><span class="s2">"dtickrange"</span><span class="p">:</span> <span class="p">[</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">60000</span><span class="p">],</span> <span class="s2">"value"</span><span class="p">:</span> <span class="s2">"%H:%M:%S</span><span class="se">\n</span><span class="s2">%Y-%m-</span><span class="si">%d</span><span class="s2">"</span><span class="p">},</span>
+<span class="linenos">18</span>    <span class="p">{</span><span class="s2">"dtickrange"</span><span class="p">:</span> <span class="p">[</span><span class="mi">60000</span><span class="p">,</span> <span class="mi">3600000</span><span class="p">],</span> <span class="s2">"value"</span><span class="p">:</span> <span class="s2">"%H:%M</span><span class="se">\n</span><span class="s2">%Y-%m-</span><span class="si">%d</span><span class="s2">"</span><span class="p">},</span>
+<span class="linenos">19</span>    <span class="p">{</span><span class="s2">"dtickrange"</span><span class="p">:</span> <span class="p">[</span><span class="mi">3600000</span><span class="p">,</span> <span class="mi">86400000</span><span class="p">],</span> <span class="s2">"value"</span><span class="p">:</span> <span class="s2">"%H:%M</span><span class="se">\n</span><span class="s2">%Y-%m-</span><span class="si">%d</span><span class="s2">"</span><span class="p">},</span>
+<span class="linenos">20</span>    <span class="p">{</span><span class="s2">"dtickrange"</span><span class="p">:</span> <span class="p">[</span><span class="mi">86400000</span><span class="p">,</span> <span class="mi">604800000</span><span class="p">],</span> <span class="s2">"value"</span><span class="p">:</span> <span class="s2">"%H:%M</span><span class="se">\n</span><span class="s2">%Y-%m-</span><span class="si">%d</span><span class="s2">"</span><span class="p">},</span>
+<span class="linenos">21</span>    <span class="p">{</span><span class="s2">"dtickrange"</span><span class="p">:</span> <span class="p">[</span><span class="mi">604800000</span><span class="p">,</span> <span class="s2">"M1"</span><span class="p">],</span> <span class="s2">"value"</span><span class="p">:</span> <span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2">"</span><span class="p">},</span>
+<span class="linenos">22</span>    <span class="p">{</span><span class="s2">"dtickrange"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"M1"</span><span class="p">,</span> <span class="s2">"M12"</span><span class="p">],</span> <span class="s2">"value"</span><span class="p">:</span> <span class="s2">"%Y-%m"</span><span class="p">},</span>
+<span class="linenos">23</span>    <span class="p">{</span><span class="s2">"dtickrange"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"M12"</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span> <span class="s2">"value"</span><span class="p">:</span> <span class="s2">"%Y"</span><span class="p">},</span>
+<span class="linenos">24</span><span class="p">]</span>
+<span class="linenos">25</span>
+<span class="linenos">26</span>
+<div class="viewcode-block" id="set_dt_ticks">
+<a class="viewcode-back" href="../../../index.html#hdhelpers.plotting.set_dt_ticks">[docs]</a>
+<span class="linenos">27</span><span class="k">def</span><span class="w"> </span><span class="nf">set_dt_ticks</span><span class="p">(</span><span class="n">fig</span><span class="p">:</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">28</span><span class="w">    </span><span class="sd">"""Set zoom-dependent, locale-independent date/time labels on all x axes.</span>
+<span class="linenos">29</span>
+<span class="linenos">30</span><span class="sd">    Update tickformatstops; timestamps and time zones are unchanged.</span>
+<span class="linenos">31</span>
+<span class="linenos">32</span><span class="sd">    Args:</span>
+<span class="linenos">33</span><span class="sd">        fig: Figure to format.</span>
+<span class="linenos">34</span>
+<span class="linenos">35</span><span class="sd">    Returns:</span>
+<span class="linenos">36</span><span class="sd">        None: The supplied figure is updated in place.</span>
+<span class="linenos">37</span>
+<span class="linenos">38</span><span class="sd">    Code example:</span>
+<span class="linenos">39</span>
+<span class="linenos">40</span><span class="sd">    .. doctest::</span>
+<span class="linenos">41</span>
+<span class="linenos">42</span><span class="sd">        &gt;&gt;&gt; import plotly.graph_objects as go</span>
+<span class="linenos">43</span><span class="sd">        &gt;&gt;&gt; fig = go.Figure(data=go.Scatter(x=["2024-01-01", "2024-01-02"], y=[1, 4]))</span>
+<span class="linenos">44</span><span class="sd">        &gt;&gt;&gt; set_dt_ticks(fig)</span>
+<span class="linenos">45</span><span class="sd">    """</span>
+<span class="linenos">46</span>    <span class="n">fig</span><span class="o">.</span><span class="n">update_xaxes</span><span class="p">(</span><span class="n">tickformatstops</span><span class="o">=</span><span class="n">TICKFORMATSTOPS</span><span class="p">)</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">hdhelpers - documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">hdhelpers.plotting.timestamp_ticks</a></li>
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2026, Steffen Wittkamp, Jenny Kupzig.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+    </div>
+  </body>
+</html>

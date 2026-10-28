@@ -1,1417 +1,885 @@
-"""Helper functions for metadata extraction
+"""Functions accessing the metadata of SERIES, SINGLETSFRAMEs and MULTITSFRAMEs
 
-This module provides functions to help extracting information from metadata
-provided as .attrs with pandas DataFrame / Series objects following the hetida
-designer metadata conventions.
+The functions are thin wrappers over the methods of the models of the metadata conventions,
+see read_metadata. The methods resolve the fallbacks of the conventions, e.g. a missing display
+name falls back to the name, see hdhelpers.metadata._reading.
 
-They properly cascade defaults / fallbacks
-and try to provide backwards compatible access to metadata for different versions
-of the metadata conventions or simpler metadata structures.
+The metadata is the model attached to the object (see attach_metadata), whatever data type it
+belongs to, e.g. the metadata of a SINGLETSFRAME on a Series taken from it. Otherwise the
+metadata in attrs is parsed as the data type of the function. Metadata which does not follow
+the conventions gives no information: None or empty defaultdicts. For a SERIES or SINGLETSFRAME,
+the single metric is the one named by dataset_metadata.single_metric, otherwise the only one.
+
+Fields of the functions taking one can be dotted paths, e.g. "inherited.site".
 """
 
 import datetime
 from collections import defaultdict
-from typing import Any, cast
+from collections.abc import Callable
+from typing import Any
 
 import pandas as pd
-from glom import Coalesce, Spec, glom
 
-import hdhelpers.metadata._specs as _specs
-from hdhelpers.metadata._helpers import (
-    check_dataframe,
-    check_series,
-    check_series_or_dataframe,
-    default_timezone_by_metric,
-    extract_from_metadata,
-    get_value_dimension_info,
-    metric_info_by_metric,
-    series_value_info,
-    single_metric_default_timezone,
-    singlets_metric_info,
-    singlets_value_dimension_info,
-    singlets_value_dimension_info_with_fallbacks,
-    spec_not_none,
-    value_dimension_info_with_fallbacks,
-)
-from hdhelpers.metadata._recording import (
+from hdhelpers.metadata._reading import (
+    DISPLAY_NAME_FIELDS,
+    SHORT_DISPLAY_NAME_FIELDS,
     Recording,
-    default_aggregation_method_by_metric,
-    recording_by_metric,
-    single_metric_default_aggregation_method,
-    single_metric_recording,
+    dataset_default_timezone,
+    dataset_recording,
 )
+from hdhelpers.metadata.attached import META_KEY, AnyMetadata, infer_data_type, read_metadata
+from hdhelpers.metadata.conventions import TimeseriesDataType, _TimeseriesMetadataBase
+
+_DEFAULT_AGGREGATION_METHOD = "MEAN"
+
+
+def check_dataframe(data: pd.DataFrame) -> None:
+    if not isinstance(data, pd.DataFrame):
+        raise TypeError("Input is not a pd.DataFrame")
+
+
+def check_series(series: pd.Series) -> None:
+    if not isinstance(series, pd.Series):
+        raise TypeError("Input is not a pd.Series.")
+
+
+def check_series_or_dataframe(data: pd.Series | pd.DataFrame) -> None:
+    if not isinstance(data, pd.Series) and not isinstance(data, pd.DataFrame):
+        raise TypeError("Input is not a pd.Series or pd.DataFrame.")
+
+
+def _metadata(data: pd.Series | pd.DataFrame, data_type: TimeseriesDataType) -> AnyMetadata | None:
+    """The attached metadata of any data type, otherwise the attrs parsed as data_type"""
+    attached = data.attrs.get(META_KEY)
+    if isinstance(attached, _TimeseriesMetadataBase):
+        return attached  # type: ignore[return-value]
+    return read_metadata(data, data_type)
+
+
+def _single_metric(meta: AnyMetadata | None) -> str | None:
+    """The single metric: dataset_metadata.single_metric if described, otherwise the only one"""
+    if meta is None:
+        return None
+    metric_ids = meta.metric_ids()
+    single_metric = meta.dataset_metadata.single_metric
+    if single_metric is not None:
+        return single_metric if single_metric in metric_ids else None
+    return metric_ids[0] if len(metric_ids) == 1 else None
+
+
+def _by_metric_by_column(
+    data: pd.DataFrame, fields: str | tuple[str, ...], include_inherited: bool
+) -> defaultdict[str, defaultdict[str, Any]]:
+    check_dataframe(data)
+    meta = _metadata(data, "MULTITSFRAME")
+    infos = (
+        {}
+        if meta is None
+        else meta.value_dimension_infos(fields, include_inherited=include_inherited)
+    )
+    return defaultdict(
+        lambda: defaultdict(lambda: None),
+        {metric: defaultdict(lambda: None, info) for metric, info in infos.items()},
+    )
+
+
+def _single_metric_by_column(
+    data: pd.DataFrame, fields: str | tuple[str, ...], include_inherited: bool
+) -> defaultdict[str, Any]:
+    check_dataframe(data)
+    meta = _metadata(data, "SINGLETSFRAME")
+    metric = _single_metric(meta)
+    if meta is None or metric is None:
+        return defaultdict(lambda: None)
+    return defaultdict(
+        lambda: None,
+        meta.value_dimension_infos(fields, include_inherited=include_inherited)[metric],
+    )
+
+
+def _series_value(series: pd.Series, fields: str | tuple[str, ...], include_inherited: bool) -> Any:
+    check_series(series)
+    meta = _metadata(series, "SERIES")
+    metric = _single_metric(meta)
+    if meta is None or metric is None:
+        return None
+    return meta.value_dimension_info(fields, metric, "value", include_inherited=include_inherited)
+
+
+def _single_metric_or_dataset(
+    data: pd.Series | pd.DataFrame,
+    data_type: TimeseriesDataType,
+    of_metric: Callable[[AnyMetadata, str], Any],
+    of_dataset: Callable[[AnyMetadata], Any],
+    empty: Any,
+) -> Any:
+    """Information of the single metric, of the dataset metadata if the metric is not found"""
+    meta = _metadata(data, data_type)
+    if meta is None:
+        return empty
+    metric = _single_metric(meta)
+    return of_dataset(meta) if metric is None else of_metric(meta, metric)
+
+
+# value dimensions of MULTITSFRAMEs
 
 
 def get_units(
     multitsframe: pd.DataFrame, *, include_inherited: bool = False
 ) -> defaultdict[str, defaultdict[str, str | None]]:
-    """Gets unit of value dimensions in MTSF metrics from Metadata
+    """Read units for each metric and value column.
 
     Args:
-        multitsframe (pd.DataFrame): MTSF with metadata following the convention.
-        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata) as last resort, i.e. if neither the value dimension, the metric nor "value_dimensions_shared" provide the information. Defaults to False, since this information should be provided for the metric itself.
+        multitsframe: DataFrame with per-metric metadata in attrs.
+        include_inherited: Use inherited fields last, only for the "value" column.
 
     Returns:
-        dict[str, dict[str | None] | None]: Dictionary of metrics containing the names of the value dimensions.
-        If the short display name of the value_dimension is not present it returns the result of get_value_dimension_info().
-
-    Raises:
-        TypeError: If `multitsframe` is not a DataFrame.
+        defaultdict[str, defaultdict[str, str | None]]:
+            Units as result[metric_id][column]; unavailable units are None.
 
     Code example:
 
     .. doctest:: metadata.get_units
 
-        >>> attr = {
-        ...    "by_metric": {
-        ...        "metric1": {
-        ...           "value_dimensions": {
-        ...                "value_dim_1": {
-        ...                    "unit": "m"
-        ...                }
-        ...            }
-        ...        },
-        ...        "metric3": {
-        ...            "value_dimensions": {
-        ...                 "value_dim_1": {
-        ...                     "unit": None,
-        ...                 }
-        ...            }
-        ...        }
-        ...    }
-        ... }
-        >>> dataframe.attrs = attr
-        >>> result = get_units(dataframe)
-        >>> result["metric1"]['value_dim_1']
-        'm'
-        >>> result["metric3"]['value_dim_1'] is None
+        >>> from hdhelpers.metadata.conventions import MULTITSFRAME_METADATA_EXAMPLE
+        >>> multitsframe.attrs = MULTITSFRAME_METADATA_EXAMPLE
+        >>> units = md.get_units(multitsframe)
+        >>> units["plant_a.temperature"]["value"]
+        '°C'
+        >>> units["unknown metric"]["value"] is None
         True
-        >>> result["metric2"]['value_dim_1'] is None
-        True
-    """
 
-    check_dataframe(multitsframe)
-    return get_value_dimension_info(multitsframe, _specs.UNIT, include_inherited)
+    See :ref:`metadata-getter-values` for shared examples and return shapes.
+    """  # noqa: E501
+    return _by_metric_by_column(multitsframe, "unit", include_inherited)
 
 
 def get_names(
     multitsframe: pd.DataFrame, *, include_inherited: bool = False
 ) -> defaultdict[str, defaultdict[str, str | None]]:
-    """Gets names of the MTSF metrics from the metadata
+    """Read metadata names for each metric and value column.
+
+    For the "value" column, try the metric's name after the column's own name.
 
     Args:
-        multitsframe (pd.DataFrame): MTSF with metadata following the convention.
-        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata) as last resort, i.e. if neither the value dimension, the metric nor "value_dimensions_shared" provide the information. Defaults to False, since this information should be provided for the metric itself.
+        multitsframe: DataFrame with per-metric metadata in attrs.
+        include_inherited: Use inherited fields last, only for the "value" column.
 
     Returns:
-        dict[str, str | None]: Dictionary of metrics containing the names. If the name is not present for a metric the corresponding value is None.
-
-    Raises:
-        TypeError: If `multitsframe` is not a DataFrame.
+        defaultdict[str, defaultdict[str, str | None]]:
+            Names as result[metric_id][column]; unavailable names are None.
 
     Code example:
 
     .. doctest:: metadata.get_names
 
-        >>> attr = { "by_metric": { "metric1": {"metric": {"name": "name_of_metric1"}},
-        ...                        "metric2": {"metric": {"name": None }} }}
-        >>> dataframe.attrs = attr
-        >>> result = get_names(dataframe)
-        >>> result["metric1"]["value"]
-        'name_of_metric1'
-        >>> result["metric2"]["value"] is None
-        True
+        >>> from hdhelpers.metadata.conventions import MULTITSFRAME_METADATA_EXAMPLE
+        >>> multitsframe.attrs = MULTITSFRAME_METADATA_EXAMPLE
+        >>> md.get_names(multitsframe)["plant_a.pressure"]["value"]
+        'Plant A pressure'
 
-    Lets try another MTSF format:
-
-    .. doctest:: metadata.get_names
-
-        >>> attr = { "dataset_metadata": {"metric_key": "external_id"},
-        ...          "metrics": [{"external_id": "ruhr-temperature",
-        ...                       "name": "Ruhr temperature [°C]",
-        ...                       "display_name": "temperature [°C]",
-        ...                       "short_display_name": "[°C]",
-        ...                       "value_dimensions": [{"column": "temp", "measurement": "temperature", "unit": "°C"}]}]}
-        >>> dataframe.attrs = attr
-        >>> result = get_names(dataframe)
-        >>> result["ruhr-temperature"]["value"]
-        'Ruhr temperature [°C]'
+    See :ref:`metadata-getter-names` for shared examples and return shapes.
     """
-
-    check_dataframe(multitsframe)
-    return get_value_dimension_info(multitsframe, _specs.NAME, include_inherited)
+    return _by_metric_by_column(multitsframe, "name", include_inherited)
 
 
 def get_display_names(
     multitsframe: pd.DataFrame, *, include_inherited: bool = False
 ) -> defaultdict[str, defaultdict[str, str | None]]:
-    """Gets display names of the MTSF metrics from the metadata
+    """Read display labels for each metric and value column.
+
+    Use display_name, then name.
 
     Args:
-        multitsframe (pd.DataFrame): MTSF with metadata following the convention.
-        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata) as last resort, i.e. if neither the value dimension, the metric nor "value_dimensions_shared" provide the information. Defaults to False, since this information should be provided for the metric itself.
+        multitsframe: DataFrame with per-metric metadata in attrs.
+        include_inherited: Use inherited fields last, only for the "value" column.
 
     Returns:
-        defaultdict[str, defaultdict[str, str | None]]: Dictionary of metrics containing the display names.
-        If the display name of the metrics is not present it returns the result of :func:`hdhelpers.metadata.get_names`.
-        For metadata following the current convention, the display name is looked up on the value dimension, on
-        the metric (for the value dimension "value") and in "value_dimensions_shared" before falling back to the
-        name. Fields provided as null count as missing.
+        defaultdict[str, defaultdict[str, str | None]]:
+            Labels as result[metric_id][column]; unavailable labels are None.
 
-    Raises:
-        TypeError: If `multitsframe` is not a DataFrame.
-
-    Code example:
-
-    .. doctest:: metadata.get_display_names
-
-        >>> attr = { "by_metric": { "metric1": {"metric": {"display_name": "display_name_of_metric1"}},
-        ...                         "metric2": {"metric": {"name": "name_of_metric2"}}}}
-        >>> dataframe.attrs = attr
-        >>> result = get_display_names(dataframe)
-        >>> result["metric1"]["value"]
-        'display_name_of_metric1'
-        >>> result["metric2"]["value"]
-        'name_of_metric2'
-
-    Lets try another MTSF format:
-
-    .. doctest:: metadata.get_display_names
-
-        >>> attr = { "dataset_metadata": {"metric_key": "external_id"},
-        ...          "metrics": [{"external_id": "ruhr-temperature",
-        ...                       "name": "Ruhr temperature [°C]",
-        ...                       "display_name": "temperature [°C]",
-        ...                       "short_display_name": "[°C]",
-        ...                       "value_dimensions": [{"column": "temp", "measurement": "temperature", "unit": "°C"}]}]}
-        >>> dataframe.attrs = attr
-        >>> result = get_display_names(dataframe)
-        >>> result["ruhr-temperature"]["value"]
-        'temperature [°C]'
+    See :ref:`metadata-getter-names` for shared examples and return shapes.
     """
-
-    check_dataframe(multitsframe)
-    return value_dimension_info_with_fallbacks(
-        multitsframe, _specs.DISPLAY_NAME_FIELDS, _specs.DISPLAY_NAME, include_inherited
-    )
+    return _by_metric_by_column(multitsframe, DISPLAY_NAME_FIELDS, include_inherited)
 
 
 def get_short_display_names(
     multitsframe: pd.DataFrame, *, include_inherited: bool = False
 ) -> defaultdict[str, defaultdict[str, str | None]]:
-    """Gets short display names of the MTSF metrics from the metadata
+    """Read short display labels for each metric and value column.
+
+    Use short_display_name, then display_name, then name.
 
     Args:
-        multitsframe (pd.DataFrame): MTSF with metadata following the convention.
-        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata) as last resort, i.e. if neither the value dimension, the metric nor "value_dimensions_shared" provide the information. Defaults to False, since this information should be provided for the metric itself.
+        multitsframe: DataFrame with per-metric metadata in attrs.
+        include_inherited: Use inherited fields last, only for the "value" column.
 
     Returns:
-        defaultdict[str, defaultdict[str, str | None]]: Dictionary of metrics containing the short display names.
-        If the short display name of the metrics is not present it returns the result of :func:`hdhelpers.metadata.get_display_names`.
-        For metadata following the current convention, each of short display name, display name and name is
-        looked up on the value dimension, on the metric (for the value dimension "value") and in
-        "value_dimensions_shared" before falling back to the next one. Fields provided as null count as missing.
+        defaultdict[str, defaultdict[str, str | None]]:
+            Labels as result[metric_id][column]; unavailable labels are None.
 
-    Raises:
-        TypeError: If `multitsframe` is not a DataFrame.
-
-    Code example:
-
-    .. doctest:: metadata.get_short_display_names
-
-        >>> attr = { "by_metric": { "metric1": {"metric": {"short_display_name": "short_display_name_of_metric1"}},
-        ...                         "metric2": {"metric": {"name": "name_of_metric2"}},
-        ...                         "metric3": {"metric": {"name": None}} }}
-        >>> dataframe.attrs = attr
-        >>> result = get_short_display_names(dataframe)
-        >>> result["metric1"]["value"]
-        'short_display_name_of_metric1'
-        >>> result["metric2"]["value"]
-        'name_of_metric2'
-        >>> result["metric3"]["value"] is None
-        True
-
-    Lets try another MTSF format:
-
-    .. doctest:: metadata.get_short_display_names
-
-        >>> attr = { "dataset_metadata": {"metric_key": "external_id"},
-        ...          "metrics": [{"external_id": "ruhr-temperature",
-        ...                       "name": "Ruhr temperature [°C]",
-        ...                       "display_name": "temperature [°C]",
-        ...                       "short_display_name": "temp. [°C]",
-        ...                       "value_dimensions": [{"column": "temp", "measurement": "temperature", "unit": "°C"}]}]}
-        >>> dataframe.attrs = attr
-        >>> result = get_short_display_names(dataframe)
-        >>> result["ruhr-temperature"]["value"]
-        'temp. [°C]'
+    See :ref:`metadata-getter-names` for shared examples and return shapes.
     """
-
-    check_dataframe(multitsframe)
-    return value_dimension_info_with_fallbacks(
-        multitsframe, _specs.SHORT_DISPLAY_NAME_FIELDS, _specs.SHORT_DISPLAY_NAME, include_inherited
-    )
+    return _by_metric_by_column(multitsframe, SHORT_DISPLAY_NAME_FIELDS, include_inherited)
 
 
 def get_measurements(
     multitsframe: pd.DataFrame, *, include_inherited: bool = False
 ) -> defaultdict[str, defaultdict[str, str | None]]:
-    """Gets measurement (type) of the MTSF metrics from the metadata
+    """Read physical quantities for each metric and value column.
+
+    For example, "temperature" is a measurement and "°C" is its unit.
 
     Args:
-        multitsframe (pd.DataFrame): MTSF with metadata following the convention.
-        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata) as last resort, i.e. if neither the value dimension, the metric nor "value_dimensions_shared" provide the information. Defaults to False, since this information should be provided for the metric itself.
+        multitsframe: DataFrame with per-metric metadata in attrs.
+        include_inherited: Use inherited fields last, only for the "value" column.
 
     Returns:
-        defaultdict[str, defaultdict[str, str | None]]: Dictionary of metrics containing the measurement (type) of the MTSF metrics.
-        If the short measurement (type) of the MTSF metrics is not present it returns None.
+        defaultdict[str, defaultdict[str, str | None]]:
+            Quantities as result[metric_id][column]; unavailable quantities are None.
 
-    Raises:
-        TypeError: If `multitsframe` is not a DataFrame.
-
-    Code example:
-
-    .. doctest:: metadata.get_measurements
-
-        >>> attr = { "dataset_metadata": {"metric_key": "external_id"},
-        ...          "metrics": [{"external_id": "column_name", "value_dimensions": [{"column": "temp", "measurement": "temperature"}]}]}
-        >>> dataframe.attrs = attr
-        >>> result = get_measurements(dataframe)
-        >>> result["column_name"]["temp"]
-        'temperature'
-
-
+    See :ref:`metadata-getter-values` for shared examples and return shapes.
     """
-    check_dataframe(multitsframe)
-    return get_value_dimension_info(multitsframe, _specs.MEASUREMENT, include_inherited)
+    return _by_metric_by_column(multitsframe, "measurement", include_inherited)
 
 
 def get_metric_info(
-    multitsframe: pd.DataFrame, metric_info: str | Spec, *, include_inherited: bool = True
+    multitsframe: pd.DataFrame, metric_info: str, *, include_inherited: bool = True
 ) -> defaultdict[str, Any]:
-    """Gets a dictionary of metadata associated to metrics.
+    """Read a metadata field for each metric.
 
-    In contrast to metadata associated to concrete value dimensions, this
-    function abstracts access to metadata associated to the underlying metric.
-
-    The information is looked up in the metric itself, then in its value dimension "value",
-    then in "value_dimensions_shared" and finally in the properties the metric inherits from
-    objects higher up in an asset hierarchy (given under "inherited" in the metric metadata),
-    e.g. the latitude of the plant a sensor belongs to. The latter can be switched off via
-    `include_inherited`. Information provided as null counts as missing. Note that in contrast
-    to this function, the functions for dedicated information like :func:`get_units` or
-    :func:`get_display_names` do not fall back to inherited properties by default.
+    Search the metric, its "value" column, shared "value" metadata, then inherited fields
+    (if enabled).
 
     Args:
-        multitsframe (pd.DataFrame): MTSF with metadata following the convention.
-        metric_info (str | Spec): Information to retrieve, interpreted as a glom Spec: e.g. a field name, a dotted path like "sensor.manufacturer" into sub dictionaries or any other glom Spec. See "How to query nested information?" in the first steps.
-        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata) as last resort, i.e. if neither the metric, its value dimension "value" nor "value_dimensions_shared" provide the information. Defaults to True.
+        multitsframe: DataFrame with per-metric metadata in attrs.
+        metric_info: Field name or dotted path, e.g. "sensor.model".
+        include_inherited: Use inherited fields as a last fallback.
 
     Returns:
-        defaultdict[str, Any]: Dictionary, where keys are the entries of the metrics metadata specified via "metric_key" in "dataset_metadata" and values are the entries specified via "metric_info" in the metrics metadata. Defaults to None, also if there is no metric metadata at all.
+        defaultdict[str, Any]: Field values by metric ID; unresolved fields are None.
 
     Code example:
 
     .. doctest:: metadata.get_metric_info
 
-        >>> multitsframe.attrs = {
-        ...    "dataset_metadata": {
-        ...        "metric_key": "id"
-        ...    },
-        ...    "metrics": [
-        ...        {
-        ...            "id": "first",
-        ...            "external_id": "external_first",
-        ...            "unit": "m",
-        ...            "display_name": "first display name",
-        ...            "sensor": {"manufacturer": "Acme"},
-        ...            "value_dimensions": [
-        ...                {
-        ...                    "column": "temp",
-        ...                    "unit": "C",
-        ...                    "measurement": "temperature"
-        ...                }
-        ...            ]
-        ...        },
-        ...        {
-        ...            "id": "second",
-        ...            "name": "second name",
-        ...            "external_id": "external_second",
-        ...            "value_dimensions": [
-        ...                {
-        ...                    "column": "temp",
-        ...                    "unit": "C"
-        ...                }
-        ...            ]
-        ...        }
-        ...    ]
-        ... }
-        >>> result = get_metric_info(multitsframe, "external_id")
-        >>> result["first"]
-        'external_first'
-        >>> result["second"]
-        'external_second'
-        >>> result["not-given"] is None
-        True
+        >>> from hdhelpers.metadata.conventions import MULTITSFRAME_METADATA_EXAMPLE
+        >>> multitsframe.attrs = MULTITSFRAME_METADATA_EXAMPLE
+        >>> md.get_metric_info(multitsframe, "recording_mode")["plant_a.temperature"]
+        'on_change'
 
-    A dotted path reaches into sub dictionaries:
-
-    .. doctest:: metadata.get_metric_info
-
-        >>> result = get_metric_info(multitsframe, "sensor.manufacturer")
-        >>> result["first"]
-        'Acme'
-        >>> result["second"] is None
-        True
+    See :ref:`metadata-getter-fields` for shared examples and return shapes.
     """
     check_dataframe(multitsframe)
-    return defaultdict(
-        lambda: None, metric_info_by_metric(multitsframe, metric_info, include_inherited)
+    meta = _metadata(multitsframe, "MULTITSFRAME")
+    infos = (
+        {} if meta is None else meta.metric_infos(metric_info, include_inherited=include_inherited)
     )
+    return defaultdict(lambda: None, infos)
+
+
+# the value dimension "value" of SERIES
 
 
 def get_series_info(
-    series: pd.Series, value_dim_info: str | Spec, *, include_inherited: bool = True
+    series: pd.Series, value_dim_info: str, *, include_inherited: bool = True
 ) -> Any:
-    """Gets an arbitrary series info
+    """Read a metadata field for this Series.
 
-    Since a series has only one value dimension named "value", this information is
-    equivalent to information on the metric.
+    Search the "value" column, the metric, shared "value" metadata, then inherited fields
+    (if enabled).
 
     Args:
-        series (pd.Series): Series with metadata following the convention.
-        value_dim_info (str | Spec): Information to retrieve, interpreted as a glom Spec: e.g. a field name, a dotted path like "sensor.manufacturer" into sub dictionaries or any other glom Spec. See "How to query nested information?" in the first steps.
-        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata) as last resort, i.e. if neither the value dimension, the metric nor "value_dimensions_shared" provide the information. Defaults to True.
+        series: Series with metadata in attrs.
+        value_dim_info: Field name or dotted path, e.g. "sensor.model".
+        include_inherited: Use inherited fields as a last fallback.
 
     Returns:
-        Any: Retrieved information defined by `value_dim_info`
+        Any: Field value, or None when unavailable.
 
     Code example:
 
     .. doctest:: metadata.get_series_info
 
-        >>> attr = { "by_metric": { "series": {"value_dimensions": {"value": {"unit": "m"}}}}}
-        >>> series.attrs = attr
-        >>> get_series_info(series, "unit")
-        'm'
-        >>> get_series_info(series, "not-given") is None
-        True
+        >>> from hdhelpers.metadata.conventions import SERIES_METADATA_EXAMPLE
+        >>> series.attrs = SERIES_METADATA_EXAMPLE
+        >>> md.get_series_info(series, "decimals")
+        2
+
+    See :ref:`metadata-getter-fields` for shared examples and return shapes.
     """
-
-    check_series(series)
-    return _series_info(series, (value_dim_info,), value_dim_info, include_inherited)
-
-
-def _series_info(
-    series: pd.Series, fields: tuple[str | Spec, ...], legacy_spec: Spec, include_inherited: bool
-) -> Any:
-    """Info of a Series, falling back to further fields
-
-    Since a Series has only one value dimension named "value", it falls back to the metric
-    metadata. For metadata following the current metadata convention, each field is looked up
-    on the value dimension, the metric and "value_dimensions_shared" before the next field is
-    tried, see value_dimension_info_with_fallbacks. Older metadata structures are handled via
-    legacy_spec, keeping their established behaviour.
-    """
-    from_metrics = series_value_info(series, fields, legacy_spec, include_inherited)
-    if from_metrics is not None:
-        return from_metrics
-
-    # compatibility with some older format
-    return glom(
-        series.attrs,
-        Coalesce(
-            spec_not_none(
-                (
-                    "single_metric_metadata.structured_metadata.value_dimensions.value",
-                    legacy_spec,
-                )
-            ),
-            spec_not_none(
-                (
-                    "single_metric_metadata.structured_metadata.metric",
-                    legacy_spec,
-                )
-            ),
-            default=None,
-        ),
-    )
-
-
-def _series_info_with_fallbacks(
-    series: pd.Series, fields: tuple[str | Spec, ...], include_inherited: bool
-) -> Any:
-    """Info of a Series, falling back to further fields, which may be provided as null
-
-    Older metadata structures keep their established behaviour of using the first of the
-    fields present on the first level providing any.
-    """
-    legacy_spec = Coalesce(*(spec_not_none(field) for field in fields))
-    return _series_info(series, fields, legacy_spec, include_inherited)
+    return _series_value(series, value_dim_info, include_inherited)
 
 
 def get_series_unit(series: pd.Series, *, include_inherited: bool = False) -> str | None:
-    """Gets name of the series from metadata
+    """Read this Series' unit from metadata.
 
     Args:
-        series (pd.Series): Series with metadata following the convention.
-        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata) as last resort, i.e. if neither the value dimension, the metric nor "value_dimensions_shared" provide the information. Defaults to False, since this information should be provided for the metric itself.
+        series: Series with metadata in attrs.
+        include_inherited: Use inherited fields as a last fallback.
 
     Returns:
-        str | None:
-            Returns the unit of series.
-            If the unit of the series is not present it returns None.
-
-    Raises:
-        TypeError: If `series` is not a Series.
-
-    Let's test what happens if series has no attr:
-
-    .. doctest:: metadata.get_series_unit
-
-        >>> series.attrs = {}
-        >>> get_series_unit(series) is None
-        True
-
-    Let's test what happens if series has attr but no entry for unit:
-
-    .. doctest:: metadata.get_series_unit
-
-        >>> attr = { "by_metric": { "series": {"value_dimensions": {"value": {"unit":None}}}}}
-        >>> series.attrs = attr
-        >>> get_series_unit(series) is None
-        True
-
-    Let's test what happens if series has unit in attr:
-
-    .. doctest:: metadata.get_series_unit
-
-        >>> attr = { "by_metric": { "series": {"value_dimensions": {"value": {"unit":"m/s"}}}}}
-        >>> series.attrs = attr
-        >>> get_series_unit(series)
-        'm/s'
-    """
-
-    check_series(series)
-    return cast(
-        str | None,
-        _series_info_with_fallbacks(series, (_specs.UNIT,), include_inherited),
-    )
-
-
-def get_series_name(series: pd.Series, *, include_inherited: bool = False) -> str | None:
-    """Gets name of the series from metadata
-
-    Args:
-        series (pd.Series): Series with metadata following the convention.
-        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata) as last resort, i.e. if neither the value dimension, the metric nor "value_dimensions_shared" provide the information. Defaults to False, since this information should be provided for the metric itself.
-
-    Returns:
-        str | None:
-            Returns the name of the value.
-            If the name of the metric is not present it returns the name of the value.
-            If the value name is not present it returns None.
-
-    Raises:
-        TypeError: If `series` is not a Series.
-
-    Let's test what happens if series has name in value_dimensions:
-
-    .. doctest:: metadata.get_series_name
-
-        >>> attr = { "by_metric": { "series": {"value_dimensions": {"value": {"name": "value_name_of_series"}}}}}
-        >>> series.attrs = attr
-        >>> get_series_name(series)
-        'value_name_of_series'
-
-    Let's test what happens if series has name in metric:
-
-    .. doctest:: metadata.get_series_name
-
-        >>> attr = { "by_metric": { "series": {"metric": {"name": "name_of_series_1"}}}}
-        >>> series.attrs = attr
-        >>> get_series_name(series)
-        'name_of_series_1'
-
-    Let's test what happens if series has name in metric and value_dimensions:
-
-    .. doctest:: metadata.get_series_name
-
-        >>> attr = { "single_metric_metadata": { "structured_metadata": {"metric": {"name": "name_of_series_2"}},
-        ...                                                              "value_dimensions": {"value": {"name": "value_name_of_series"}}}}
-        >>> series.attrs = attr
-        >>> get_series_name(series)
-        'name_of_series_2'
-    """
-    check_series(series)
-    return cast(
-        str | None,
-        _series_info_with_fallbacks(series, ("name",), include_inherited),
-    )
-
-
-def get_series_display_name(series: pd.Series, *, include_inherited: bool = False) -> str | None:
-    """Gets display name of the series from metadata
-
-    Args:
-        series (pd.Series): Series with metadata following the convention.
-        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata) as last resort, i.e. if neither the value dimension, the metric nor "value_dimensions_shared" provide the information. Defaults to False, since this information should be provided for the metric itself.
-
-    Returns:
-        str | None:
-            Returns the display name of the value.
-            If the display name of the metric is not present it returns the display name of the value.
-            If the metric display name is not present it returns the result of :func:`hdhelpers.metadata.get_series_name`.
-
-    Raises:
-        TypeError: If `series` is not a Series.
+        str | None: Unit string; "" means dimensionless and None means unavailable.
 
     Code example:
 
-    .. doctest:: metadata.get_series_display_name
+    .. doctest:: metadata.get_series_unit
 
-        >>> attr = { "by_metric": { "series": {"metric": {"display_name": "display_name_of_series"}}}}
-        >>> series.attrs = attr
-        >>> get_series_display_name(series)
-        'display_name_of_series'
+        >>> from hdhelpers.metadata.conventions import SERIES_METADATA_EXAMPLE
+        >>> series.attrs = SERIES_METADATA_EXAMPLE
+        >>> md.get_series_unit(series)
+        'm'
+
+    See :ref:`metadata-getter-values` for shared examples and return shapes.
     """
-    check_series(series)
-    return cast(
-        str | None,
-        _series_info_with_fallbacks(series, _specs.DISPLAY_NAME_FIELDS, include_inherited),
+    return _series_value(series, "unit", include_inherited)  # type: ignore[no-any-return]
+
+
+def get_series_name(series: pd.Series, *, include_inherited: bool = False) -> str | None:
+    """Read this Series' name from metadata.
+
+    Try the "value" column's name, then the metric's name.
+
+    Args:
+        series: Series with metadata in attrs.
+        include_inherited: Use inherited fields as a last fallback.
+
+    Returns:
+        str | None: Resolved name, or None when unavailable.
+
+    Code example:
+
+    .. doctest:: metadata.get_series_name
+
+        >>> from hdhelpers.metadata.conventions import SERIES_METADATA_EXAMPLE
+        >>> series.attrs = SERIES_METADATA_EXAMPLE
+        >>> md.get_series_name(series)
+        'Water level north'
+
+    See :ref:`metadata-getter-names` for shared examples and return shapes.
+    """
+    return _series_value(series, "name", include_inherited)  # type: ignore[no-any-return]
+
+
+def get_series_display_name(series: pd.Series, *, include_inherited: bool = False) -> str | None:
+    """Read the display label for this Series.
+
+    Use display_name, then name.
+
+    Args:
+        series: Series with metadata in attrs.
+        include_inherited: Use inherited fields as a last fallback.
+
+    Returns:
+        str | None: Resolved label, or None when unavailable.
+
+    See :ref:`metadata-getter-names` for shared examples and return shapes.
+    """
+    return _series_value(  # type: ignore[no-any-return]
+        series, DISPLAY_NAME_FIELDS, include_inherited
     )
 
 
 def get_series_short_display_name(
     series: pd.Series, *, include_inherited: bool = False
 ) -> str | None:
-    """Gets short display name of the Series from metadata
+    """Read the short display label for this Series.
+
+    Use short_display_name, then display_name, then name.
 
     Args:
-        series (pd.Series): Series with metadata following the convention.
-        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata) as last resort, i.e. if neither the value dimension, the metric nor "value_dimensions_shared" provide the information. Defaults to False, since this information should be provided for the metric itself.
+        series: Series with metadata in attrs.
+        include_inherited: Use inherited fields as a last fallback.
 
     Returns:
-        str | None:
-            Returns the short display name of the value.
-            If the short display name of the metric is not present it returns the short display name of the value.
-            If the metric short display name is not present it returns the result of :func:`hdhelpers.metadata.get_series_display_name`.
+        str | None: Resolved label, or None when unavailable.
 
-    Raises:
-        TypeError: If `series` is not a Series.
-
-    Code example:
-
-    .. doctest:: metadata.get_series_short_display_name
-
-        >>> attr = { "by_metric": { "series": { "metric": {"short_display_name": "short_display_name_of_series"}}}}
-        >>> series.attrs = attr
-        >>> get_series_short_display_name(series)
-        'short_display_name_of_series'
+    See :ref:`metadata-getter-names` for shared examples and return shapes.
     """
-    check_series(series)
-    return cast(
-        str | None,
-        _series_info_with_fallbacks(series, _specs.SHORT_DISPLAY_NAME_FIELDS, include_inherited),
+    return _series_value(  # type: ignore[no-any-return]
+        series, SHORT_DISPLAY_NAME_FIELDS, include_inherited
     )
 
 
 def get_series_measurement(series: pd.Series, *, include_inherited: bool = False) -> str | None:
-    """Gets measurement (type) of the Series from metadata
+    """Read this Series' physical quantity from metadata.
+
+    For example, "temperature" describes the quantity and "°C" describes its unit.
 
     Args:
-        series (pd.Series): Series with metadata following the convention.
-        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata) as last resort, i.e. if neither the value dimension, the metric nor "value_dimensions_shared" provide the information. Defaults to False, since this information should be provided for the metric itself.
+        series: Series with metadata in attrs.
+        include_inherited: Use inherited fields as a last fallback.
 
     Returns:
-        str | None:
-            Returns the  measurement (type) of the value.
-            If "measurement" is not given in the metadata, None is returned.
+        str | None: Quantity name, or None when unavailable.
 
-    Raises:
-        TypeError: If `series` is not a Series.
-
-    Code example:
-
-    .. doctest:: metadata.get_series_measurement
-
-        >>> attr = { "by_metric": { "series": { "metric": {"measurement": "temperature"}}}}
-        >>> series.attrs = attr
-        >>> get_series_measurement(series)
-        'temperature'
+    See :ref:`metadata-getter-values` for shared examples and return shapes.
     """
-    check_series(series)
-    return cast(
-        str | None, get_series_info(series, "measurement", include_inherited=include_inherited)
-    )
+    return _series_value(series, "measurement", include_inherited)  # type: ignore[no-any-return]
+
+
+# value dimensions of SINGLETSFRAMEs
 
 
 def get_singlets_info(
-    singletsframe: pd.DataFrame, value_dim_info: str | Spec, *, include_inherited: bool = True
-) -> Any:
-    """Gets an arbitrary info of the value dimensions of a SingleTSFrame
+    singletsframe: pd.DataFrame, value_dim_info: str, *, include_inherited: bool = True
+) -> defaultdict[str, Any]:
+    """Read a metadata field for each value column of a single-metric frame.
 
-    A SingleTSFrame (STSF) holds exactly one metric - like a Series - but arbitrarily many
-    value dimensions - like a MultiTSFrame. Therefore, in contrast to the MTSF functions,
-    the result is keyed by value dimension only and not by metric first.
-
-    The single metric is identified via "single_metric" in "dataset_metadata". If that is
-    missing but the metadata contains exactly one metric, that metric is used, since a STSF
-    cannot be ambiguous in this respect.
+    For "value", search column, metric, shared and inherited metadata (if enabled), in that
+    order. Other columns use their own and shared metadata.
 
     Args:
-        singletsframe (pd.DataFrame): STSF with metadata following the convention.
-        value_dim_info (str | Spec): Information to retrieve, interpreted as a glom Spec: e.g. a field name, a dotted path like "sensor.manufacturer" into sub dictionaries or any other glom Spec. See "How to query nested information?" in the first steps.
-        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata) as last resort, i.e. if neither the value dimension, the metric nor "value_dimensions_shared" provide the information. Defaults to True.
+        singletsframe: DataFrame with one metric's metadata in attrs.
+        value_dim_info: Field name or dotted path, e.g. "sensor.model".
+        include_inherited: Use inherited fields last, only for the "value" column.
 
     Returns:
-        defaultdict[str, Any]: Dictionary of value dimensions containing the retrieved information. If the information is not present for a value dimension the corresponding value is None.
-
-    Raises:
-        TypeError: If `singletsframe` is not a DataFrame.
+        defaultdict[str, Any]: Field values as result[column]; unresolved fields are None.
 
     Code example:
 
     .. doctest:: metadata.get_singlets_info
 
-        >>> dataframe.attrs = {
-        ...     "dataset_metadata": {"single_metric": "abc.temp", "metric_key": "external_id"},
-        ...     "metrics": [
-        ...         {
-        ...             "external_id": "abc.temp",
-        ...             "value_dimensions": [
-        ...                 {"column": "value", "unit": "°C"},
-        ...                 {"column": "state"},
-        ...             ],
-        ...         }
-        ...     ],
-        ... }
-        >>> result = get_singlets_info(dataframe, "unit")
-        >>> result["value"]
-        '°C'
-        >>> result["state"] is None
-        True
-    """
+        >>> from hdhelpers.metadata.conventions import SINGLETSFRAME_METADATA_EXAMPLE
+        >>> dataframe.attrs = SINGLETSFRAME_METADATA_EXAMPLE
+        >>> md.get_singlets_info(dataframe, "name")["state"]
+        'measurement state'
 
-    check_dataframe(singletsframe)
-    return singlets_value_dimension_info(singletsframe, value_dim_info, include_inherited)
+    See :ref:`metadata-getter-fields` for shared examples and return shapes.
+    """
+    return _single_metric_by_column(singletsframe, value_dim_info, include_inherited)
 
 
 def get_singlets_units(
     singletsframe: pd.DataFrame, *, include_inherited: bool = False
 ) -> defaultdict[str, str | None]:
-    """Gets units of the value dimensions of a SingleTSFrame from metadata
+    """Read units for each value column of a single-metric frame.
 
     Args:
-        singletsframe (pd.DataFrame): STSF with metadata following the convention.
-        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata) as last resort, i.e. if neither the value dimension, the metric nor "value_dimensions_shared" provide the information. Defaults to False, since this information should be provided for the metric itself.
+        singletsframe: DataFrame with one metric's metadata in attrs.
+        include_inherited: Use inherited fields last, only for the "value" column.
 
     Returns:
-        defaultdict[str, str | None]: Dictionary of value dimensions containing the units. If the unit is not present for a value dimension the corresponding value is None.
+        defaultdict[str, str | None]:
+            Units as result[column]; "" means dimensionless and None means unavailable.
 
-    Raises:
-        TypeError: If `singletsframe` is not a DataFrame.
-
-    Note that a value dimension falls back to "value_dimensions_shared" if it carries no unit
-    of its own:
+    Code example:
 
     .. doctest:: metadata.get_singlets_units
 
-        >>> dataframe.attrs = {
-        ...     "dataset_metadata": {"single_metric": "abc.temp", "metric_key": "external_id"},
-        ...     "metrics": [
-        ...         {
-        ...             "external_id": "abc.temp",
-        ...             "value_dimensions": [
-        ...                 {"column": "value", "unit": "°C"},
-        ...                 {"column": "state"},
-        ...             ],
-        ...         }
-        ...     ],
-        ...     "value_dimensions_shared": [{"column": "state", "unit": "UNKNOWN"}],
-        ... }
-        >>> result = get_singlets_units(dataframe)
-        >>> result["value"]
+        >>> from hdhelpers.metadata.conventions import SINGLETSFRAME_METADATA_EXAMPLE
+        >>> dataframe.attrs = SINGLETSFRAME_METADATA_EXAMPLE
+        >>> md.get_singlets_units(dataframe)["value"]
         '°C'
-        >>> result["state"]
-        'UNKNOWN'
-        >>> result["not-given"] is None
-        True
 
-    The "metric_key" is optional and defaults to "id":
-
-    .. doctest:: metadata.get_singlets_units
-
-        >>> dataframe.attrs = {
-        ...     "dataset_metadata": {"single_metric": "abc.temp"},
-        ...     "metrics": [
-        ...         {"id": "abc.temp", "value_dimensions": [{"column": "value", "unit": "m"}]}
-        ...     ],
-        ... }
-        >>> get_singlets_units(dataframe)["value"]
-        'm'
+    See :ref:`metadata-getter-values` for shared examples and return shapes.
     """
-
-    check_dataframe(singletsframe)
-    return singlets_value_dimension_info(singletsframe, _specs.UNIT, include_inherited)
+    return _single_metric_by_column(singletsframe, "unit", include_inherited)
 
 
 def get_singlets_names(
     singletsframe: pd.DataFrame, *, include_inherited: bool = False
 ) -> defaultdict[str, str | None]:
-    """Gets names of the value dimensions of a SingleTSFrame from metadata
+    """Read metadata names for each value column of a single-metric frame.
+
+    For "value", try the metric's name after the column's own name.
 
     Args:
-        singletsframe (pd.DataFrame): STSF with metadata following the convention.
-        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata) as last resort, i.e. if neither the value dimension, the metric nor "value_dimensions_shared" provide the information. Defaults to False, since this information should be provided for the metric itself.
+        singletsframe: DataFrame with one metric's metadata in attrs.
+        include_inherited: Use inherited fields last, only for the "value" column.
 
     Returns:
-        defaultdict[str, str | None]: Dictionary of value dimensions containing the names. If the name is not present for a value dimension the corresponding value is None.
+        defaultdict[str, str | None]: Names as result[column]; unavailable names are None.
 
-    Raises:
-        TypeError: If `singletsframe` is not a DataFrame.
-
-    Code example:
-
-    .. doctest:: metadata.get_singlets_names
-
-        >>> dataframe.attrs = {
-        ...     "dataset_metadata": {"single_metric": "abc.temp", "metric_key": "external_id"},
-        ...     "metrics": [
-        ...         {
-        ...             "external_id": "abc.temp",
-        ...             "value_dimensions": [
-        ...                 {"column": "value", "name": "temperature"},
-        ...                 {"column": "state"},
-        ...             ],
-        ...         }
-        ...     ],
-        ... }
-        >>> result = get_singlets_names(dataframe)
-        >>> result["value"]
-        'temperature'
-        >>> result["state"] is None
-        True
+    See :ref:`metadata-getter-names` for shared examples and return shapes.
     """
-
-    check_dataframe(singletsframe)
-    return singlets_value_dimension_info(singletsframe, _specs.NAME, include_inherited)
+    return _single_metric_by_column(singletsframe, "name", include_inherited)
 
 
 def get_singlets_display_names(
     singletsframe: pd.DataFrame, *, include_inherited: bool = False
 ) -> defaultdict[str, str | None]:
-    """Gets display names of the value dimensions of a SingleTSFrame from metadata
+    """Read display labels for each value column of a single-metric frame.
 
-    Falls back to the name of the value dimension if no display name is given. The display name
-    is looked up on the value dimension, on the metric (for the value dimension "value") and in
-    "value_dimensions_shared" before falling back to the name. Fields provided as null count as
-    missing.
+    Use display_name, then name.
 
     Args:
-        singletsframe (pd.DataFrame): STSF with metadata following the convention.
-        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata) as last resort, i.e. if neither the value dimension, the metric nor "value_dimensions_shared" provide the information. Defaults to False, since this information should be provided for the metric itself.
+        singletsframe: DataFrame with one metric's metadata in attrs.
+        include_inherited: Use inherited fields last, only for the "value" column.
 
     Returns:
-        defaultdict[str, str | None]: Dictionary of value dimensions containing the display names. If neither display name nor name is present for a value dimension the corresponding value is None.
+        defaultdict[str, str | None]: Labels as result[column]; unavailable labels are None.
 
-    Raises:
-        TypeError: If `singletsframe` is not a DataFrame.
-
-    Code example:
-
-    .. doctest:: metadata.get_singlets_display_names
-
-        >>> dataframe.attrs = {
-        ...     "dataset_metadata": {"single_metric": "abc.temp", "metric_key": "external_id"},
-        ...     "metrics": [
-        ...         {
-        ...             "external_id": "abc.temp",
-        ...             "value_dimensions": [
-        ...                 {"column": "value", "name": "temperature", "display_name": "temp"},
-        ...                 {"column": "state", "name": "measurement state"},
-        ...             ],
-        ...         }
-        ...     ],
-        ... }
-        >>> result = get_singlets_display_names(dataframe)
-        >>> result["value"]
-        'temp'
-        >>> result["state"]
-        'measurement state'
+    See :ref:`metadata-getter-names` for shared examples and return shapes.
     """
-
-    check_dataframe(singletsframe)
-    return singlets_value_dimension_info_with_fallbacks(
-        singletsframe, _specs.DISPLAY_NAME_FIELDS, _specs.DISPLAY_NAME, include_inherited
-    )
+    return _single_metric_by_column(singletsframe, DISPLAY_NAME_FIELDS, include_inherited)
 
 
 def get_singlets_short_display_names(
     singletsframe: pd.DataFrame, *, include_inherited: bool = False
 ) -> defaultdict[str, str | None]:
-    """Gets short display names of the value dimensions of a SingleTSFrame from metadata
+    """Read short display labels for each value column of a single-metric frame.
 
-    Falls back to the display name and then to the name of the value dimension if no short
-    display name is given. Each of them is looked up on the value dimension, on the metric (for
-    the value dimension "value") and in "value_dimensions_shared" before falling back to the next
-    one. Fields provided as null count as missing.
+    Use short_display_name, then display_name, then name.
 
     Args:
-        singletsframe (pd.DataFrame): STSF with metadata following the convention.
-        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata) as last resort, i.e. if neither the value dimension, the metric nor "value_dimensions_shared" provide the information. Defaults to False, since this information should be provided for the metric itself.
+        singletsframe: DataFrame with one metric's metadata in attrs.
+        include_inherited: Use inherited fields last, only for the "value" column.
 
     Returns:
-        defaultdict[str, str | None]: Dictionary of value dimensions containing the short display names. If none of short display name, display name and name is present for a value dimension the corresponding value is None.
+        defaultdict[str, str | None]: Labels as result[column]; unavailable labels are None.
 
-    Raises:
-        TypeError: If `singletsframe` is not a DataFrame.
-
-    Code example:
-
-    .. doctest:: metadata.get_singlets_short_display_names
-
-        >>> dataframe.attrs = {
-        ...     "dataset_metadata": {"single_metric": "abc.temp", "metric_key": "external_id"},
-        ...     "metrics": [
-        ...         {
-        ...             "external_id": "abc.temp",
-        ...             "value_dimensions": [
-        ...                 {"column": "value", "name": "temperature", "short_display_name": "T"},
-        ...                 {"column": "state", "display_name": "state"},
-        ...             ],
-        ...         }
-        ...     ],
-        ... }
-        >>> result = get_singlets_short_display_names(dataframe)
-        >>> result["value"]
-        'T'
-        >>> result["state"]
-        'state'
+    See :ref:`metadata-getter-names` for shared examples and return shapes.
     """
-
-    check_dataframe(singletsframe)
-    return singlets_value_dimension_info_with_fallbacks(
-        singletsframe,
-        _specs.SHORT_DISPLAY_NAME_FIELDS,
-        _specs.SHORT_DISPLAY_NAME,
-        include_inherited,
-    )
+    return _single_metric_by_column(singletsframe, SHORT_DISPLAY_NAME_FIELDS, include_inherited)
 
 
 def get_singlets_measurements(
     singletsframe: pd.DataFrame, *, include_inherited: bool = False
 ) -> defaultdict[str, str | None]:
-    """Gets measurements (types) of the value dimensions of a SingleTSFrame from metadata
+    """Read physical quantities for each value column of a single-metric frame.
+
+    For example, "temperature" is a measurement and "°C" is its unit.
 
     Args:
-        singletsframe (pd.DataFrame): STSF with metadata following the convention.
-        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata) as last resort, i.e. if neither the value dimension, the metric nor "value_dimensions_shared" provide the information. Defaults to False, since this information should be provided for the metric itself.
+        singletsframe: DataFrame with one metric's metadata in attrs.
+        include_inherited: Use inherited fields last, only for the "value" column.
 
     Returns:
-        defaultdict[str, str | None]: Dictionary of value dimensions containing the measurements. If "measurement" is not given for a value dimension the corresponding value is None.
+        defaultdict[str, str | None]:
+            Quantities as result[column]; unavailable quantities are None.
 
-    Raises:
-        TypeError: If `singletsframe` is not a DataFrame.
-
-    Code example:
-
-    .. doctest:: metadata.get_singlets_measurements
-
-        >>> dataframe.attrs = {
-        ...     "dataset_metadata": {"single_metric": "abc.temp", "metric_key": "external_id"},
-        ...     "metrics": [
-        ...         {
-        ...             "external_id": "abc.temp",
-        ...             "value_dimensions": [
-        ...                 {"column": "value", "measurement": "temperature"},
-        ...             ],
-        ...         }
-        ...     ],
-        ... }
-        >>> get_singlets_measurements(dataframe)["value"]
-        'temperature'
+    See :ref:`metadata-getter-values` for shared examples and return shapes.
     """
-
-    check_dataframe(singletsframe)
-    return singlets_value_dimension_info(singletsframe, _specs.MEASUREMENT, include_inherited)
+    return _single_metric_by_column(singletsframe, "measurement", include_inherited)
 
 
 def get_singlets_metric_info(
-    singletsframe: pd.DataFrame, metric_info: str | Spec, *, include_inherited: bool = True
+    singletsframe: pd.DataFrame, metric_info: str, *, include_inherited: bool = True
 ) -> Any:
-    """Gets metadata associated to the single metric of a SingleTSFrame
+    """Read one metadata field for the frame's single metric.
 
-    Counterpart of :func:`get_metric_info` for SingleTSFrames: instead of a dictionary keyed
-    by metric this directly returns the requested information for the one metric. Like
-    :func:`get_metric_info`, it falls back to the value dimension "value", to
-    "value_dimensions_shared" and finally to the properties the metric inherits.
+    Search the metric, its "value" column, shared "value" metadata, then inherited fields
+    (if enabled).
 
     Args:
-        singletsframe (pd.DataFrame): STSF with metadata following the convention.
-        metric_info (str | Spec): Information to retrieve, interpreted as a glom Spec: e.g. a field name, a dotted path like "sensor.manufacturer" into sub dictionaries or any other glom Spec. See "How to query nested information?" in the first steps.
-        include_inherited (bool): Whether to fall back to the properties a metric inherits from objects higher up in an asset hierarchy (given under "inherited" in the metric metadata) as last resort, i.e. if neither the metric, its value dimension "value" nor "value_dimensions_shared" provide the information. Defaults to True.
+        singletsframe: DataFrame with one metric's metadata in attrs.
+        metric_info: Field name or dotted path, e.g. "sensor.model".
+        include_inherited: Use inherited fields as a last fallback.
 
     Returns:
-        Any: Retrieved information defined by `metric_info`, or None if it cannot be determined - which includes the case of absent metric metadata.
-
-    Raises:
-        TypeError: If `singletsframe` is not a DataFrame.
+        Any: One field value, or None when unavailable.
 
     Code example:
 
+    Using :ref:`metadata-example-data`, compare a field of the metric with fields of its value
+    dimensions. See :ref:`metadata-getter-fields` for the related getters:
+
     .. doctest:: metadata.get_singlets_metric_info
 
-        >>> dataframe.attrs = {
-        ...     "dataset_metadata": {"single_metric": "abc.temp", "metric_key": "external_id"},
-        ...     "metrics": [{"external_id": "abc.temp", "name": "ABC temperature"}],
-        ... }
-        >>> get_singlets_metric_info(dataframe, "name")
+        >>> md.get_singlets_metric_info(dataframe, "name")
         'ABC temperature'
-        >>> get_singlets_metric_info(dataframe, "not-given") is None
-        True
-
-    Without any metadata None is returned:
-
-    .. doctest:: metadata.get_singlets_metric_info
-
-        >>> dataframe.attrs = {}
-        >>> get_singlets_metric_info(dataframe, "name") is None
-        True
+        >>> md.get_singlets_info(dataframe, "name")["state"]
+        'measurement state'
     """
-
     check_dataframe(singletsframe)
-    return singlets_metric_info(singletsframe, metric_info, include_inherited)
+    return _single_metric_or_dataset(
+        singletsframe,
+        "SINGLETSFRAME",
+        lambda meta, metric: meta.metric_info(
+            metric_info, metric, include_inherited=include_inherited
+        ),
+        lambda _meta: None,
+        empty=None,
+    )
+
+
+# queried interval, time zones, recording and aggregation
 
 
 def get_queried_interval(
     data: pd.Series | pd.DataFrame,
 ) -> tuple[datetime.datetime | None, datetime.datetime | None]:
-    """Get queried interval from metadata
+    """Read the requested UTC time interval from dataset metadata.
 
     Args:
-        data (pd.Series | pd.DataFrame): Series or Dataframe with metadata following the convention
+        data: Series or DataFrame with dataset metadata in attrs.
 
     Returns:
-        tuple[datetime.datetime | None, datetime.datetime | None]: Tuple of available start and end date of requested interval.
-
-    Raises:
-        ValueError: If metadata of `data` is not None and not convertible to a datetime-object (ISO-format is expected).
-        TypeError: If `data` is not a Series or Dataframe.
+        tuple[datetime.datetime | None, datetime.datetime | None]:
+            (start, end) as timezone-aware datetimes, or (None, None) if unavailable.
 
     Code example:
 
     .. doctest:: metadata.get_queried_interval
 
-        >>> attr = {
-        ...        "dataset_metadata": {
-        ...        "ref_interval_start_timestamp": "2025-11-05T13:28:00Z",
-        ...        "ref_interval_end_timestamp": "2025-11-06T13:28:00Z"
-        ...    }
-        ... }
-        >>> series.attrs = attr
-        >>> start, end = get_queried_interval(series)
+        >>> from hdhelpers.metadata.conventions import SERIES_METADATA_EXAMPLE
+        >>> series.attrs = SERIES_METADATA_EXAMPLE
+        >>> start, end = md.get_queried_interval(series)
         >>> start.isoformat()
-        '2025-11-05T13:28:00+00:00'
-        >>> end.isoformat()
-        '2025-11-06T13:28:00+00:00'
+        '2026-01-01T00:00:00+00:00'
+
+    See :ref:`metadata-getter-values` for shared examples and return shapes.
     """
     check_series_or_dataframe(data)
-    start = extract_from_metadata(data.attrs, key="ref_interval_start_timestamp", default=None)
-    end = extract_from_metadata(data.attrs, key="ref_interval_end_timestamp", default=None)
-
-    formatted_start = datetime.datetime.fromisoformat(start) if start else None
-    formatted_end = datetime.datetime.fromisoformat(end) if end else None
-
-    return formatted_start, formatted_end
+    meta = _metadata(data, infer_data_type(data))
+    return (None, None) if meta is None else meta.queried_interval()
 
 
 def get_default_timezones(multitsframe: pd.DataFrame) -> defaultdict[str, str | None]:
-    """Gets the default time zone of each metric of a MultiTSFrame
+    """Read the time zone recommended for calculations on each metric.
 
-    The default time zone is meant for computations: It is the time zone the timeseries should
-    be evaluated in by default, e.g. for bucketing days when aggregating, so that each day
-    starts at midnight of this time zone. It belongs to the data, e.g. it is the time zone of
-    the plant a sensor belongs to. It is not meant for displaying timestamps - that is what the
-    time zone of the plot target settings is for, which e.g. :func:`hdhelpers.helpers.modify_timezone`
-    uses by default. See "Which time zone to compute in?" in the first steps.
-
-    The time zone is an IANA time zone name like "Europe/Berlin" or a fixed UTC offset like
-    "+02:00", both accepted by pandas, e.g. by ``tz_convert``.
-
-    The default time zone of a metric falls back to the one of the dataset metadata, which
-    applies to all metrics without their own. It does not fall back to value dimensions or
-    inherited properties.
+    Use the metric's default_timezone, then the dataset's default_timezone.
 
     Args:
-        multitsframe (pd.DataFrame): MTSF with metadata following the convention.
+        multitsframe: DataFrame with per-metric metadata in attrs.
 
     Returns:
-        defaultdict[str, str | None]: Dictionary, where keys are the entries of the metrics metadata specified via "metric_key" in "dataset_metadata" and values are their default time zones. Defaults to the default time zone of the dataset metadata, also for metrics without metadata, and to None if that is missing as well.
-
-    Raises:
-        TypeError: If `multitsframe` is not a DataFrame.
+        defaultdict[str, str | None]:
+            Zone names or UTC offsets by metric ID, or None for unresolved zones. Missing
+            IDs use the dataset default.
 
     Code example:
 
     .. doctest:: metadata.get_default_timezones
 
-        >>> multitsframe.attrs = {
-        ...     "dataset_metadata": {"metric_key": "id", "default_timezone": "Europe/Berlin"},
-        ...     "metrics": [
-        ...         {"id": "new_york_sensor", "default_timezone": "America/New_York"},
-        ...         {"id": "berlin_sensor"},
-        ...     ],
-        ... }
-        >>> timezones = get_default_timezones(multitsframe)
-        >>> timezones["new_york_sensor"]
-        'America/New_York'
-        >>> timezones["berlin_sensor"]
+        >>> from hdhelpers.metadata.conventions import MULTITSFRAME_METADATA_EXAMPLE
+        >>> multitsframe.attrs = MULTITSFRAME_METADATA_EXAMPLE
+        >>> md.get_default_timezones(multitsframe)["plant_a.pressure"]
         'Europe/Berlin'
-        >>> timezones["metric_without_metadata"]
-        'Europe/Berlin'
+
+    See :ref:`metadata-getter-timezones` for shared examples and return shapes.
     """
     check_dataframe(multitsframe)
-    return default_timezone_by_metric(multitsframe)
+    meta = _metadata(multitsframe, "MULTITSFRAME")
+    if meta is None:
+        return defaultdict(lambda: None)
+    dataset_timezone = dataset_default_timezone(meta)
+    return defaultdict(lambda: dataset_timezone, meta.default_timezones())
 
 
 def get_series_default_timezone(series: pd.Series) -> str | None:
-    """Gets the default time zone of a Series
+    """Read the time zone recommended for calculations on this Series.
 
-    The default time zone is meant for computations: It is the time zone the timeseries should
-    be evaluated in by default, e.g. for bucketing days when aggregating, so that each day
-    starts at midnight of this time zone. It belongs to the data, e.g. it is the time zone of
-    the plant a sensor belongs to. It is not meant for displaying timestamps - that is what the
-    time zone of the plot target settings is for, which e.g. :func:`hdhelpers.helpers.modify_timezone`
-    uses by default. See "Which time zone to compute in?" in the first steps.
-
-    The time zone is an IANA time zone name like "Europe/Berlin" or a fixed UTC offset like
-    "+02:00", both accepted by pandas, e.g. by ``tz_convert``.
-
-    The default time zone of the metric falls back to the one of the dataset metadata.
+    Use the metric's default_timezone, then the dataset's default_timezone.
 
     Args:
-        series (pd.Series): Series with metadata following the convention.
+        series: Series with metadata in attrs.
 
     Returns:
-        str | None: The default time zone, or None if neither the metric nor the dataset metadata provide one.
+        str | None: Zone name or UTC offset, or None when neither source provides one.
 
-    Raises:
-        TypeError: If `series` is not a Series.
-
-    Code example:
-
-    .. doctest:: metadata.get_series_default_timezone
-
-        >>> series.attrs = {
-        ...     "dataset_metadata": {"single_metric": "water.north.level", "metric_key": "external_id"},
-        ...     "metrics": [{"external_id": "water.north.level", "default_timezone": "Europe/Berlin"}],
-        ... }
-        >>> get_series_default_timezone(series)
-        'Europe/Berlin'
-        >>> series.attrs = {}
-        >>> get_series_default_timezone(series) is None
-        True
+    See :ref:`metadata-getter-timezones` for shared examples and return shapes.
     """
     check_series(series)
-    return single_metric_default_timezone(series)
+    return _single_metric_or_dataset(  # type: ignore[no-any-return]
+        series,
+        "SERIES",
+        lambda meta, metric: meta.default_timezone(metric),
+        dataset_default_timezone,
+        empty=None,
+    )
 
 
 def get_singlets_default_timezone(singletsframe: pd.DataFrame) -> str | None:
-    """Gets the default time zone of the single metric of a SingleTSFrame
+    """Read the time zone recommended for calculations on a single-metric frame.
 
-    The default time zone is meant for computations: It is the time zone the timeseries should
-    be evaluated in by default, e.g. for bucketing days when aggregating, so that each day
-    starts at midnight of this time zone. It belongs to the data, e.g. it is the time zone of
-    the plant a sensor belongs to. It is not meant for displaying timestamps - that is what the
-    time zone of the plot target settings is for, which e.g. :func:`hdhelpers.helpers.modify_timezone`
-    uses by default. See "Which time zone to compute in?" in the first steps.
-
-    The time zone is an IANA time zone name like "Europe/Berlin" or a fixed UTC offset like
-    "+02:00", both accepted by pandas, e.g. by ``tz_convert``.
-
-    The default time zone of the metric falls back to the one of the dataset metadata.
+    Use the metric's default_timezone, then the dataset's default_timezone.
 
     Args:
-        singletsframe (pd.DataFrame): STSF with metadata following the convention.
+        singletsframe: DataFrame with one metric's metadata in attrs.
 
     Returns:
-        str | None: The default time zone, or None if neither the metric nor the dataset metadata provide one.
+        str | None: Zone name or UTC offset, or None when neither source provides one.
 
-    Raises:
-        TypeError: If `singletsframe` is not a DataFrame.
-
-    Code example:
-
-    .. doctest:: metadata.get_singlets_default_timezone
-
-        >>> dataframe.attrs = {
-        ...     "dataset_metadata": {"single_metric": "abc.temp", "default_timezone": "+02:00"},
-        ...     "metrics": [{"id": "abc.temp", "default_timezone": None}],
-        ... }
-        >>> get_singlets_default_timezone(dataframe)
-        '+02:00'
+    See :ref:`metadata-getter-timezones` for shared examples and return shapes.
     """
     check_dataframe(singletsframe)
-    return single_metric_default_timezone(singletsframe)
+    return _single_metric_or_dataset(  # type: ignore[no-any-return]
+        singletsframe,
+        "SINGLETSFRAME",
+        lambda meta, metric: meta.default_timezone(metric),
+        dataset_default_timezone,
+        empty=None,
+    )
 
 
 def get_recordings(multitsframe: pd.DataFrame) -> defaultdict[str, Recording]:
-    """Gets how the values of each metric of a MultiTSFrame are recorded
+    """Read recording settings for each metric.
 
-    The recording consists of the "recording_mode" of the metric (e.g. "periodic" or
-    "on_change"), the frequency of its values with offset and time zone and its
-    "recording_aggregation_method", see :class:`Recording` for what they mean.
-
-    The frequency falls back as a whole: If the metric has a "data_frequency", it applies
-    together with the metric's "data_frequency_offset" and "data_frequency_timezone". Otherwise
-    "ref_data_frequency" of the dataset metadata applies together with
-    "ref_data_frequency_offset" and "ref_data_frequency_timezone". The values are provided as
-    given in the metadata.
+    Use the metric's frequency, offset and time zone together. If its frequency is missing,
+    use the dataset's three fields instead.
 
     Args:
-        multitsframe (pd.DataFrame): MTSF with metadata following the convention.
+        multitsframe: DataFrame with per-metric metadata in attrs.
 
     Returns:
-        defaultdict[str, Recording]: Dictionary, where keys are the entries of the metrics metadata specified via "metric_key" in "dataset_metadata" and values are their recordings. Defaults to a recording with the frequency of the dataset metadata, also for metrics without metadata.
-
-    Raises:
-        TypeError: If `multitsframe` is not a DataFrame.
+        defaultdict[str, Recording]:
+            Settings by metric ID; missing IDs use dataset frequency settings.
 
     Code example:
 
     .. doctest:: metadata.get_recordings
 
-        >>> multitsframe.attrs = {
-        ...     "dataset_metadata": {"metric_key": "id", "ref_data_frequency": "1h"},
-        ...     "metrics": [
-        ...         {
-        ...             "id": "average_level",
-        ...             "recording_mode": "periodic",
-        ...             "data_frequency": "15min",
-        ...             "recording_aggregation_method": "MEAN",
-        ...         },
-        ...         {"id": "pump_state", "recording_mode": "on_change"},
-        ...     ],
-        ... }
-        >>> recordings = get_recordings(multitsframe)
-        >>> recordings["average_level"].data_frequency
-        '15min'
-        >>> recordings["pump_state"].recording_mode
+        >>> from hdhelpers.metadata.conventions import MULTITSFRAME_METADATA_EXAMPLE
+        >>> multitsframe.attrs = MULTITSFRAME_METADATA_EXAMPLE
+        >>> md.get_recordings(multitsframe)["plant_a.temperature"].recording_mode
         'on_change'
-        >>> recordings["pump_state"].data_frequency
-        '1h'
+
+    See :ref:`metadata-getter-recordings` for shared examples and return shapes.
     """
     check_dataframe(multitsframe)
-    return recording_by_metric(multitsframe)
+    meta = _metadata(multitsframe, "MULTITSFRAME")
+    if meta is None:
+        return defaultdict(Recording)
+    no_metadata = dataset_recording(meta)
+    return defaultdict(lambda: no_metadata, meta.recordings())
 
 
 def get_series_recording(series: pd.Series) -> Recording:
-    """Gets how the values of a Series are recorded
+    """Read recording settings for this Series.
 
-    See :func:`get_recordings` for the recording and how its frequency falls back to the one of
-    the dataset metadata.
+    Use the metric's frequency, offset and time zone together. If its frequency is missing,
+    use the dataset's three fields instead.
 
     Args:
-        series (pd.Series): Series with metadata following the convention.
+        series: Series with metadata in attrs.
 
     Returns:
-        Recording: The recording of the metric, with the frequency of the dataset metadata if the metric does not provide one.
+        Recording: Recording object; absent metadata yields its default field values.
 
-    Raises:
-        TypeError: If `series` is not a Series.
-
-    Code example:
-
-    .. doctest:: metadata.get_series_recording
-
-        >>> series.attrs = {
-        ...     "dataset_metadata": {"single_metric": "water.north.level", "metric_key": "external_id"},
-        ...     "metrics": [
-        ...         {
-        ...             "external_id": "water.north.level",
-        ...             "recording_mode": "periodic",
-        ...             "data_frequency": "2h",
-        ...             "data_frequency_timezone": "Europe/Berlin",
-        ...         }
-        ...     ],
-        ... }
-        >>> recording = get_series_recording(series)
-        >>> recording.data_frequency, recording.data_frequency_offset, recording.data_frequency_timezone
-        ('2h', None, 'Europe/Berlin')
+    See :ref:`metadata-getter-recordings` for shared examples and return shapes.
     """
     check_series(series)
-    return single_metric_recording(series)
+    return _single_metric_or_dataset(  # type: ignore[no-any-return]
+        series,
+        "SERIES",
+        lambda meta, metric: meta.recording(metric),
+        dataset_recording,
+        empty=Recording(),
+    )
 
 
 def get_singlets_recording(singletsframe: pd.DataFrame) -> Recording:
-    """Gets how the values of the single metric of a SingleTSFrame are recorded
+    """Read recording settings for a single-metric frame.
 
-    See :func:`get_recordings` for the recording and how its frequency falls back to the one of
-    the dataset metadata.
+    Use the metric's frequency, offset and time zone together. If its frequency is missing,
+    use the dataset's three fields instead.
 
     Args:
-        singletsframe (pd.DataFrame): STSF with metadata following the convention.
+        singletsframe: DataFrame with one metric's metadata in attrs.
 
     Returns:
-        Recording: The recording of the metric, with the frequency of the dataset metadata if the metric does not provide one.
+        Recording: Recording object; absent metadata yields its default field values.
 
-    Raises:
-        TypeError: If `singletsframe` is not a DataFrame.
-
-    Code example:
-
-    .. doctest:: metadata.get_singlets_recording
-
-        >>> dataframe.attrs = {
-        ...     "dataset_metadata": {
-        ...         "single_metric": "abc.temp",
-        ...         "ref_data_frequency": "5min",
-        ...         "ref_data_frequency_offset": "1min",
-        ...     },
-        ...     "metrics": [{"id": "abc.temp", "recording_mode": "periodic"}],
-        ... }
-        >>> recording = get_singlets_recording(dataframe)
-        >>> recording.recording_mode, recording.data_frequency, recording.data_frequency_offset
-        ('periodic', '5min', '1min')
+    See :ref:`metadata-getter-recordings` for shared examples and return shapes.
     """
     check_dataframe(singletsframe)
-    return single_metric_recording(singletsframe)
+    return _single_metric_or_dataset(  # type: ignore[no-any-return]
+        singletsframe,
+        "SINGLETSFRAME",
+        lambda meta, metric: meta.recording(metric),
+        dataset_recording,
+        empty=Recording(),
+    )
 
 
 def get_default_aggregation_methods(multitsframe: pd.DataFrame) -> defaultdict[str, str]:
-    """Gets the method each metric of a MultiTSFrame should be aggregated with by default
+    """Read the default aggregation method for each metric.
 
-    E.g. for plotting or reporting it in coarser intervals. It is the "default_aggregation_method"
-    of the metric, with "AVG" normalized to its alias "MEAN". If the metric does not provide one,
-    it is "LAST" for values of the data type "boolean" or "string" (the "value_data_type" of the
-    value dimension "value"), i.e. the state holding at the end of the interval, and "MEAN"
-    otherwise. It is not taken from inherited properties.
+    Use explicit default_aggregation_method (AVG becomes MEAN). Otherwise, metadata
+    value_data_type selects LAST for boolean/string and MEAN for other types.
 
     Args:
-        multitsframe (pd.DataFrame): MTSF with metadata following the convention.
+        multitsframe: DataFrame with per-metric metadata in attrs.
 
     Returns:
-        defaultdict[str, str]: Dictionary, where keys are the entries of the metrics metadata specified via "metric_key" in "dataset_metadata" and values are their default aggregation methods, e.g. "MEAN", "SUM" or "LAST". Defaults to "MEAN" for metrics without metadata.
-
-    Raises:
-        TypeError: If `multitsframe` is not a DataFrame.
+        defaultdict[str, str]: Method names by metric ID; missing IDs default to MEAN.
 
     Code example:
 
     .. doctest:: metadata.get_default_aggregation_methods
 
-        >>> multitsframe.attrs = {
-        ...     "dataset_metadata": {"metric_key": "id"},
-        ...     "metrics": [
-        ...         {"id": "level", "default_aggregation_method": "AVG"},
-        ...         {"id": "rainfall", "default_aggregation_method": "SUM"},
-        ...         {
-        ...             "id": "pump_running",
-        ...             "value_dimensions": [{"column": "value", "value_data_type": "boolean"}],
-        ...         },
-        ...     ],
-        ... }
-        >>> methods = get_default_aggregation_methods(multitsframe)
-        >>> methods["level"], methods["rainfall"], methods["pump_running"]
-        ('MEAN', 'SUM', 'LAST')
-        >>> methods["metric_without_metadata"]
-        'MEAN'
+        >>> from hdhelpers.metadata.conventions import MULTITSFRAME_METADATA_EXAMPLE
+        >>> multitsframe.attrs = MULTITSFRAME_METADATA_EXAMPLE
+        >>> methods = md.get_default_aggregation_methods(multitsframe)
+        >>> methods["plant_a.temperature"], methods["plant_a.pressure"]
+        ('MAX', 'MEAN')
+
+    See :ref:`metadata-getter-aggregation` for shared examples and return shapes.
     """
     check_dataframe(multitsframe)
-    return default_aggregation_method_by_metric(multitsframe)
+    meta = _metadata(multitsframe, "MULTITSFRAME")
+    methods = {} if meta is None else meta.default_aggregation_methods()
+    return defaultdict(lambda: _DEFAULT_AGGREGATION_METHOD, methods)
 
 
 def get_series_default_aggregation_method(series: pd.Series) -> str:
-    """Gets the method a Series should be aggregated with by default
+    """Read the default aggregation method for this Series.
 
-    See :func:`get_default_aggregation_methods` for the method and its default.
+    Use explicit default_aggregation_method (AVG becomes MEAN). Otherwise, metadata
+    value_data_type selects LAST for boolean/string and MEAN for other types.
 
     Args:
-        series (pd.Series): Series with metadata following the convention.
+        series: Series with metadata in attrs.
 
     Returns:
-        str: The default aggregation method, e.g. "MEAN", "SUM" or "LAST".
+        str: Method name; MEAN if metadata is unavailable.
 
-    Raises:
-        TypeError: If `series` is not a Series.
-
-    Code example:
-
-    .. doctest:: metadata.get_series_default_aggregation_method
-
-        >>> series.attrs = {
-        ...     "dataset_metadata": {"single_metric": "rainfall"},
-        ...     "metrics": [{"id": "rainfall", "default_aggregation_method": "SUM"}],
-        ... }
-        >>> get_series_default_aggregation_method(series)
-        'SUM'
-        >>> series.attrs = {}
-        >>> get_series_default_aggregation_method(series)
-        'MEAN'
+    See :ref:`metadata-getter-aggregation` for shared examples and return shapes.
     """
     check_series(series)
-    return single_metric_default_aggregation_method(series)
+    return _single_metric_or_dataset(  # type: ignore[no-any-return]
+        series,
+        "SERIES",
+        lambda meta, metric: meta.default_aggregation_method(metric),
+        lambda _meta: _DEFAULT_AGGREGATION_METHOD,
+        empty=_DEFAULT_AGGREGATION_METHOD,
+    )
 
 
 def get_singlets_default_aggregation_method(singletsframe: pd.DataFrame) -> str:
-    """Gets the method the single metric of a SingleTSFrame should be aggregated with by default
+    """Read the default aggregation method for a single-metric frame.
 
-    See :func:`get_default_aggregation_methods` for the method and its default.
+    Use explicit default_aggregation_method (AVG becomes MEAN). Otherwise, metadata
+    value_data_type selects LAST for boolean/string and MEAN for other types.
 
     Args:
-        singletsframe (pd.DataFrame): STSF with metadata following the convention.
+        singletsframe: DataFrame with one metric's metadata in attrs.
 
     Returns:
-        str: The default aggregation method, e.g. "MEAN", "SUM" or "LAST".
+        str: Method name; MEAN if metadata is unavailable.
 
-    Raises:
-        TypeError: If `singletsframe` is not a DataFrame.
-
-    Code example:
-
-    .. doctest:: metadata.get_singlets_default_aggregation_method
-
-        >>> dataframe.attrs = {
-        ...     "dataset_metadata": {"single_metric": "valve"},
-        ...     "metrics": [
-        ...         {
-        ...             "id": "valve",
-        ...             "value_dimensions": [{"column": "value", "value_data_type": "string"}],
-        ...         }
-        ...     ],
-        ... }
-        >>> get_singlets_default_aggregation_method(dataframe)
-        'LAST'
+    See :ref:`metadata-getter-aggregation` for shared examples and return shapes.
     """
     check_dataframe(singletsframe)
-    return single_metric_default_aggregation_method(singletsframe)
+    return _single_metric_or_dataset(  # type: ignore[no-any-return]
+        singletsframe,
+        "SINGLETSFRAME",
+        lambda meta, metric: meta.default_aggregation_method(metric),
+        lambda _meta: _DEFAULT_AGGREGATION_METHOD,
+        empty=_DEFAULT_AGGREGATION_METHOD,
+    )
 
 
-def without_metadata[T: (pd.Series, pd.DataFrame)](data: T) -> T:
-    """Gets a copy of a Series or DataFrame without its metadata, to compute on
+def copy_without_metadata[T: (pd.Series, pd.DataFrame)](data: T) -> T:
+    """Copy a Series or DataFrame with all attrs removed.
 
-    pandas deep-copies the metadata (``attrs``) of a Series or DataFrame to every object an
-    operation creates from it, e.g. when filtering rows, selecting a column or grouping. For
-    metadata of many metrics, e.g. with comments, loops over the metrics then take much longer
-    than the computation itself. Compute on the copy without metadata instead and attach the
-    metadata of the result once at the end.
-
-    The copy is cheap: It shares the data with ``data`` until one of them is changed (copy on
-    write), so changing the copy does not change ``data``.
+    Data is shared until either object is modified (pandas copy on write).
 
     Args:
-        data (pd.Series | pd.DataFrame): Series or DataFrame, e.g. a MTSF with metadata.
+        data (pd.Series | pd.DataFrame): Source object; left unchanged.
 
     Returns:
-        pd.Series | pd.DataFrame: Copy of ``data`` with empty ``attrs``.
+        pd.Series | pd.DataFrame: Copy with empty attrs.
 
     Code example:
 
-    .. doctest:: metadata.without_metadata
+    .. doctest:: metadata.copy_without_metadata
 
         >>> multitsframe.attrs = {"dataset_metadata": {"metric_key": "id"}, "metrics": []}
-        >>> data = without_metadata(multitsframe)
+        >>> data = md.copy_without_metadata(multitsframe)
         >>> data.attrs
         {}
         >>> multitsframe.attrs

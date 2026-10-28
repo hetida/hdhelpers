@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Metadata model reference &#8212; hdhelpers - documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=14e077c0" />
+    <link rel="stylesheet" type="text/css" href="_static/stylesheet.css?v=55595bb5" />
+
+    <script src="_static/documentation_options.js?v=b1628c55"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+
+    <link rel="icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Metadata examples" href="metadata_examples.html" />
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="metadata_examples.html" title="Metadata examples"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">hdhelpers - documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Metadata model reference</a></li>
+      </ul>
+    </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+
+  <section id="metadata-model-reference">
+<h1>Metadata model reference<a class="headerlink" href="#metadata-model-reference" title="Link to this heading">¶</a></h1>
+<p>Read models with <a class="reference internal" href="index.html#hdhelpers.metadata.read_metadata" title="hdhelpers.metadata.read_metadata"><code class="xref py py-func docutils literal notranslate"><span class="pre">hdhelpers.metadata.read_metadata()</span></code></a>. The returned type depends
+on the metadata’s data type; see <a class="reference internal" href="metadata_examples.html#metadata-type-selection"><span class="std std-ref">Automatic metadata type selection</span></a>.
+All three root models are immutable, allow additional fields and provide the same
+reading and update methods.</p>
+<table class="docutils align-default" id="id1">
+<caption><span class="caption-text">Root models</span><a class="headerlink" href="#id1" title="Link to this table">¶</a></caption>
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 35.0%" />
+<col style="width: 35.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Model</p></th>
+<th class="head"><p>Data</p></th>
+<th class="head"><p>Value dimensions</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata" title="hdhelpers.metadata.conventions.SeriesMetadata"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeriesMetadata</span></code></a></p></td>
+<td><p>One metric in a pandas Series</p></td>
+<td><p>One, named <code class="docutils literal notranslate"><span class="pre">value</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hdhelpers.metadata.conventions.SingleTSFrameMetadata" title="hdhelpers.metadata.conventions.SingleTSFrameMetadata"><code class="xref py py-class docutils literal notranslate"><span class="pre">SingleTSFrameMetadata</span></code></a></p></td>
+<td><p>One metric in a pandas DataFrame</p></td>
+<td><p>One or more value columns</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hdhelpers.metadata.conventions.MultiTSFrameMetadata" title="hdhelpers.metadata.conventions.MultiTSFrameMetadata"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiTSFrameMetadata</span></code></a></p></td>
+<td><p>Metrics identified by a DataFrame’s <code class="docutils literal notranslate"><span class="pre">metric</span></code> column</p></td>
+<td><p>Value columns for each metric</p></td>
+</tr>
+</tbody>
+</table>
+<p>The root fields are <code class="docutils literal notranslate"><span class="pre">dataset_metadata</span></code> (settings for the dataset), <code class="docutils literal notranslate"><span class="pre">metrics</span></code>
+(metric descriptions) and optional <code class="docutils literal notranslate"><span class="pre">value_dimensions_shared</span></code> (column defaults).
+See <a class="reference internal" href="metadata_examples.html#metadata-lookup-basics"><span class="std std-ref">Metadata lookup basics</span></a> for storage, missing values and shared field rules.</p>
+<section id="reading-and-updating">
+<h2>Reading and updating<a class="headerlink" href="#reading-and-updating" title="Link to this heading">¶</a></h2>
+<p>Using <a class="reference internal" href="metadata_examples.html#metadata-example-data"><span class="std std-ref">Shared data setup</span></a>, read a model and attach changed metadata to a
+converted result. Updates return a new model; the original remains unchanged.</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">md</span><span class="o">.</span><span class="n">read_metadata</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span><span class="o">.</span><span class="n">unit</span><span class="p">()</span>
+<span class="go">'m'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">series</span> <span class="o">*</span> <span class="mi">100</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">changed</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">with_value_dimension</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"cm"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">set_metadata</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">changed</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">md</span><span class="o">.</span><span class="n">get_series_unit</span><span class="p">(</span><span class="n">result</span><span class="p">),</span> <span class="n">meta</span><span class="o">.</span><span class="n">unit</span><span class="p">()</span>
+<span class="go">('cm', 'm')</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">multi</span> <span class="o">=</span> <span class="n">md</span><span class="o">.</span><span class="n">read_metadata</span><span class="p">(</span><span class="n">multitsframe</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">multi</span><span class="o">.</span><span class="n">unit</span><span class="p">(</span><span class="s2">"plant_a.pressure"</span><span class="p">)</span>
+<span class="go">'bar'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">multi</span><span class="o">.</span><span class="n">narrowed_to</span><span class="p">(</span><span class="s2">"plant_a.pressure"</span><span class="p">)</span><span class="o">.</span><span class="n">unit</span><span class="p">()</span>
+<span class="go">'bar'</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">metric_id</span></code> is the value of the field selected by <code class="docutils literal notranslate"><span class="pre">dataset_metadata.metric_key</span></code>.
+It can be omitted for SeriesMetadata and SingleTSFrameMetadata; MultiTSFrameMetadata
+requires it for methods reading one metric, even if only one metric is present.
+<code class="docutils literal notranslate"><span class="pre">column</span></code> selects a value dimension and defaults to <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code>.</p>
+<p>Methods in the plural return dictionaries by metric ID; value-dimension methods
+return nested dictionaries as <code class="docutils literal notranslate"><span class="pre">result[metric_id][column]</span></code>. Missing fields return
+None; <code class="docutils literal notranslate"><span class="pre">metric()</span></code> raises KeyError for an unknown metric. See
+<a class="reference internal" href="metadata_examples.html#metadata-getter-timezones"><span class="std std-ref">Default time zones</span></a>, <a class="reference internal" href="metadata_examples.html#metadata-getter-recordings"><span class="std std-ref">Recording information</span></a> and
+<a class="reference internal" href="metadata_examples.html#metadata-getter-aggregation"><span class="std std-ref">Default aggregation methods</span></a> for their specific defaults.</p>
+<p><code class="docutils literal notranslate"><span class="pre">with_metric</span></code>, <code class="docutils literal notranslate"><span class="pre">with_value_dimension</span></code> and <code class="docutils literal notranslate"><span class="pre">with_dataset_metadata</span></code> accept field
+changes as keyword arguments and validate the changed metadata. Use these methods
+for updates; <code class="docutils literal notranslate"><span class="pre">model_copy(update=...)</span></code> does not validate replacement values.
+Use <a class="reference internal" href="index.html#hdhelpers.metadata.attrs_to_json" title="hdhelpers.metadata.attrs_to_json"><code class="xref py py-func docutils literal notranslate"><span class="pre">hdhelpers.metadata.attrs_to_json()</span></code></a> when exporting pandas attrs, or
+<code class="docutils literal notranslate"><span class="pre">model_dump(mode=&quot;json&quot;)</span></code> to obtain the model’s convention fields directly.</p>
+</section>
+<section id="root-classes-and-methods">
+<h2>Root classes and methods<a class="headerlink" href="#root-classes-and-methods" title="Link to this heading">¶</a></h2>
+<p>The shared methods are documented once under SeriesMetadata below. They are also
+available on SingleTSFrameMetadata and MultiTSFrameMetadata. Conversion methods
+change only metadata; convert the pandas data separately to match it.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">SeriesMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#SeriesMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata" title="Link to this definition">¶</a></dt>
+<dd><p>Immutable metadata for a SERIES: one metric with a single “value” dimension.</p>
+<p>Read from a pandas Series with read_metadata. See the module documentation for storage,
+adapter exchange and common field rules.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.as_singletsframe">
+<span class="sig-name descname"><span class="pre">as_singletsframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'value'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#hdhelpers.metadata.conventions.SingleTSFrameMetadata" title="hdhelpers.metadata.conventions.SingleTSFrameMetadata"><span class="pre">SingleTSFrameMetadata</span></a></span></span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#SeriesMetadata.as_singletsframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.as_singletsframe" title="Link to this definition">¶</a></dt>
+<dd><p>The metadata of the SINGLETSFRAME with the values of the SERIES in column</p>
+<p>Renames the value dimension “value” of the metric and the shared one to column.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.default_aggregation_method">
+<span class="sig-name descname"><span class="pre">default_aggregation_method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.default_aggregation_method" title="Link to this definition">¶</a></dt>
+<dd><p>The default aggregation method of the metric, see the module docstring</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.default_aggregation_methods">
+<span class="sig-name descname"><span class="pre">default_aggregation_methods</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.default_aggregation_methods" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.default_timezone">
+<span class="sig-name descname"><span class="pre">default_timezone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.default_timezone" title="Link to this definition">¶</a></dt>
+<dd><p>The default time zone of the metric, otherwise the one of the dataset metadata</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.default_timezones">
+<span class="sig-name descname"><span class="pre">default_timezones</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.default_timezones" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.display_name">
+<span class="sig-name descname"><span class="pre">display_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'value'</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.display_name" title="Link to this definition">¶</a></dt>
+<dd><p>The display name, falling back to the name</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.display_names">
+<span class="sig-name descname"><span class="pre">display_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.display_names" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.measurement">
+<span class="sig-name descname"><span class="pre">measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'value'</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.measurement" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.measurements">
+<span class="sig-name descname"><span class="pre">measurements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.measurements" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.metric">
+<span class="sig-name descname"><span class="pre">metric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#hdhelpers.metadata.conventions.MetricMetadata" title="hdhelpers.metadata.conventions.MetricMetadata"><span class="pre">MetricMetadata</span></a></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.metric" title="Link to this definition">¶</a></dt>
+<dd><p>The metadata of a metric, KeyError if there is none</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.metric_ids">
+<span class="sig-name descname"><span class="pre">metric_ids</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.metric_ids" title="Link to this definition">¶</a></dt>
+<dd><p>The ids of the metrics, i.e. their values of the field named by the metric key</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.metric_info">
+<span class="sig-name descname"><span class="pre">metric_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.metric_info" title="Link to this definition">¶</a></dt>
+<dd><p>Information of a metric, see the module docstring for the fallbacks</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.metric_infos">
+<span class="sig-name descname"><span class="pre">metric_infos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.metric_infos" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'value'</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.names">
+<span class="sig-name descname"><span class="pre">names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.names" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.queried_interval">
+<span class="sig-name descname"><span class="pre">queried_interval</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.queried_interval" title="Link to this definition">¶</a></dt>
+<dd><p>Start and end of the queried interval (the ref interval), None if missing</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.recording">
+<span class="sig-name descname"><span class="pre">recording</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="index.html#hdhelpers.metadata.Recording" title="hdhelpers.metadata._reading.Recording"><span class="pre">Recording</span></a></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.recording" title="Link to this definition">¶</a></dt>
+<dd><p>How the values of the metric are recorded</p>
+<p>The frequency with its offset and time zone falls back to the ones of the dataset
+metadata as a whole.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.recordings">
+<span class="sig-name descname"><span class="pre">recordings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="index.html#hdhelpers.metadata.Recording" title="hdhelpers.metadata._reading.Recording"><span class="pre">Recording</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.recordings" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.short_display_name">
+<span class="sig-name descname"><span class="pre">short_display_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'value'</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.short_display_name" title="Link to this definition">¶</a></dt>
+<dd><p>The short display name, falling back to the display name and the name</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.short_display_names">
+<span class="sig-name descname"><span class="pre">short_display_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.short_display_names" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.unit">
+<span class="sig-name descname"><span class="pre">unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'value'</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.unit" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.units">
+<span class="sig-name descname"><span class="pre">units</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.units" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.value_dimension_info">
+<span class="sig-name descname"><span class="pre">value_dimension_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'value'</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.value_dimension_info" title="Link to this definition">¶</a></dt>
+<dd><p>Information of a value dimension, trying the fields in turn</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.value_dimension_infos">
+<span class="sig-name descname"><span class="pre">value_dimension_infos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inherited</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.value_dimension_infos" title="Link to this definition">¶</a></dt>
+<dd><p>Information of the value dimensions by column by metric</p>
+<p>The value dimensions of a metric are its own ones, “value” and the shared ones.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.with_dataset_metadata">
+<span class="sig-name descname"><span class="pre">with_dataset_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">changes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Self</span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.with_dataset_metadata" title="Link to this definition">¶</a></dt>
+<dd><p>A version with fields of the dataset metadata changed, the metrics are shared</p>
+<p>Validated including all rules of the conventions, since the dataset metadata concerns
+all metrics.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.with_metric">
+<span class="sig-name descname"><span class="pre">with_metric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">changes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Self</span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.with_metric" title="Link to this definition">¶</a></dt>
+<dd><p>A version with fields of a metric changed, the other metrics are shared</p>
+<p>The changed metric is validated, including the rules of the conventions which concern it.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.with_value_dimension">
+<span class="sig-name descname"><span class="pre">with_value_dimension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'value'</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">changes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Self</span></span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.with_value_dimension" title="Link to this definition">¶</a></dt>
+<dd><p>A version with fields of a value dimension of a metric changed, see with_metric</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SingleTSFrameMetadata">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">SingleTSFrameMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#SingleTSFrameMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.SingleTSFrameMetadata" title="Link to this definition">¶</a></dt>
+<dd><p>Immutable metadata for a SINGLETSFRAME: one metric with one or more value columns.</p>
+<p>Read from a pandas DataFrame with read_metadata. See the module documentation for storage,
+adapter exchange and common field rules.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SingleTSFrameMetadata.as_series">
+<span class="sig-name descname"><span class="pre">as_series</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'value'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata" title="hdhelpers.metadata.conventions.SeriesMetadata"><span class="pre">SeriesMetadata</span></a></span></span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#SingleTSFrameMetadata.as_series"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.SingleTSFrameMetadata.as_series" title="Link to this definition">¶</a></dt>
+<dd><p>The metadata of the SERIES with the values of column</p>
+<p>Keeps only the value dimensions of column, renamed to “value”. KeyError if the metric
+has no value dimension of column.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SingleTSFrameMetadata.as_multitsframe">
+<span class="sig-name descname"><span class="pre">as_multitsframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#hdhelpers.metadata.conventions.MultiTSFrameMetadata" title="hdhelpers.metadata.conventions.MultiTSFrameMetadata"><span class="pre">MultiTSFrameMetadata</span></a></span></span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#SingleTSFrameMetadata.as_multitsframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.SingleTSFrameMetadata.as_multitsframe" title="Link to this definition">¶</a></dt>
+<dd><p>The metadata of the MULTITSFRAME of the single metric, named metric_id if given</p>
+<p>If metric_id differs from the id of the metric, it becomes its id: in the field named by
+the metric key if the metric does not have it, otherwise in the field “metric”, which
+then becomes the metric key.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.MultiTSFrameMetadata">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">MultiTSFrameMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#MultiTSFrameMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.MultiTSFrameMetadata" title="Link to this definition">¶</a></dt>
+<dd><p>Immutable metadata for a MULTITSFRAME: multiple metrics identified by a metric column.</p>
+<p>Each metric can have several value dimensions; a MULTITSFRAME may also hold one metric.
+Read from a pandas DataFrame with read_metadata. See the module documentation for storage,
+adapter exchange and common field rules.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.MultiTSFrameMetadata.narrowed_to">
+<span class="sig-name descname"><span class="pre">narrowed_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#hdhelpers.metadata.conventions.SingleTSFrameMetadata" title="hdhelpers.metadata.conventions.SingleTSFrameMetadata"><span class="pre">SingleTSFrameMetadata</span></a></span></span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#MultiTSFrameMetadata.narrowed_to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.MultiTSFrameMetadata.narrowed_to" title="Link to this definition">¶</a></dt>
+<dd><p>The metadata of the SINGLETSFRAME of one metric, KeyError if it has no metadata</p>
+<p>The metric is shared, not copied. It becomes the single and only queried metric.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="reading-method-guide">
+<h2>Reading method guide<a class="headerlink" href="#reading-method-guide" title="Link to this heading">¶</a></h2>
+<table class="docutils align-default" id="id2">
+<caption><span class="caption-text">Shared methods</span><a class="headerlink" href="#id2" title="Link to this table">¶</a></caption>
+<colgroup>
+<col style="width: 40.0%" />
+<col style="width: 60.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Methods</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.metric_ids" title="hdhelpers.metadata.conventions.SeriesMetadata.metric_ids"><code class="xref py py-meth docutils literal notranslate"><span class="pre">SeriesMetadata.metric_ids()</span></code></a>, <a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.metric" title="hdhelpers.metadata.conventions.SeriesMetadata.metric"><code class="xref py py-meth docutils literal notranslate"><span class="pre">metric()</span></code></a></p></td>
+<td><p>List metric identifiers or retrieve a metric’s metadata.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.value_dimension_info" title="hdhelpers.metadata.conventions.SeriesMetadata.value_dimension_info"><code class="xref py py-meth docutils literal notranslate"><span class="pre">SeriesMetadata.value_dimension_info()</span></code></a>, <a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.value_dimension_infos" title="hdhelpers.metadata.conventions.SeriesMetadata.value_dimension_infos"><code class="xref py py-meth docutils literal notranslate"><span class="pre">value_dimension_infos()</span></code></a></p></td>
+<td><p>Read a field or dotted path for one value dimension, or for all metrics and columns.
+An ordered sequence of fields specifies fallbacks, e.g. <code class="docutils literal notranslate"><span class="pre">(&quot;display_name&quot;,</span> <span class="pre">&quot;name&quot;)</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.unit" title="hdhelpers.metadata.conventions.SeriesMetadata.unit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">SeriesMetadata.unit()</span></code></a>, <a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.units" title="hdhelpers.metadata.conventions.SeriesMetadata.units"><code class="xref py py-meth docutils literal notranslate"><span class="pre">units()</span></code></a>,
+<a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.measurement" title="hdhelpers.metadata.conventions.SeriesMetadata.measurement"><code class="xref py py-meth docutils literal notranslate"><span class="pre">measurement()</span></code></a>, <a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.measurements" title="hdhelpers.metadata.conventions.SeriesMetadata.measurements"><code class="xref py py-meth docutils literal notranslate"><span class="pre">measurements()</span></code></a></p></td>
+<td><p>Read units or measured quantities, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;°C&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;temperature&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.name" title="hdhelpers.metadata.conventions.SeriesMetadata.name"><code class="xref py py-meth docutils literal notranslate"><span class="pre">SeriesMetadata.name()</span></code></a>, <a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.names" title="hdhelpers.metadata.conventions.SeriesMetadata.names"><code class="xref py py-meth docutils literal notranslate"><span class="pre">names()</span></code></a>,
+<a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.display_name" title="hdhelpers.metadata.conventions.SeriesMetadata.display_name"><code class="xref py py-meth docutils literal notranslate"><span class="pre">display_name()</span></code></a>, <a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.display_names" title="hdhelpers.metadata.conventions.SeriesMetadata.display_names"><code class="xref py py-meth docutils literal notranslate"><span class="pre">display_names()</span></code></a>,
+<a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.short_display_name" title="hdhelpers.metadata.conventions.SeriesMetadata.short_display_name"><code class="xref py py-meth docutils literal notranslate"><span class="pre">short_display_name()</span></code></a>, <a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.short_display_names" title="hdhelpers.metadata.conventions.SeriesMetadata.short_display_names"><code class="xref py py-meth docutils literal notranslate"><span class="pre">short_display_names()</span></code></a></p></td>
+<td><p>Read names or labels with the <a class="reference internal" href="metadata_examples.html#metadata-getter-names"><span class="std std-ref">documented fallbacks</span></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.metric_info" title="hdhelpers.metadata.conventions.SeriesMetadata.metric_info"><code class="xref py py-meth docutils literal notranslate"><span class="pre">SeriesMetadata.metric_info()</span></code></a>, <a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.metric_infos" title="hdhelpers.metadata.conventions.SeriesMetadata.metric_infos"><code class="xref py py-meth docutils literal notranslate"><span class="pre">metric_infos()</span></code></a></p></td>
+<td><p>Read a field or dotted path, searching the metric before its <code class="docutils literal notranslate"><span class="pre">value</span></code> dimension.
+Inherited properties are a final fallback when enabled.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.default_timezone" title="hdhelpers.metadata.conventions.SeriesMetadata.default_timezone"><code class="xref py py-meth docutils literal notranslate"><span class="pre">SeriesMetadata.default_timezone()</span></code></a>, <a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.default_timezones" title="hdhelpers.metadata.conventions.SeriesMetadata.default_timezones"><code class="xref py py-meth docutils literal notranslate"><span class="pre">default_timezones()</span></code></a></p></td>
+<td><p>Read the time zone for calculations, falling back to the dataset default.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.recording" title="hdhelpers.metadata.conventions.SeriesMetadata.recording"><code class="xref py py-meth docutils literal notranslate"><span class="pre">SeriesMetadata.recording()</span></code></a>, <a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.recordings" title="hdhelpers.metadata.conventions.SeriesMetadata.recordings"><code class="xref py py-meth docutils literal notranslate"><span class="pre">recordings()</span></code></a></p></td>
+<td><p>Read <a class="reference internal" href="index.html#hdhelpers.metadata.Recording" title="hdhelpers.metadata.Recording"><code class="xref py py-class docutils literal notranslate"><span class="pre">Recording</span></code></a> objects describing how values are recorded.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.default_aggregation_method" title="hdhelpers.metadata.conventions.SeriesMetadata.default_aggregation_method"><code class="xref py py-meth docutils literal notranslate"><span class="pre">SeriesMetadata.default_aggregation_method()</span></code></a>, <a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.default_aggregation_methods" title="hdhelpers.metadata.conventions.SeriesMetadata.default_aggregation_methods"><code class="xref py py-meth docutils literal notranslate"><span class="pre">default_aggregation_methods()</span></code></a></p></td>
+<td><p>Read explicit or inferred aggregation methods, normalizing <code class="docutils literal notranslate"><span class="pre">AVG</span></code> to <code class="docutils literal notranslate"><span class="pre">MEAN</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.queried_interval" title="hdhelpers.metadata.conventions.SeriesMetadata.queried_interval"><code class="xref py py-meth docutils literal notranslate"><span class="pre">SeriesMetadata.queried_interval()</span></code></a></p></td>
+<td><p>Read the requested interval as UTC datetimes.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="nested-metadata">
+<h2>Nested metadata<a class="headerlink" href="#nested-metadata" title="Link to this heading">¶</a></h2>
+<p>These classes describe the root models’ fields. Construct them from convention
+fields with <code class="docutils literal notranslate"><span class="pre">ModelName.model_validate(mapping)</span></code>, or access them through a root
+model, e.g. <code class="docutils literal notranslate"><span class="pre">meta.metric().value_dimensions</span></code>. Required fields may accept None
+where the conventions permit unknown values.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.MetricMetadata">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">MetricMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#MetricMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.MetricMetadata" title="Link to this definition">¶</a></dt>
+<dd><p>Metadata of a metric, i.e. of a single, possibly multidimensional timeseries</p>
+<p>A metric is identified by its field named by dataset_metadata.metric_key, whose values occur
+in the metric column of a MULTITSFRAME. Every metric must have this field as a string,
+unique among the metrics.</p>
+<p>Required fields include <code class="docutils literal notranslate"><span class="pre">id</span></code>, <code class="docutils literal notranslate"><span class="pre">name</span></code> and <code class="docutils literal notranslate"><span class="pre">value_dimensions</span></code>. Other fields
+describe labels, recording, default time zone, aggregation, comments and inherited properties.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.ValueDimensionMetadata">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">ValueDimensionMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#ValueDimensionMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.ValueDimensionMetadata" title="Link to this definition">¶</a></dt>
+<dd><p>Metadata for one metric’s value column, such as its unit and measured quantity.</p>
+<p>Each metric describes its value columns; a SERIES uses “value”. Non-null fields take
+precedence over shared metadata for the same column. Unit and measurement are required
+fields, but may be None if unknown.</p>
+<p>Required fields are <code class="docutils literal notranslate"><span class="pre">column</span></code>, <code class="docutils literal notranslate"><span class="pre">unit</span></code> and <code class="docutils literal notranslate"><span class="pre">measurement</span></code>. Unit and measurement
+may be None. Optional fields include names, data type, deadband and display precision.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SharedValueDimensionMetadata">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">SharedValueDimensionMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#SharedValueDimensionMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.SharedValueDimensionMetadata" title="Link to this definition">¶</a></dt>
+<dd><p>Default metadata for a value column shared across metrics.</p>
+<p>Matched by column name (“value” for a SERIES) and used when the corresponding field
+is missing from metric-specific metadata.</p>
+<p><code class="docutils literal notranslate"><span class="pre">column</span></code> identifies the value dimension. Its other fields supply shared defaults.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SingleMetricDatasetMetadata">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">SingleMetricDatasetMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#SingleMetricDatasetMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.SingleMetricDatasetMetadata" title="Link to this definition">¶</a></dt>
+<dd><p>Metadata associated with a SERIES or SINGLETSFRAME as a whole</p>
+<p>E.g. the queried time interval or how existing data should be handled when the dataset is
+sent to an adapter. The fields concerning invalidation and deletion are only relevant for
+adapters actually supporting these operations, like the built-in SQL adapter. Other adapters
+may ignore them.</p>
+<p>Start and end of an interval must be provided together.</p>
+<p><code class="docutils literal notranslate"><span class="pre">single_metric</span></code> identifies the sole metric using <code class="docutils literal notranslate"><span class="pre">metric_key</span></code>.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.MultiTSFrameDatasetMetadata">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">MultiTSFrameDatasetMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#MultiTSFrameDatasetMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.MultiTSFrameDatasetMetadata" title="Link to this definition">¶</a></dt>
+<dd><p>Metadata associated with a MULTITSFRAME as a whole</p>
+<p>E.g. the queried time interval or how existing data should be handled when the dataset is
+sent to an adapter. The fields concerning invalidation and deletion are only relevant for
+adapters actually supporting these operations, like the built-in SQL adapter. Other adapters
+may ignore them.</p>
+<p>Start and end of an interval must be provided together.</p>
+<p>Both dataset models include <code class="docutils literal notranslate"><span class="pre">metric_key</span></code>, <code class="docutils literal notranslate"><span class="pre">queried_metrics</span></code>, the requested interval,
+default settings and adapter invalidation settings. Here <code class="docutils literal notranslate"><span class="pre">single_metric</span></code> is optional
+and applies only to a dataset containing one metric.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.InheritedMetricMetadata">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">InheritedMetricMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#InheritedMetricMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.InheritedMetricMetadata" title="Link to this definition">¶</a></dt>
+<dd><p>Properties supplied by a source system for a metric and its parent assets.</p>
+<p>Stores already-resolved values, e.g. a plant’s latitude; the source system resolves the
+hierarchy. Metadata lookups use these properties as fallbacks only with
+<code class="docutils literal notranslate"><span class="pre">include_inherited=True</span></code>. Convention-defined fields such as name, id and unit belong in
+the metric or value-dimension metadata.</p>
+<p>Use JSON types matching each value’s meaning: numbers, booleans and UTC ISO timestamp
+strings for points in time. For example, hetida platform supplies properties by label,
+using a signal’s own value or that of the nearest parent asset providing one.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.MetricComment">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">MetricComment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#MetricComment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.MetricComment" title="Link to this definition">¶</a></dt>
+<dd><p>A comment attached to a metric, describing a time range of its timeseries data</p>
+<p>E.g. the hetida platform provides the comments on a signal whose time range overlaps the
+queried interval and which existed at query time, newest first.</p>
+<p>Start and end of the time range must be provided together. They are equal for a comment on a
+single point in time.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.MetricCommentReply">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">MetricCommentReply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#MetricCommentReply"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.MetricCommentReply" title="Link to this definition">¶</a></dt>
+<dd><p>A reply to a comment attached to a metric</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SignalGroupMetadata">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">SignalGroupMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#SignalGroupMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.SignalGroupMetadata" title="Link to this definition">¶</a></dt>
+<dd><p>A group of signals a dataset was read from</p>
+<p>E.g. the hetida platform provides the signal group a MULTITSFRAME was read from.</p>
+</dd></dl>
+
+</section>
+<section id="allowed-values-and-validation-issues">
+<h2>Allowed values and validation issues<a class="headerlink" href="#allowed-values-and-validation-issues" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.IntervalType">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">IntervalType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#IntervalType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.IntervalType" title="Link to this definition">¶</a></dt>
+<dd><p>Which boundaries belong to a time interval</p>
+<p>closed: both, open: none, left_closed / right_open: only the start,
+right_closed / left_open: only the end.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.AggregationMethod">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">AggregationMethod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#AggregationMethod"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.AggregationMethod" title="Link to this definition">¶</a></dt>
+<dd><p>Method for aggregating timeseries values into coarser intervals.</p>
+<p>Metadata lookups normalize AVG to MEAN; they are distinct enum values.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.ValueDataType">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">ValueDataType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#ValueDataType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.ValueDataType" title="Link to this definition">¶</a></dt>
+<dd><p>Data type of the values of a value dimension</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.RecordingMode">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">RecordingMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#RecordingMode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.RecordingMode" title="Link to this definition">¶</a></dt>
+<dd><p>When the values of a timeseries are recorded</p>
+<p>periodic: one value per interval of data_frequency, timestamped with the start of the
+interval. A missing value is a gap.
+on_change: a value is recorded when it changes (by more than the deadband of its value
+dimension) and holds until the next one. Missing timestamps are no gaps, as long as
+data_frequency (the heartbeat) is not exceeded.
+irregular: values at arbitrary points in time.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.MetadataIssueSeverity">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">MetadataIssueSeverity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#MetadataIssueSeverity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.MetadataIssueSeverity" title="Link to this definition">¶</a></dt>
+<dd><p>Severity of an issue found when checking metadata against the metadata conventions</p>
+<p>error: Violates the conventions, so helpers and components may misinterpret the metadata.
+warning: Likely a mistake, e.g. metadata not matching the data.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.MetadataConventionIssue">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">MetadataConventionIssue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#MetadataConventionIssue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.MetadataConventionIssue" title="Link to this definition">¶</a></dt>
+<dd><p>A metadata validation problem, reported as an error or warning.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.MetadataConventionIssue.severity">
+<span class="sig-name descname"><span class="pre">severity</span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.MetadataConventionIssue.severity" title="Link to this definition">¶</a></dt>
+<dd><p>Error for a violation; warning for a likely mistake.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hdhelpers.metadata.conventions.MetadataIssueSeverity" title="hdhelpers.metadata.conventions.MetadataIssueSeverity">MetadataIssueSeverity</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.MetadataConventionIssue.location">
+<span class="sig-name descname"><span class="pre">location</span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.MetadataConventionIssue.location" title="Link to this definition">¶</a></dt>
+<dd><p>Path to the affected field, e.g. “metrics[0].name”; empty for the
+metadata as a whole.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hdhelpers.metadata.conventions.MetadataConventionIssue.message">
+<span class="sig-name descname"><span class="pre">message</span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.MetadataConventionIssue.message" title="Link to this definition">¶</a></dt>
+<dd><p>Explanation of the problem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p>Obtain validation issues with <a class="reference internal" href="index.html#hdhelpers.metadata.check_metadata_conventions" title="hdhelpers.metadata.check_metadata_conventions"><code class="xref py py-func docutils literal notranslate"><span class="pre">hdhelpers.metadata.check_metadata_conventions()</span></code></a>.
+When required metadata cannot be read, <a class="reference internal" href="index.html#hdhelpers.metadata.read_metadata" title="hdhelpers.metadata.read_metadata"><code class="xref py py-func docutils literal notranslate"><span class="pre">hdhelpers.metadata.read_metadata()</span></code></a>
+raises <a class="reference internal" href="index.html#hdhelpers.metadata.MetadataConventionError" title="hdhelpers.metadata.MetadataConventionError"><code class="xref py py-class docutils literal notranslate"><span class="pre">MetadataConventionError</span></code></a>, whose <code class="docutils literal notranslate"><span class="pre">issues</span></code> attribute
+contains these issue objects.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#" title="Metadata model reference">Metadata model reference</a><ul>
+<li><a class="reference internal" href="#reading-and-updating" title="Reading and updating">Reading and updating</a></li>
+<li><a class="reference internal" href="#root-classes-and-methods" title="Root classes and methods">Root classes and methods</a><ul>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata" title="SeriesMetadata"><code class="docutils literal notranslate"><span class="pre">SeriesMetadata</span></code></a><ul>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.as_singletsframe" title="as_singletsframe()"><code class="docutils literal notranslate"><span class="pre">as_singletsframe()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.default_aggregation_method" title="default_aggregation_method()"><code class="docutils literal notranslate"><span class="pre">default_aggregation_method()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.default_aggregation_methods" title="default_aggregation_methods()"><code class="docutils literal notranslate"><span class="pre">default_aggregation_methods()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.default_timezone" title="default_timezone()"><code class="docutils literal notranslate"><span class="pre">default_timezone()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.default_timezones" title="default_timezones()"><code class="docutils literal notranslate"><span class="pre">default_timezones()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.display_name" title="display_name()"><code class="docutils literal notranslate"><span class="pre">display_name()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.display_names" title="display_names()"><code class="docutils literal notranslate"><span class="pre">display_names()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.measurement" title="measurement()"><code class="docutils literal notranslate"><span class="pre">measurement()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.measurements" title="measurements()"><code class="docutils literal notranslate"><span class="pre">measurements()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.metric" title="metric()"><code class="docutils literal notranslate"><span class="pre">metric()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.metric_ids" title="metric_ids()"><code class="docutils literal notranslate"><span class="pre">metric_ids()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.metric_info" title="metric_info()"><code class="docutils literal notranslate"><span class="pre">metric_info()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.metric_infos" title="metric_infos()"><code class="docutils literal notranslate"><span class="pre">metric_infos()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.name" title="name()"><code class="docutils literal notranslate"><span class="pre">name()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.names" title="names()"><code class="docutils literal notranslate"><span class="pre">names()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.queried_interval" title="queried_interval()"><code class="docutils literal notranslate"><span class="pre">queried_interval()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.recording" title="recording()"><code class="docutils literal notranslate"><span class="pre">recording()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.recordings" title="recordings()"><code class="docutils literal notranslate"><span class="pre">recordings()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.short_display_name" title="short_display_name()"><code class="docutils literal notranslate"><span class="pre">short_display_name()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.short_display_names" title="short_display_names()"><code class="docutils literal notranslate"><span class="pre">short_display_names()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.unit" title="unit()"><code class="docutils literal notranslate"><span class="pre">unit()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.units" title="units()"><code class="docutils literal notranslate"><span class="pre">units()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.value_dimension_info" title="value_dimension_info()"><code class="docutils literal notranslate"><span class="pre">value_dimension_info()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.value_dimension_infos" title="value_dimension_infos()"><code class="docutils literal notranslate"><span class="pre">value_dimension_infos()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.with_dataset_metadata" title="with_dataset_metadata()"><code class="docutils literal notranslate"><span class="pre">with_dataset_metadata()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.with_metric" title="with_metric()"><code class="docutils literal notranslate"><span class="pre">with_metric()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata.with_value_dimension" title="with_value_dimension()"><code class="docutils literal notranslate"><span class="pre">with_value_dimension()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SingleTSFrameMetadata" title="SingleTSFrameMetadata"><code class="docutils literal notranslate"><span class="pre">SingleTSFrameMetadata</span></code></a><ul>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SingleTSFrameMetadata.as_series" title="as_series()"><code class="docutils literal notranslate"><span class="pre">as_series()</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SingleTSFrameMetadata.as_multitsframe" title="as_multitsframe()"><code class="docutils literal notranslate"><span class="pre">as_multitsframe()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.MultiTSFrameMetadata" title="MultiTSFrameMetadata"><code class="docutils literal notranslate"><span class="pre">MultiTSFrameMetadata</span></code></a><ul>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.MultiTSFrameMetadata.narrowed_to" title="narrowed_to()"><code class="docutils literal notranslate"><span class="pre">narrowed_to()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#reading-method-guide" title="Reading method guide">Reading method guide</a></li>
+<li><a class="reference internal" href="#nested-metadata" title="Nested metadata">Nested metadata</a><ul>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.MetricMetadata" title="MetricMetadata"><code class="docutils literal notranslate"><span class="pre">MetricMetadata</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.ValueDimensionMetadata" title="ValueDimensionMetadata"><code class="docutils literal notranslate"><span class="pre">ValueDimensionMetadata</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SharedValueDimensionMetadata" title="SharedValueDimensionMetadata"><code class="docutils literal notranslate"><span class="pre">SharedValueDimensionMetadata</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SingleMetricDatasetMetadata" title="SingleMetricDatasetMetadata"><code class="docutils literal notranslate"><span class="pre">SingleMetricDatasetMetadata</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.MultiTSFrameDatasetMetadata" title="MultiTSFrameDatasetMetadata"><code class="docutils literal notranslate"><span class="pre">MultiTSFrameDatasetMetadata</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.InheritedMetricMetadata" title="InheritedMetricMetadata"><code class="docutils literal notranslate"><span class="pre">InheritedMetricMetadata</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.MetricComment" title="MetricComment"><code class="docutils literal notranslate"><span class="pre">MetricComment</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.MetricCommentReply" title="MetricCommentReply"><code class="docutils literal notranslate"><span class="pre">MetricCommentReply</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.SignalGroupMetadata" title="SignalGroupMetadata"><code class="docutils literal notranslate"><span class="pre">SignalGroupMetadata</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#allowed-values-and-validation-issues" title="Allowed values and validation issues">Allowed values and validation issues</a><ul>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.IntervalType" title="IntervalType"><code class="docutils literal notranslate"><span class="pre">IntervalType</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.AggregationMethod" title="AggregationMethod"><code class="docutils literal notranslate"><span class="pre">AggregationMethod</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.ValueDataType" title="ValueDataType"><code class="docutils literal notranslate"><span class="pre">ValueDataType</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.RecordingMode" title="RecordingMode"><code class="docutils literal notranslate"><span class="pre">RecordingMode</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.MetadataIssueSeverity" title="MetadataIssueSeverity"><code class="docutils literal notranslate"><span class="pre">MetadataIssueSeverity</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.MetadataConventionIssue" title="MetadataConventionIssue"><code class="docutils literal notranslate"><span class="pre">MetadataConventionIssue</span></code></a><ul>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.MetadataConventionIssue.severity" title="severity"><code class="docutils literal notranslate"><span class="pre">severity</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.MetadataConventionIssue.location" title="location"><code class="docutils literal notranslate"><span class="pre">location</span></code></a></li>
+<li><a class="reference internal" href="#hdhelpers.metadata.conventions.MetadataConventionIssue.message" title="message"><code class="docutils literal notranslate"><span class="pre">message</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="metadata_examples.html"
+                          title="previous chapter">Metadata examples</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/metadata_models.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="metadata_examples.html" title="Metadata examples"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">hdhelpers - documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Metadata model reference</a></li>
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2026, Steffen Wittkamp, Jenny Kupzig.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+    </div>
+  </body>
+</html>

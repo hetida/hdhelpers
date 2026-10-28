@@ -40,17 +40,13 @@ FUSEKI_COLOR_CYCLE = [
 
 
 def resolve_color(color_str: str) -> str:
-    """Resolves Fuseki Colors and returns resulting color string
-
-    Non-fuseki (color) strings are returned just as they are.
+    """Resolve a Fuseki palette name to a color string.
 
     Args:
-        color_str (str): Color string like "#ea1255", "orange" or "ki.shade" (Fuseki color)
+        color_str: Palette name, e.g. "ki.energy", or any other string.
 
     Returns:
-        str:
-            Returns the resolved color string.
-
+        str: Resolved color; other strings are returned unchanged.
 
     Code example:
 

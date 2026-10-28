@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from hdhelpers.metadata import without_metadata
+from hdhelpers.metadata import copy_without_metadata
 
 
 class NotCopyable:
@@ -18,11 +18,11 @@ class NotCopyable:
         pd.Series([1.0, 2.0], index=pd.date_range("2026-01-01", periods=2, tz="UTC"), name="a"),
     ],
 )
-def test_without_metadata(data):
+def test_copy_without_metadata(data):
     metadata = {"metrics": [{"id": "a"}], "not copyable": NotCopyable()}
     data.attrs = metadata
 
-    copy = without_metadata(data)
+    copy = copy_without_metadata(data)
 
     assert copy.attrs == {}
     assert data.attrs == metadata
@@ -40,12 +40,12 @@ def test_changing_the_copy_does_not_change_the_data():
     data = pd.DataFrame({"value": [1.0, 2.0]})
     data.attrs = {"metrics": []}
 
-    copy = without_metadata(data)
+    copy = copy_without_metadata(data)
     copy.loc[0, "value"] = -1.0
 
     assert data.loc[0, "value"] == 1.0
 
 
-def test_without_metadata_requires_series_or_dataframe():
+def test_copy_without_metadata_requires_series_or_dataframe():
     with pytest.raises(TypeError):
-        without_metadata([1.0, 2.0])
+        copy_without_metadata([1.0, 2.0])
