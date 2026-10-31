@@ -120,9 +120,9 @@ change only metadata; convert the pandas data separately to match it.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">SeriesMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#SeriesMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata" title="Link to this definition">¶</a></dt>
-<dd><p>Immutable metadata for a SERIES: one metric with a single “value” dimension.</p>
-<p>Read from a pandas Series with read_metadata. See the module documentation for storage,
-adapter exchange and common field rules.</p>
+<dd><p>Metadata of a SERIES: one metric with a single “value” dimension.</p>
+<p>Exchanged with adapters, e.g. in the Data-Attributes header of generic REST adapter endpoints
+or the __metadata__ field of the direct provisioning adapter’s wrapped format.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SeriesMetadata.as_singletsframe">
 <span class="sig-name descname"><span class="pre">as_singletsframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'value'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#hdhelpers.metadata.conventions.SingleTSFrameMetadata" title="hdhelpers.metadata.conventions.SingleTSFrameMetadata"><span class="pre">SingleTSFrameMetadata</span></a></span></span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#SeriesMetadata.as_singletsframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.SeriesMetadata.as_singletsframe" title="Link to this definition">¶</a></dt>
@@ -285,9 +285,9 @@ all metrics.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SingleTSFrameMetadata">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">SingleTSFrameMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#SingleTSFrameMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.SingleTSFrameMetadata" title="Link to this definition">¶</a></dt>
-<dd><p>Immutable metadata for a SINGLETSFRAME: one metric with one or more value columns.</p>
-<p>Read from a pandas DataFrame with read_metadata. See the module documentation for storage,
-adapter exchange and common field rules.</p>
+<dd><p>Metadata of a SINGLETSFRAME: one metric with one or more value columns.</p>
+<p>Exchanged with adapters, e.g. in the Data-Attributes header of generic REST adapter endpoints
+or the __metadata__ field of the direct provisioning adapter’s wrapped format.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hdhelpers.metadata.conventions.SingleTSFrameMetadata.as_series">
 <span class="sig-name descname"><span class="pre">as_series</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'value'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#hdhelpers.metadata.conventions.SeriesMetadata" title="hdhelpers.metadata.conventions.SeriesMetadata"><span class="pre">SeriesMetadata</span></a></span></span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#SingleTSFrameMetadata.as_series"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.SingleTSFrameMetadata.as_series" title="Link to this definition">¶</a></dt>
@@ -310,10 +310,10 @@ then becomes the metric key.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="hdhelpers.metadata.conventions.MultiTSFrameMetadata">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">MultiTSFrameMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#MultiTSFrameMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.MultiTSFrameMetadata" title="Link to this definition">¶</a></dt>
-<dd><p>Immutable metadata for a MULTITSFRAME: multiple metrics identified by a metric column.</p>
+<dd><p>Metadata of a MULTITSFRAME: multiple metrics identified by a metric column.</p>
 <p>Each metric can have several value dimensions; a MULTITSFRAME may also hold one metric.
-Read from a pandas DataFrame with read_metadata. See the module documentation for storage,
-adapter exchange and common field rules.</p>
+Exchanged with adapters, e.g. in the Data-Attributes header of generic REST adapter endpoints
+or the __metadata__ field of the direct provisioning adapter’s wrapped format.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hdhelpers.metadata.conventions.MultiTSFrameMetadata.narrowed_to">
 <span class="sig-name descname"><span class="pre">narrowed_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#hdhelpers.metadata.conventions.SingleTSFrameMetadata" title="hdhelpers.metadata.conventions.SingleTSFrameMetadata"><span class="pre">SingleTSFrameMetadata</span></a></span></span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#MultiTSFrameMetadata.narrowed_to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.MultiTSFrameMetadata.narrowed_to" title="Link to this definition">¶</a></dt>
@@ -396,7 +396,7 @@ describe labels, recording, default time zone, aggregation, comments and inherit
 <dd><p>Metadata for one metric’s value column, such as its unit and measured quantity.</p>
 <p>Each metric describes its value columns; a SERIES uses “value”. Non-null fields take
 precedence over shared metadata for the same column. Unit and measurement are required
-fields, but may be None if unknown.</p>
+fields, but may be null if unknown.</p>
 <p>Required fields are <code class="docutils literal notranslate"><span class="pre">column</span></code>, <code class="docutils literal notranslate"><span class="pre">unit</span></code> and <code class="docutils literal notranslate"><span class="pre">measurement</span></code>. Unit and measurement
 may be None. Optional fields include names, data type, deadband and display precision.</p>
 </dd></dl>
@@ -441,12 +441,14 @@ and applies only to a dataset containing one metric.</p>
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">InheritedMetricMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#InheritedMetricMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.InheritedMetricMetadata" title="Link to this definition">¶</a></dt>
 <dd><p>Properties supplied by a source system for a metric and its parent assets.</p>
 <p>Stores already-resolved values, e.g. a plant’s latitude; the source system resolves the
-hierarchy. Metadata lookups use these properties as fallbacks only with
-<code class="docutils literal notranslate"><span class="pre">include_inherited=True</span></code>. Convention-defined fields such as name, id and unit belong in
-the metric or value-dimension metadata.</p>
+hierarchy. Consumers use these properties only as last resort and not for information
+describing the metric itself, like its unit or names. Convention-defined fields such as name,
+id and unit belong in the metric or value-dimension metadata.</p>
 <p>Use JSON types matching each value’s meaning: numbers, booleans and UTC ISO timestamp
 strings for points in time. For example, hetida platform supplies properties by label,
 using a signal’s own value or that of the nearest parent asset providing one.</p>
+<p>The reading methods of the root models use these properties as fallbacks only with
+<code class="docutils literal notranslate"><span class="pre">include_inherited=True</span></code>.</p>
 </dd></dl>
 
 <dl class="py class">
@@ -487,7 +489,7 @@ right_closed / left_open: only the end.</p>
 <dt class="sig sig-object py" id="hdhelpers.metadata.conventions.AggregationMethod">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">AggregationMethod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#AggregationMethod"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.AggregationMethod" title="Link to this definition">¶</a></dt>
 <dd><p>Method for aggregating timeseries values into coarser intervals.</p>
-<p>Metadata lookups normalize AVG to MEAN; they are distinct enum values.</p>
+<p>AVG is an alias of MEAN.</p>
 </dd></dl>
 
 <dl class="py class">
@@ -512,46 +514,31 @@ irregular: values at arbitrary points in time.</p>
 <dt class="sig sig-object py" id="hdhelpers.metadata.conventions.MetadataIssueSeverity">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">MetadataIssueSeverity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#MetadataIssueSeverity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.MetadataIssueSeverity" title="Link to this definition">¶</a></dt>
 <dd><p>Severity of an issue found when checking metadata against the metadata conventions</p>
-<p>error: Violates the conventions, so helpers and components may misinterpret the metadata.
+<p>error: Violates the conventions, so consumers like components may misinterpret the metadata.
 warning: Likely a mistake, e.g. metadata not matching the data.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hdhelpers.metadata.conventions.MetadataConventionIssue">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hdhelpers.metadata.conventions.</span></span><span class="sig-name descname"><span class="pre">MetadataConventionIssue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hdhelpers/metadata/conventions.html#MetadataConventionIssue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hdhelpers.metadata.conventions.MetadataConventionIssue" title="Link to this definition">¶</a></dt>
-<dd><p>A metadata validation problem, reported as an error or warning.</p>
+<dd><p>A problem found when checking metadata against the metadata conventions</p>
+<p>An error for a violation of the conventions, a warning for a likely mistake.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hdhelpers.metadata.conventions.MetadataConventionIssue.severity">
-<span class="sig-name descname"><span class="pre">severity</span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.MetadataConventionIssue.severity" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">severity</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hdhelpers.metadata.conventions.MetadataIssueSeverity" title="hdhelpers.metadata.conventions.MetadataIssueSeverity"><span class="pre">MetadataIssueSeverity</span></a></span><a class="headerlink" href="#hdhelpers.metadata.conventions.MetadataConventionIssue.severity" title="Link to this definition">¶</a></dt>
 <dd><p>Error for a violation; warning for a likely mistake.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#hdhelpers.metadata.conventions.MetadataIssueSeverity" title="hdhelpers.metadata.conventions.MetadataIssueSeverity">MetadataIssueSeverity</a></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hdhelpers.metadata.conventions.MetadataConventionIssue.location">
-<span class="sig-name descname"><span class="pre">location</span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.MetadataConventionIssue.location" title="Link to this definition">¶</a></dt>
-<dd><p>Path to the affected field, e.g. “metrics[0].name”; empty for the
-metadata as a whole.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
+<span class="sig-name descname"><span class="pre">location</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.MetadataConventionIssue.location" title="Link to this definition">¶</a></dt>
+<dd><p>Path to the affected field, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;metrics[0].name&quot;</span></code>; empty for the metadata as a whole.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hdhelpers.metadata.conventions.MetadataConventionIssue.message">
-<span class="sig-name descname"><span class="pre">message</span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.MetadataConventionIssue.message" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">message</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#hdhelpers.metadata.conventions.MetadataConventionIssue.message" title="Link to this definition">¶</a></dt>
 <dd><p>Explanation of the problem.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
 </dd></dl>
 
 </dd></dl>

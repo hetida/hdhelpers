@@ -18,6 +18,9 @@ adapters is optional.
 The models document the request body of the hetida designer backend endpoint for checking
 metadata. Hence they occur as JSON Schemas in the openapi.json of the backend, so that third party
 projects, e.g. adapters providing or receiving such metadata, can validate against them.
+Their docstrings and field descriptions become the descriptions of these schemas, so they are
+written for JSON users: null, true and false instead of their Python counterparts and no Python
+names, e.g. of functions or parameters.
 Additional fields are allowed at every level. The models are immutable, see ConventionModel.
 Metadata timestamps are UTC ISO strings with an explicit Z or +00:00 offset.
 
@@ -119,7 +122,7 @@ UtcTimestamp = Annotated[
 class AggregationMethod(StrEnum):
     """Method for aggregating timeseries values into coarser intervals.
 
-    Metadata lookups normalize AVG to MEAN; they are distinct enum values.
+    AVG is an alias of MEAN.
     """
 
     MEAN = "MEAN"
@@ -370,7 +373,7 @@ class ValueDimensionMetadata(SharedValueDimensionMetadata):
 
     Each metric describes its value columns; a SERIES uses "value". Non-null fields take
     precedence over shared metadata for the same column. Unit and measurement are required
-    fields, but may be None if unknown.
+    fields, but may be null if unknown.
     """
 
     unit: str | None = Field(
@@ -387,9 +390,9 @@ class InheritedMetricMetadata(ConventionModel):
     """Properties supplied by a source system for a metric and its parent assets.
 
     Stores already-resolved values, e.g. a plant's latitude; the source system resolves the
-    hierarchy. Metadata lookups use these properties as fallbacks only with
-    ``include_inherited=True``. Convention-defined fields such as name, id and unit belong in
-    the metric or value-dimension metadata.
+    hierarchy. Consumers use these properties only as last resort and not for information
+    describing the metric itself, like its unit or names. Convention-defined fields such as name,
+    id and unit belong in the metric or value-dimension metadata.
 
     Use JSON types matching each value's meaning: numbers, booleans and UTC ISO timestamp
     strings for points in time. For example, hetida platform supplies properties by label,
@@ -581,12 +584,12 @@ class _DatasetMetadataBase(ConventionModel):
         " datapoints instead of an interval. If true, the ref interval is not required.",
     )
     ref_interval_start_timestamp: UtcTimestamp | None = optional(
-        description="Start of the queried time interval (ref interval) in UTC isoformat."
-        " Required unless ref_dataset_discrete is true.",
+        description="Start of the queried time interval (ref interval) as ISO 8601 timestamp"
+        " in UTC. Required unless ref_dataset_discrete is true.",
     )
     ref_interval_end_timestamp: UtcTimestamp | None = optional(
-        description="End of the queried time interval (ref interval) in UTC isoformat."
-        " Required unless ref_dataset_discrete is true.",
+        description="End of the queried time interval (ref interval) as ISO 8601 timestamp in"
+        " UTC. Required unless ref_dataset_discrete is true.",
     )
     ref_interval_type: IntervalType | None = optional(
         description="Type of the ref interval. Required unless ref_dataset_discrete is true.",
@@ -608,10 +611,10 @@ class _DatasetMetadataBase(ConventionModel):
         + " Applies to all metrics without their own data_frequency.",
     )
     query_timestamp: UtcTimestamp | None = optional(
-        description="The point in time whose state of the data was delivered in UTC isoformat:"
-        " Data stored, changed or invalidated later is not included. A source supporting it"
-        " delivers the same data again when queried for this point in time, e.g. for"
-        " reproducing an execution.",
+        description="The point in time whose state of the data was delivered, as ISO 8601"
+        " timestamp in UTC: Data stored, changed or invalidated later is not included. A source"
+        " supporting it delivers the same data again when queried for this point in time, e.g."
+        " for reproducing an execution.",
     )
     default_aggregation_interval: str | None = optional(
         description="Interval to aggregate the timeseries to by default, e.g. when components"
@@ -628,12 +631,12 @@ class _DatasetMetadataBase(ConventionModel):
         + " Applies to all metrics without their own default_timezone.",
     )
     invalidation_interval_start: UtcTimestamp | None = optional(
-        description="Start of an invalidation interval separate from the ref interval in UTC"
-        " isoformat",
+        description="Start of an invalidation interval separate from the ref interval, as ISO"
+        " 8601 timestamp in UTC",
     )
     invalidation_interval_end: UtcTimestamp | None = optional(
-        description="End of an invalidation interval separate from the ref interval in UTC"
-        " isoformat",
+        description="End of an invalidation interval separate from the ref interval, as ISO"
+        " 8601 timestamp in UTC",
     )
     invalidation_interval_type: IntervalType | None = optional(
         IntervalType.CLOSED, description="Type of the invalidation interval"
@@ -901,10 +904,10 @@ def _with_value_column(metric: MetricMetadata, column: str, new_column: str) -> 
 
 
 class SeriesMetadata(_TimeseriesMetadataBase):
-    """Immutable metadata for a SERIES: one metric with a single "value" dimension.
+    """Metadata of a SERIES: one metric with a single "value" dimension.
 
-    Read from a pandas Series with read_metadata. See the module documentation for storage,
-    adapter exchange and common field rules.
+    Exchanged with adapters, e.g. in the Data-Attributes header of generic REST adapter endpoints
+    or the __metadata__ field of the direct provisioning adapter's wrapped format.
     """
 
     model_config = ConfigDict(json_schema_extra={"examples": [SERIES_METADATA_EXAMPLE]})
@@ -932,10 +935,10 @@ class SeriesMetadata(_TimeseriesMetadataBase):
 
 
 class SingleTSFrameMetadata(_TimeseriesMetadataBase):
-    """Immutable metadata for a SINGLETSFRAME: one metric with one or more value columns.
+    """Metadata of a SINGLETSFRAME: one metric with one or more value columns.
 
-    Read from a pandas DataFrame with read_metadata. See the module documentation for storage,
-    adapter exchange and common field rules.
+    Exchanged with adapters, e.g. in the Data-Attributes header of generic REST adapter endpoints
+    or the __metadata__ field of the direct provisioning adapter's wrapped format.
     """
 
     model_config = ConfigDict(json_schema_extra={"examples": [SINGLETSFRAME_METADATA_EXAMPLE]})
@@ -989,11 +992,11 @@ class SingleTSFrameMetadata(_TimeseriesMetadataBase):
 
 
 class MultiTSFrameMetadata(_TimeseriesMetadataBase):
-    """Immutable metadata for a MULTITSFRAME: multiple metrics identified by a metric column.
+    """Metadata of a MULTITSFRAME: multiple metrics identified by a metric column.
 
     Each metric can have several value dimensions; a MULTITSFRAME may also hold one metric.
-    Read from a pandas DataFrame with read_metadata. See the module documentation for storage,
-    adapter exchange and common field rules.
+    Exchanged with adapters, e.g. in the Data-Attributes header of generic REST adapter endpoints
+    or the __metadata__ field of the direct provisioning adapter's wrapped format.
     """
 
     model_config = ConfigDict(json_schema_extra={"examples": [MULTITSFRAME_METADATA_EXAMPLE]})
@@ -1032,7 +1035,7 @@ METADATA_MODELS: dict[str, type[_TimeseriesMetadataBase]] = {
 class MetadataIssueSeverity(StrEnum):
     """Severity of an issue found when checking metadata against the metadata conventions
 
-    error: Violates the conventions, so helpers and components may misinterpret the metadata.
+    error: Violates the conventions, so consumers like components may misinterpret the metadata.
     warning: Likely a mistake, e.g. metadata not matching the data.
     """
 
@@ -1041,13 +1044,9 @@ class MetadataIssueSeverity(StrEnum):
 
 
 class MetadataConventionIssue(BaseModel):
-    """A metadata validation problem, reported as an error or warning.
+    """A problem found when checking metadata against the metadata conventions
 
-    Attributes:
-        severity (MetadataIssueSeverity): Error for a violation; warning for a likely mistake.
-        location (str): Path to the affected field, e.g. "metrics[0].name"; empty for the
-            metadata as a whole.
-        message (str): Explanation of the problem.
+    An error for a violation of the conventions, a warning for a likely mistake.
     """
 
     severity: MetadataIssueSeverity
@@ -1056,7 +1055,7 @@ class MetadataConventionIssue(BaseModel):
         description="Where the issue occurs, e.g. metrics[0].value_dimensions[1].column in the"
         " checked metadata. Empty for the checked object as a whole.",
     )
-    message: str
+    message: str = Field(..., description="Explanation of the problem")
 
 
 class MetadataConventionError(ValueError):
