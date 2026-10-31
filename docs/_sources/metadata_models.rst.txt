@@ -154,6 +154,9 @@ where the conventions permit unknown values.
 
 .. autoclass:: InheritedMetricMetadata(**data)
 
+   The reading methods of the root models use these properties as fallbacks only with
+   ``include_inherited=True``.
+
 .. autoclass:: MetricComment(**data)
 
 .. autoclass:: MetricCommentReply(**data)
@@ -179,6 +182,21 @@ Allowed values and validation issues
    :members:
 
 .. autoclass:: MetadataConventionIssue(**data)
+
+   .. attribute:: severity
+      :type: MetadataIssueSeverity
+
+      Error for a violation; warning for a likely mistake.
+
+   .. attribute:: location
+      :type: str
+
+      Path to the affected field, e.g. ``"metrics[0].name"``; empty for the metadata as a whole.
+
+   .. attribute:: message
+      :type: str
+
+      Explanation of the problem.
 
 Obtain validation issues with :func:`hdhelpers.metadata.check_metadata_conventions`.
 When required metadata cannot be read, :func:`hdhelpers.metadata.read_metadata`
