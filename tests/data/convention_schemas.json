@@ -1,7 +1,7 @@
 {
   "$defs": {
     "AggregationMethod": {
-      "description": "Method for aggregating timeseries values into coarser intervals.\n\nMetadata lookups normalize AVG to MEAN; they are distinct enum values.",
+      "description": "Method for aggregating timeseries values into coarser intervals.\n\nAVG is an alias of MEAN.",
       "enum": [
         "MEAN",
         "AVG",
@@ -18,7 +18,7 @@
     },
     "InheritedMetricMetadata": {
       "additionalProperties": true,
-      "description": "Properties supplied by a source system for a metric and its parent assets.\n\nStores already-resolved values, e.g. a plant's latitude; the source system resolves the\nhierarchy. Metadata lookups use these properties as fallbacks only with\n``include_inherited=True``. Convention-defined fields such as name, id and unit belong in\nthe metric or value-dimension metadata.\n\nUse JSON types matching each value's meaning: numbers, booleans and UTC ISO timestamp\nstrings for points in time. For example, hetida platform supplies properties by label,\nusing a signal's own value or that of the nearest parent asset providing one.",
+      "description": "Properties supplied by a source system for a metric and its parent assets.\n\nStores already-resolved values, e.g. a plant's latitude; the source system resolves the\nhierarchy. Consumers use these properties only as last resort and not for information\ndescribing the metric itself, like its unit or names. Convention-defined fields such as name,\nid and unit belong in the metric or value-dimension metadata.\n\nUse JSON types matching each value's meaning: numbers, booleans and UTC ISO timestamp\nstrings for points in time. For example, hetida platform supplies properties by label,\nusing a signal's own value or that of the nearest parent asset providing one.",
       "properties": {},
       "title": "InheritedMetricMetadata",
       "type": "object"
@@ -603,7 +603,7 @@
             }
           ],
           "default": null,
-          "description": "End of an invalidation interval separate from the ref interval in UTC isoformat",
+          "description": "End of an invalidation interval separate from the ref interval, as ISO 8601 timestamp in UTC",
           "title": "Invalidation Interval End"
         },
         "invalidation_interval_start": {
@@ -618,7 +618,7 @@
             }
           ],
           "default": null,
-          "description": "Start of an invalidation interval separate from the ref interval in UTC isoformat",
+          "description": "Start of an invalidation interval separate from the ref interval, as ISO 8601 timestamp in UTC",
           "title": "Invalidation Interval Start"
         },
         "invalidation_interval_type": {
@@ -701,7 +701,7 @@
             }
           ],
           "default": null,
-          "description": "The point in time whose state of the data was delivered in UTC isoformat: Data stored, changed or invalidated later is not included. A source supporting it delivers the same data again when queried for this point in time, e.g. for reproducing an execution.",
+          "description": "The point in time whose state of the data was delivered, as ISO 8601 timestamp in UTC: Data stored, changed or invalidated later is not included. A source supporting it delivers the same data again when queried for this point in time, e.g. for reproducing an execution.",
           "title": "Query Timestamp"
         },
         "ref_data_frequency": {
@@ -768,7 +768,7 @@
             }
           ],
           "default": null,
-          "description": "End of the queried time interval (ref interval) in UTC isoformat. Required unless ref_dataset_discrete is true.",
+          "description": "End of the queried time interval (ref interval) as ISO 8601 timestamp in UTC. Required unless ref_dataset_discrete is true.",
           "title": "Ref Interval End Timestamp"
         },
         "ref_interval_start_timestamp": {
@@ -783,7 +783,7 @@
             }
           ],
           "default": null,
-          "description": "Start of the queried time interval (ref interval) in UTC isoformat. Required unless ref_dataset_discrete is true.",
+          "description": "Start of the queried time interval (ref interval) as ISO 8601 timestamp in UTC. Required unless ref_dataset_discrete is true.",
           "title": "Ref Interval Start Timestamp"
         },
         "ref_interval_type": {
@@ -832,7 +832,7 @@
     },
     "MultiTSFrameMetadata": {
       "additionalProperties": true,
-      "description": "Immutable metadata for a MULTITSFRAME: multiple metrics identified by a metric column.\n\nEach metric can have several value dimensions; a MULTITSFRAME may also hold one metric.\nRead from a pandas DataFrame with read_metadata. See the module documentation for storage,\nadapter exchange and common field rules.",
+      "description": "Metadata of a MULTITSFRAME: multiple metrics identified by a metric column.\n\nEach metric can have several value dimensions; a MULTITSFRAME may also hold one metric.\nExchanged with adapters, e.g. in the Data-Attributes header of generic REST adapter endpoints\nor the __metadata__ field of the direct provisioning adapter's wrapped format.",
       "examples": [
         {
           "dataset_metadata": {
@@ -928,7 +928,7 @@
     },
     "SeriesMetadata": {
       "additionalProperties": true,
-      "description": "Immutable metadata for a SERIES: one metric with a single \"value\" dimension.\n\nRead from a pandas Series with read_metadata. See the module documentation for storage,\nadapter exchange and common field rules.",
+      "description": "Metadata of a SERIES: one metric with a single \"value\" dimension.\n\nExchanged with adapters, e.g. in the Data-Attributes header of generic REST adapter endpoints\nor the __metadata__ field of the direct provisioning adapter's wrapped format.",
       "examples": [
         {
           "dataset_metadata": {
@@ -1283,7 +1283,7 @@
             }
           ],
           "default": null,
-          "description": "End of an invalidation interval separate from the ref interval in UTC isoformat",
+          "description": "End of an invalidation interval separate from the ref interval, as ISO 8601 timestamp in UTC",
           "title": "Invalidation Interval End"
         },
         "invalidation_interval_start": {
@@ -1298,7 +1298,7 @@
             }
           ],
           "default": null,
-          "description": "Start of an invalidation interval separate from the ref interval in UTC isoformat",
+          "description": "Start of an invalidation interval separate from the ref interval, as ISO 8601 timestamp in UTC",
           "title": "Invalidation Interval Start"
         },
         "invalidation_interval_type": {
@@ -1381,7 +1381,7 @@
             }
           ],
           "default": null,
-          "description": "The point in time whose state of the data was delivered in UTC isoformat: Data stored, changed or invalidated later is not included. A source supporting it delivers the same data again when queried for this point in time, e.g. for reproducing an execution.",
+          "description": "The point in time whose state of the data was delivered, as ISO 8601 timestamp in UTC: Data stored, changed or invalidated later is not included. A source supporting it delivers the same data again when queried for this point in time, e.g. for reproducing an execution.",
           "title": "Query Timestamp"
         },
         "ref_data_frequency": {
@@ -1448,7 +1448,7 @@
             }
           ],
           "default": null,
-          "description": "End of the queried time interval (ref interval) in UTC isoformat. Required unless ref_dataset_discrete is true.",
+          "description": "End of the queried time interval (ref interval) as ISO 8601 timestamp in UTC. Required unless ref_dataset_discrete is true.",
           "title": "Ref Interval End Timestamp"
         },
         "ref_interval_start_timestamp": {
@@ -1463,7 +1463,7 @@
             }
           ],
           "default": null,
-          "description": "Start of the queried time interval (ref interval) in UTC isoformat. Required unless ref_dataset_discrete is true.",
+          "description": "Start of the queried time interval (ref interval) as ISO 8601 timestamp in UTC. Required unless ref_dataset_discrete is true.",
           "title": "Ref Interval Start Timestamp"
         },
         "ref_interval_type": {
@@ -1505,7 +1505,7 @@
     },
     "SingleTSFrameMetadata": {
       "additionalProperties": true,
-      "description": "Immutable metadata for a SINGLETSFRAME: one metric with one or more value columns.\n\nRead from a pandas DataFrame with read_metadata. See the module documentation for storage,\nadapter exchange and common field rules.",
+      "description": "Metadata of a SINGLETSFRAME: one metric with one or more value columns.\n\nExchanged with adapters, e.g. in the Data-Attributes header of generic REST adapter endpoints\nor the __metadata__ field of the direct provisioning adapter's wrapped format.",
       "examples": [
         {
           "dataset_metadata": {
@@ -1591,7 +1591,7 @@
     },
     "ValueDimensionMetadata": {
       "additionalProperties": true,
-      "description": "Metadata for one metric's value column, such as its unit and measured quantity.\n\nEach metric describes its value columns; a SERIES uses \"value\". Non-null fields take\nprecedence over shared metadata for the same column. Unit and measurement are required\nfields, but may be None if unknown.",
+      "description": "Metadata for one metric's value column, such as its unit and measured quantity.\n\nEach metric describes its value columns; a SERIES uses \"value\". Non-null fields take\nprecedence over shared metadata for the same column. Unit and measurement are required\nfields, but may be null if unknown.",
       "properties": {
         "column": {
           "description": "The actual column name in the MULTITSFRAME or SINGLETSFRAME, connecting the value dimension to its column. \"value\" for a SERIES.",
