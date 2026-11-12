@@ -21,6 +21,9 @@ Since version >0.13.10 the hetida designer runtime comes with an installed versi
 The plotting helpers (`hdhelpers.plotting` and their names in `hdhelpers`) need plotly, which is the optional extra
 `plotting`: `pip install "hdhelpers[plotting]"`. Everything else, e.g. the metadata models, works without plotly.
 
+The package ships inline type annotations and a `py.typed` marker (PEP 561), so type checkers such as
+mypy can use its type information after installation.
+
 An example is given in [GitHub page](https://hetida.github.io/hdhelpers/first_steps.html#how-to-get-metadata-with-hdhelpers) of how to use functionalities of hdhelpers inside a hetida designer component. Furthermore the base component [Single Time Series Plot](https://github.com/hetida/hetida-designer/blob/release/runtime/transformations/components/visualization) uses hdhelpers to demonstrate the usage (since version >0.13.10).
 
 ## Developing for hdhelpers

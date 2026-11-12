@@ -1,3 +1,7 @@
+## [Unreleased]
+- Include the PEP 561 `py.typed` marker so mypy recognizes the installed package's type annotations.
+- describe metadata models in JSON terms in their JSON schemas
+
 ## [0.1.0] - 2026-10-28
 - Expand documentation with installation instructions, a metadata model reference, shared examples, and clearer API descriptions
 - Add validated, immutable metadata models with helpers to read, attach, update, and serialize them. Pandas operations share attached models instead of repeatedly copying metadata. Attached models are stored under attrs["hd_metadata"]; use attrs_to_json before JSON export.
