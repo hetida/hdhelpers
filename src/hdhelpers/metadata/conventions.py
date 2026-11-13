@@ -60,6 +60,8 @@ from pydantic import (
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import CoreSchema, PydanticCustomError
 
+from hdhelpers.helpers.frequency import frequency_duration as _duration
+from hdhelpers.helpers.frequency import is_frequency as _is_frequency
 from hdhelpers.metadata._reading import MetadataReading, id_of
 
 TimeseriesDataType = Literal["SERIES", "SINGLETSFRAME", "MULTITSFRAME"]
@@ -1133,46 +1135,6 @@ def _check_interval(
     if start is not None and end is not None and pd.Timestamp(start) > pd.Timestamp(end):
         return [_error(f"{location}.{start_key}", f"Start is after end {end}.")]
     return []
-
-
-@lru_cache(maxsize=1024)
-def _is_frequency(value: str) -> bool:
-    """Whether value is a Pandas date offset alias or a timedelta string
-
-    A unit is required, since e.g. "1" would be a timedelta string of 1 nanosecond.
-    """
-    if re.search("[A-Za-z]", value) is None:
-        return False
-    try:
-        pd.tseries.frequencies.to_offset(value)
-    except ValueError:
-        try:
-            # e.g. "nan" gives NaT
-            return bool(pd.notna(pd.to_timedelta(value)))
-        except ValueError:
-            return False
-    return True
-
-
-@lru_cache(maxsize=1024)
-def _duration(value: str) -> pd.Timedelta | None:
-    """The fixed duration of a frequency, None if calendar based like "MS" or no frequency"""
-    try:
-        offset = pd.tseries.frequencies.to_offset(value)
-    except ValueError:
-        try:
-            # e.g. "P1D" or "1 days"
-            duration = pd.to_timedelta(value)
-        except ValueError:
-            return None
-        return None if pd.isna(duration) else duration
-    if isinstance(offset, pd.offsets.Day):
-        # a calendar day since pandas 3, i.e. 24 hours in UTC
-        return pd.Timedelta(days=offset.n)
-    if isinstance(offset, pd.offsets.Tick):
-        return pd.Timedelta(offset)
-    # calendar based, e.g. months
-    return None
 
 
 @lru_cache(maxsize=1024)
